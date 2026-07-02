@@ -1,0 +1,241 @@
+# =============================================================================
+# rox-anchor .gitignore
+# Reserved / future Solana Anchor program repo for RustyOnions / ROX
+# =============================================================================
+
+# =============================================================================
+# OS junk
+# =============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# =============================================================================
+# Editor / IDE
+# =============================================================================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+!.vscode/tasks.example.json
+!.vscode/launch.example.json
+
+.idea/
+*.swp
+*.swo
+*~
+.history/
+.project
+.classpath
+
+# =============================================================================
+# Logs
+# =============================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+bun-debug.log*
+crash.log
+debug.log
+
+# =============================================================================
+# Environment / secrets / credentials
+# =============================================================================
+.env
+.env.*
+!.env.example
+
+secrets/
+private/
+credentials/
+tokens/
+auth/
+
+*.secret
+*.token
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+
+# =============================================================================
+# Solana / Anchor key material — NEVER COMMIT
+# =============================================================================
+
+# Common Solana keypair names
+id.json
+keypair.json
+wallet.json
+payer.json
+authority.json
+mint-authority.json
+upgrade-authority.json
+program-authority.json
+deploy-authority.json
+admin.json
+owner.json
+validator-keypair.json
+faucet-keypair.json
+
+# Generic keypair patterns
+*.keypair
+*.keypair.json
+*-keypair.json
+*.wallet.json
+*.authority.json
+
+# Anchor/Solana generated deploy keypairs
+target/deploy/*.json
+target/deploy/*-keypair.json
+programs/**/target/deploy/*.json
+programs/**/target/deploy/*-keypair.json
+
+# Local Solana config accidentally copied into repo
+.config/solana/
+solana/
+.solana/
+
+# =============================================================================
+# Rust / Cargo build output
+# =============================================================================
+target/
+debug/
+release/
+
+**/target/
+**/debug/
+**/release/
+
+*.rlib
+*.rmeta
+*.profraw
+*.profdata
+
+# Keep Cargo manifests and lockfiles tracked when runtime is authorized.
+# Do NOT ignore:
+# Cargo.toml
+# Cargo.lock
+
+# =============================================================================
+# Anchor build/test output
+# =============================================================================
+.anchor/
+.anchor-cache/
+.anchor-test/
+test-ledger/
+ledger/
+local-ledger/
+validator-ledger/
+
+target/idl/
+target/types/
+target/verifiable/
+target/sbf-solana-solana/
+target/sbf-solana-solana/release/
+target/deploy/
+
+programs/**/target/
+programs/**/Cargo.lock.bak
+
+# =============================================================================
+# Node / TypeScript / package manager artifacts
+# =============================================================================
+node_modules/
+.pnpm-store/
+.npm/
+.yarn-cache/
+.bun/
+
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+.vite/
+.turbo/
+.cache/
+.parcel-cache/
+.rollup.cache/
+
+*.tsbuildinfo
+
+# Keep package manager lockfiles tracked when JS/TS tooling is authorized.
+# Do NOT ignore:
+# package-lock.json
+# pnpm-lock.yaml
+# yarn.lock
+# bun.lockb
+
+# =============================================================================
+# Test output
+# =============================================================================
+test-results/
+test-results-*/
+playwright-report/
+junit.xml
+.vitest/
+
+# =============================================================================
+# Generated artifacts / bundles
+# =============================================================================
+artifacts/
+releases/
+packed/
+*.tgz
+*.tar.gz
+*.zip
+
+# =============================================================================
+# Temporary files
+# =============================================================================
+tmp/
+temp/
+.tmp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.rej
+*.old
+
+# =============================================================================
+# Local databases / runtime state
+# =============================================================================
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+*.sled/
+*.redb
+*.rocksdb/
+
+local-state/
+runtime-state/
+session-state/
+
+# =============================================================================
+# Keep placeholders
+# =============================================================================
+!.gitkeep
+!.keep
