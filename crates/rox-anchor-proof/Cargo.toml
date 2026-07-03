@@ -1,0 +1,17 @@
+[package]
+name = "rox-anchor-proof"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Deterministic local proof package validation for ROX Anchor."
+
+[lib]
+name = "rox_anchor_proof"
+path = "src/lib.rs"
+
+[dependencies]
+rox-anchor-core = { path = "../rox-anchor-core" }
+
+[features]
+default = []

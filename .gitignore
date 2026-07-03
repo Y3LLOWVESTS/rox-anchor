@@ -239,3 +239,6 @@ session-state/
 # =============================================================================
 !.gitkeep
 !.keep
+
+# ROX Anchor generated local review bundles.
+CODEBUNDLE*.md

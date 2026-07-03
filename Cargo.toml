@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/rox-anchor-core",
+  "crates/rox-anchor-proof",
+  "crates/rox-anchor-cli",
+  "crates/rox-anchor-coordinator",
+  "crates/rox-anchor-relayer",
+  "crates/rox-anchor-rpc-proof",
+  "programs/rox-anchor",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT OR Apache-2.0"

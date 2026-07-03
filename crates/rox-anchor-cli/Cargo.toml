@@ -1,0 +1,21 @@
+# RO:WHAT — Metadata-only Cargo manifest for the Phase 3 Round 3.4 rox-anchor-cli disabled inspection skeleton.
+# RO:WHY — Names the local CLI inspection skeleton without adding dependencies, workspace behavior, build scripts, or runtime behavior.
+# RO:INTERACTS — crates/rox-anchor-cli/src/*.rs and crates/rox-anchor-cli/src/commands/*.rs only.
+# RO:INVARIANTS — This manifest is disabled-by-default, non-value, local-only, and does not authorize runtime.
+# RO:SECURITY — No dependencies, no build script, no RPC, no wallet, no Solana/Anchor runtime, no bridge runtime, no staking, no liquidity, no external settlement.
+# RO:TEST — Static checker only; no cargo command is authorized by this manifest.
+
+[package]
+name = "rox-anchor-cli"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "Disabled non-runtime local inspection CLI skeleton for ROX Anchor planning."
+
+[[bin]]
+name = "rox-anchor"
+path = "src/main.rs"
+
+[features]
+default = []
+disabled-skeleton = []
