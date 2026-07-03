@@ -1148,3 +1148,1401 @@ The target is a small, real, testable bridge/anchor subsystem. The safety model 
 
 
 ### END NOTE - JULY 3 2026 - 12:50 CST
+
+
+### BEGIN NOTE - JULY 3 2026 - 15:00 CST
+
+Below is the carry-over note pack for the next ROX Anchor session.
+
+The attached codebundle shows the current repo at `/Users/mymac/Desktop/rox-anchor`, dirty Git state, 94 files, and the active workspace/file tree with all six Rust crates plus `programs/rox-anchor` present.  The attached build plan confirms the active order: Phase 0 workspace recovery through Phase 13 final green run, with Phase 10 next for ROX/ROC mint-burn logic after Anchor state rules. 
+
+---
+
+# ROX Anchor Carry-Over Notes — July 3, 2026
+
+## 0. Next-session opener
+
+We are continuing active implementation work on **RustyOnions / CrabLink / ROX Anchor**.
+
+Current project:
+
+```text
+RustyOnions = backend/substrate/value-plane.
+CrabLink = Tauri-first product/client for crab:// links, b3 assets, RON Passports, internal ROC paid access, creator pages, receipts, and future UX surfaces.
+ROX Anchor = Rust + Solana/Anchor implementation surface for the ROC ↔ ROX anchor path.
+```
+
+Current posture:
+
+```text
+Implementation-first.
+QuickChain-style code/test/check/fix loop.
+No docs-only gate work.
+No placeholder-only scaffold theater.
+No live bridge runtime.
+No production mint/burn.
+No live wallet calls.
+No live RPC submission.
+No production deployment.
+```
+
+The next assistant should start by checking the current terminal state and then continue from the first real compiler/test failure, not by re-planning the project.
+
+---
+
+## 1. Attached files for next session
+
+Use these as the active references:
+
+```text
+CODEBUNDLE.md
+BUILD_PLAN.md
+latest terminal output
+```
+
+The codebundle is the current source snapshot. The build plan is the phase authority. The source of truth remains the local repo, not the generated bundle.
+
+Important current repo shape from the codebundle:
+
+```text
+crates/
+  rox-anchor-core/
+  rox-anchor-proof/
+  rox-anchor-cli/
+  rox-anchor-rpc-proof/
+  rox-anchor-coordinator/
+  rox-anchor-relayer/
+
+programs/
+  rox-anchor/
+
+tests/
+  unit/
+  integration/
+  chaos/
+```
+
+The codebundle also records the root workspace members and the Anchor program file layout. 
+
+---
+
+## 2. Build doctrine to preserve
+
+The build plan’s rules remain active:
+
+```text
+Write Rust code.
+Run focused compile/tests.
+Fix failures before moving forward.
+Do not add broad planning docs or decision gates.
+Keep comments about what code does, validates, rejects, and returns.
+Do not add live deployment, live wallet calls, live RPC submission, or real value movement until local program/tests are compile-green.
+```
+
+This is an implementation repo. Every patch should do one or more of:
+
+```text
+compile a crate
+add real behavior
+add focused tests
+fix a compiler/test failure
+reduce warning noise without hiding real errors
+```
+
+Do not drift back into broad bridge essays, decision gates, or placeholder-only files.
+
+---
+
+## 3. Current milestone status
+
+### Phase 0 — Workspace recovery and compile spine
+
+Status:
+
+```text
+COMPLETE / GREEN
+```
+
+What was accomplished:
+
+```text
+- Root Cargo workspace is active.
+- Workspace includes:
+  - rox-anchor-core
+  - rox-anchor-proof
+  - rox-anchor-cli
+  - rox-anchor-rpc-proof
+  - rox-anchor-coordinator
+  - rox-anchor-relayer
+  - programs/rox-anchor
+- Cargo.lock exists and includes Anchor/Solana dependencies after the Anchor program was brought online.
+- cargo check --workspace reached green repeatedly during later phases.
+```
+
+The root workspace manifest in the codebundle includes all expected crates and the Anchor program member. 
+
+---
+
+### Phase 1 — `rox-anchor-core`
+
+Status:
+
+```text
+COMPLETE / GREEN
+```
+
+What was built:
+
+```text
+crates/rox-anchor-core
+  src/errors.rs
+  src/ids.rs
+  src/labels.rs
+  src/lib.rs
+  src/state.rs
+  src/types.rs
+```
+
+Responsibilities now owned by core:
+
+```text
+typed IDs
+domains
+operation IDs
+idempotency keys
+nonces
+cluster IDs
+program IDs
+mint IDs
+token-account IDs
+directions
+lifecycle states
+challenge posture
+halt posture
+recovery posture
+safe status labels
+reusable core errors
+```
+
+Important invariant:
+
+```text
+Other crates must not invent duplicate state machines, duplicate direction enums, duplicate labels, or duplicate acceptance rules.
+```
+
+Current proof from codebundle:
+
+```text
+- `rox-anchor-core/src/lib.rs` re-exports errors, ids, labels, state, and types.
+- Core tests cover identifier rejection/acceptance, lifecycle blockers, and label mapping.
+- Labels include safe display strings such as Draft, Requested, Observed, Challenge Open, Halted, Recovery Required, Finality Eligible, Finalized, Failed, and Abandoned.
+```
+
+The codebundle shows `rox-anchor-core` owning shared labels and re-exporting the public API. 
+
+---
+
+### Phase 2 — `rox-anchor-proof`
+
+Status:
+
+```text
+COMPLETE / GREEN
+```
+
+What was built:
+
+```text
+crates/rox-anchor-proof
+  src/package.rs
+  src/validate.rs
+  src/replay.rs
+  src/quorum.rs
+  src/challenge.rs
+  src/recovery.rs
+  src/fixtures.rs
+  src/lib.rs
+```
+
+Proof engine behavior now exists:
+
+```text
+valid proof review
+source domain mismatch rejection
+target domain mismatch rejection
+direction mismatch rejection
+cluster mismatch rejection
+program ID mismatch rejection
+mint mismatch rejection
+token account mismatch rejection
+operation ID mismatch rejection
+idempotency key mismatch rejection
+nonce mismatch rejection
+replay rejection
+missing evidence classification
+quorum dispute classification
+challenge-open / challenge-accepted blocking
+halt blocking
+recovery-required / recovery-in-review / recovery-rejected blocking
+deterministic finding/decision output
+```
+
+Important current terms:
+
+```text
+ReviewDecision::Accepted
+ReviewDecision::Blocked
+ReviewDecision::Rejected
+
+ProofFindingCode::PackageAccepted
+ProofFindingCode::ReplayOperationId
+ProofFindingCode::ReplayIdempotencyKey
+ProofFindingCode::ReplayNonce
+ProofFindingCode::EvidenceMissing
+ProofFindingCode::QuorumDisputed
+ProofFindingCode::ChallengeOpen
+ProofFindingCode::Halted
+ProofFindingCode::RecoveryRequired
+...
+```
+
+The proof crate is now the deterministic local review engine. Coordinator, CLI, RPC proof, and relayer surfaces should keep using it instead of inventing new rules.
+
+---
+
+### Phase 3 — Focused unit test lift
+
+Status:
+
+```text
+COMPLETE ENOUGH FOR CURRENT PHASES
+```
+
+What changed:
+
+```text
+- Core/proof tests live beside implementation.
+- CLI has its own command tests.
+- RPC proof, coordinator, relayer, and Anchor program have crate-local tests.
+- Root tests under tests/unit, tests/integration, and tests/chaos still exist as future surfaces, but the root workspace is virtual, so early active tests are crate-local.
+```
+
+Important caution:
+
+```text
+The root-level tests/ tree is present but should not be assumed to run as normal integration tests until we intentionally add a harness package or move tests into crate-level test dirs.
+```
+
+Future Phase 11/12 work should either activate those root tests through a real workspace test harness or move focused tests into crate-local `tests/` folders.
+
+---
+
+### Phase 4 — `rox-anchor-cli`
+
+Status:
+
+```text
+COMPLETE / GREEN
+```
+
+What was built:
+
+```text
+crates/rox-anchor-cli
+  src/main.rs
+  src/lib.rs
+  src/commands/check.rs
+  src/commands/proof.rs
+  src/commands/status.rs
+  src/commands/halt.rs
+  src/commands/recover.rs
+  tests/check_command.rs
+```
+
+Current behavior:
+
+```text
+cargo run -p rox-anchor-cli -- check
+```
+
+prints a real local proof review from `rox-anchor-proof`, not fake success.
+
+CLI fixtures:
+
+```text
+--fixture valid
+--fixture mismatch
+--fixture replay
+--fixture missing-evidence
+--fixture disputed
+--fixture challenge
+--fixture halt
+--fixture recovery
+```
+
+CLI output includes:
+
+```text
+command
+fixture
+direction
+source_domain
+target_domain
+cluster
+program_id
+mint
+token_account
+operation_id
+idempotency_key
+nonce
+decision
+status_label
+findings
+```
+
+Important prior fix:
+
+```text
+run_from_args(["rox-anchor"]) no longer panics. It defaults safely to check.
+```
+
+Current next CLI improvement, later:
+
+```text
+Add JSON proof package input support after local integration/chaos surfaces are stable.
+```
+
+Do not add live RPC or wallet behavior to the CLI.
+
+---
+
+### Phase 5 — `rox-anchor-rpc-proof`
+
+Status:
+
+```text
+COMPLETE / GREEN
+```
+
+What was built:
+
+```text
+crates/rox-anchor-rpc-proof
+  src/commitment.rs
+  src/config.rs
+  src/rpc.rs
+  src/quorum.rs
+  src/readiness.rs
+  src/redaction.rs
+  src/main.rs
+  src/lib.rs
+```
+
+Current behavior:
+
+```text
+local RPC observation model
+commitment classification
+quorum agreement
+missing evidence
+disputed/conflicting signatures
+stale observation rejection
+binding mismatch rejection
+redacted signature/report shape
+readiness review
+conversion into proof evidence bundle
+```
+
+Known green run from this session:
+
+```text
+cargo test -p rox-anchor-rpc-proof
+7 passed
+cargo run -p rox-anchor-rpc-proof
+rox-anchor-rpc-proof local evidence model: ready=true
+cargo check --workspace
+green
+```
+
+Important invariant:
+
+```text
+RPC proof remains local evidence modeling only. It does not make live network calls.
+```
+
+---
+
+### Phase 6 — `rox-anchor-coordinator`
+
+Status:
+
+```text
+COMPLETE / GREEN
+```
+
+What was built:
+
+```text
+crates/rox-anchor-coordinator
+  src/config.rs
+  src/observer.rs
+  src/decision.rs
+  src/queue.rs
+  src/readiness.rs
+  src/redaction.rs
+  src/main.rs
+  src/lib.rs
+```
+
+Current behavior:
+
+```text
+CoordinatorConfig wraps RPC proof settings and queue capacity.
+CoordinatorObservation wraps RPC observations.
+CoordinatorQueue rejects duplicate operation IDs and queue capacity overflow.
+CoordinatorDecision runs RPC proof review, maps RPC evidence into a proof EvidenceBundle, then calls rox-anchor-proof.
+CoordinatorReadiness rejects unusable queue/RPC configs.
+Redacted coordinator reports preserve decision shape without exposing raw internals.
+```
+
+Known green run from this session:
+
+```text
+cargo test -p rox-anchor-coordinator
+6 passed
+cargo run -p rox-anchor-coordinator
+rox-anchor-coordinator local model: ready=true
+cargo check --workspace
+green
+```
+
+Important invariant:
+
+```text
+Coordinator is orchestration only. It does not invent acceptance rules and must keep calling rox-anchor-proof.
+```
+
+---
+
+### Phase 7 — `rox-anchor-relayer`
+
+Status:
+
+```text
+COMPLETE / GREEN
+```
+
+What was built:
+
+```text
+crates/rox-anchor-relayer
+  src/config.rs
+  src/retry.rs
+  src/receipts.rs
+  src/submit.rs
+  src/readiness.rs
+  src/redaction.rs
+  src/main.rs
+  src/lib.rs
+```
+
+Current behavior:
+
+```text
+RelayerConfig controls max attempts and receipt capacity.
+RetryPolicy caps requested attempts.
+RelayerSubmissionRequest carries operation ID, idempotency key, target, and proof review.
+RelayerDryRun accepts only ReviewDecision::Accepted.
+Blocked/rejected proof reviews produce local receipts with 0 attempts.
+Duplicate idempotency keys produce DuplicateRequest.
+Receipt capacity is enforced.
+Receipts are local dry-run receipts and explicitly have live_submission=false.
+Readiness rejects zero retry/receipt limits.
+Redacted reports keep status, operation, target, proof decision, attempts, and live_submission posture.
+```
+
+Known green run from this session:
+
+```text
+cargo test -p rox-anchor-relayer
+6 passed
+cargo run -p rox-anchor-relayer
+rox-anchor-relayer dry-run model: ready=true
+cargo check --workspace
+green
+```
+
+Important invariant:
+
+```text
+Relayer is still dry-run only. No live RPC submission or transaction submission exists.
+```
+
+---
+
+### Phase 8 — Anchor program compile foundation
+
+Status:
+
+```text
+COMPLETE / GREEN
+```
+
+What was built:
+
+```text
+programs/rox-anchor/Cargo.toml
+programs/rox-anchor/src/lib.rs
+programs/rox-anchor/src/errors.rs
+programs/rox-anchor/src/events.rs
+programs/rox-anchor/src/state.rs
+programs/rox-anchor/src/instructions/
+  initialize.rs
+  observe_burn.rs
+  open_challenge.rs
+  resolve_challenge.rs
+  halt.rs
+  recover.rs
+  finalize.rs
+```
+
+Key Anchor compile work completed:
+
+```text
+- Added Anchor dependency.
+- Added program crate type.
+- Added placeholder program ID.
+- Added account state structs.
+- Added program errors.
+- Added events.
+- Added instruction modules and handlers.
+- Fixed Anchor macro account context issue by using root-level re-exports.
+- Fixed generated `__client_accounts_*` visibility by making bridge exports pub(crate).
+- Compiled with cargo check -p rox-anchor.
+```
+
+Important final warning cleanup patch provided at the end of the session:
+
+```rust
+#![allow(unexpected_cfgs)]
+#![forbid(unsafe_code)]
+
+#[allow(deprecated)]
+#[program]
+pub mod rox_anchor { ... }
+```
+
+Reason:
+
+```text
+Anchor/Solana macros generated `unexpected_cfgs` warnings and one macro-generated deprecated realloc warning. The code itself was green. The warning cleanup patch suppresses macro-stack noise without suppressing ordinary Rust warnings globally.
+```
+
+Next session should verify whether that warning-cleanup patch was actually run and whether `cargo check -p rox-anchor` is now clean.
+
+---
+
+### Phase 9 — Anchor program state rules
+
+Status:
+
+```text
+COMPLETE / GREEN
+```
+
+What was built:
+
+```text
+RoxAnchorConfig
+RoxAnchorOperation
+OperationBindingArgs
+OperationStateCode
+AnchorTransferDirection
+state-rule helper methods
+handler calls into helpers instead of open-coding transitions
+13 Anchor program tests passing before the warning cleanup patch
+```
+
+Known green terminal state before warning cleanup:
+
+```text
+cargo check -p rox-anchor: green with Anchor macro warnings
+cargo test -p rox-anchor: 13 passed
+cargo check --workspace: green with Anchor macro warnings
+```
+
+The terminal output showed 13 passing `rox-anchor` tests and a final successful workspace check, with only Anchor/Solana macro warnings remaining. 
+
+State helper behavior now includes:
+
+```text
+config.initialize(authority)
+config.require_authority(authority)
+config.require_observation_open()
+config.halt(authority)
+config.recover(authority)
+
+operation.initialize(authority, args)
+operation.state_code()
+operation.direction_code()
+operation.require_not_finalized()
+operation.require_binding(args)
+operation.open_challenge()
+operation.resolve_challenge(accepted)
+operation.mark_recovery_required()
+operation.recover()
+operation.can_finalize(config)
+operation.finalize(config)
+```
+
+State blockers implemented:
+
+```text
+halted config blocks observation/finalization
+config recovery_required blocks observation/finalization
+operation challenge_open blocks finalization
+operation recovery_required blocks finalization
+accepted challenge blocks finalization
+finalized operation cannot be reopened/challenged/recovered
+wrong authority cannot halt or recover config
+invalid/corrupt direction blocks finalization
+zero amount blocks finalization
+zero burn evidence hash blocks finalization
+```
+
+The codebundle shows `RoxAnchorOperation` carrying authority, operation hash, mint, token account, direction, amount atoms, burn evidence hash, state, challenge flag, and recovery flag. 
+
+---
+
+### Phase 10 — ROX / ROC mint-burn program logic
+
+Status:
+
+```text
+STARTED / ROUND 1 LOCAL BINDING SEMANTICS LANDED / STILL NOT COMPLETE
+```
+
+What was added in Phase 10 Round 1:
+
+```text
+OperationBindingArgs now includes:
+  operation_id_hash: [u8; 32]
+  direction: AnchorTransferDirection
+  mint: Pubkey
+  token_account: Pubkey
+  amount_atoms: u64
+  burn_evidence_hash: [u8; 32]
+
+AnchorTransferDirection:
+  RocToRox
+  RoxToRoc
+
+RoxAnchorOperation now stores:
+  direction: u8
+  amount_atoms: u64
+  burn_evidence_hash: [u8; 32]
+```
+
+Validation now rejects:
+
+```text
+zero operation_id_hash
+default Pubkey mint
+default Pubkey token_account
+zero amount_atoms
+zero burn_evidence_hash
+direction mismatch
+mint mismatch
+token account mismatch
+amount mismatch
+burn evidence mismatch
+```
+
+Finalization now also requires:
+
+```text
+known direction
+amount_atoms > 0
+burn_evidence_hash != [0; 32]
+eligible state:
+  Observed
+  ChallengeRejected
+  RecoveryResolved
+```
+
+The current `OperationBindingArgs` and its validation require nonzero operation hash, non-default mint/token account, positive amount, and nonzero burn evidence hash.  The current `can_finalize` helper requires clear halt/recovery/challenge blockers plus known direction, positive amount, nonzero burn evidence, and eligible operation state. 
+
+Important limitation:
+
+```text
+This is still local state-machine binding semantics only.
+There is no SPL token CPI yet.
+There is no mint authority PDA model yet.
+There is no token account ownership validation yet.
+There is no local validator test yet.
+There is no live value movement.
+```
+
+---
+
+## 4. Most recent terminal state
+
+Last terminal output before the requested carry-over notes showed:
+
+```text
+cargo check -p rox-anchor: finished
+cargo test -p rox-anchor: 13 passed
+cargo check --workspace: finished
+warnings only
+```
+
+The warnings were:
+
+```text
+unexpected cfg condition value: custom-heap
+unexpected cfg condition value: custom-panic
+unexpected cfg condition value: solana
+unexpected cfg condition value: anchor-debug
+deprecated AccountInfo::realloc generated by Anchor macro
+```
+
+These warnings originate from Anchor/Solana macros around `#[program]` and `#[derive(Accounts)]`, not from our state logic. A cleanup patch was provided to add:
+
+```rust
+#![allow(unexpected_cfgs)]
+#[allow(deprecated)]
+```
+
+to the program root. Next session should verify that patch was applied and that warnings are cleaned.
+
+---
+
+## 5. Exact next-session first move
+
+Start here:
+
+```bash
+cd /Users/mymac/Desktop/rox-anchor
+
+cargo fmt -p rox-anchor
+cargo check -p rox-anchor
+cargo test -p rox-anchor
+cargo check --workspace
+```
+
+Interpretation:
+
+```text
+If this is clean:
+  Phase 9 is fully green and Phase 10 Round 1 is verified.
+
+If this still shows only Anchor macro warnings:
+  Apply or re-apply the warning cleanup patch.
+
+If this fails:
+  Fix the first compiler/test failure only.
+```
+
+Do not jump to live token behavior.
+
+---
+
+## 6. Pending verification from the last patch
+
+The last patch suggested was warning cleanup:
+
+```bash
+perl -0pi -e 's/#!\[forbid\(unsafe_code\)\]/#![allow(unexpected_cfgs)]\n#![forbid(unsafe_code)]/' programs/rox-anchor/src/lib.rs
+
+perl -0pi -e 's/#\[program\]\npub mod rox_anchor/#\[allow(deprecated)\]\n#[program]\npub mod rox_anchor/' programs/rox-anchor/src/lib.rs
+```
+
+Next session should confirm:
+
+```text
+programs/rox-anchor/src/lib.rs contains:
+  #![allow(unexpected_cfgs)]
+  #![forbid(unsafe_code)]
+
+and:
+  #[allow(deprecated)]
+  #[program]
+  pub mod rox_anchor
+```
+
+Then run:
+
+```bash
+cargo check -p rox-anchor
+cargo test -p rox-anchor
+cargo check --workspace
+```
+
+Expected result:
+
+```text
+No real compiler errors.
+Ideally no Anchor macro warning noise.
+13 rox-anchor tests still pass.
+Workspace still green.
+```
+
+---
+
+## 7. Current code details worth preserving
+
+### Anchor account state
+
+Current program state:
+
+```rust
+RoxAnchorConfig {
+    authority: Pubkey,
+    halted: bool,
+    recovery_required: bool,
+}
+
+RoxAnchorOperation {
+    authority: Pubkey,
+    operation_id_hash: [u8; 32],
+    mint: Pubkey,
+    token_account: Pubkey,
+    direction: u8,
+    amount_atoms: u64,
+    burn_evidence_hash: [u8; 32],
+    state: u8,
+    challenge_open: bool,
+    recovery_required: bool,
+}
+```
+
+### Anchor operation states
+
+```rust
+OperationStateCode::Observed
+OperationStateCode::ChallengeOpen
+OperationStateCode::ChallengeAccepted
+OperationStateCode::ChallengeRejected
+OperationStateCode::RecoveryRequired
+OperationStateCode::RecoveryResolved
+OperationStateCode::Finalized
+```
+
+### Anchor directions
+
+```rust
+AnchorTransferDirection::RocToRox
+AnchorTransferDirection::RoxToRoc
+```
+
+### Current program events
+
+```text
+RoxAnchorInitialized
+RoxAnchorBurnObserved
+RoxAnchorChallengeOpened
+RoxAnchorChallengeResolved
+RoxAnchorHalted
+RoxAnchorRecovered
+RoxAnchorFinalized
+```
+
+`RoxAnchorBurnObserved` now includes direction, amount, and burn evidence hash in addition to authority, operation ID hash, mint, and token account.
+
+### Current program errors
+
+```text
+ProgramHalted
+ChallengeOpen
+RecoveryRequired
+InvalidStateTransition
+InvalidBinding
+AlreadyFinalized
+OperationBindingMismatch
+DirectionBindingMismatch
+MintBindingMismatch
+TokenAccountBindingMismatch
+AmountBindingMismatch
+BurnEvidenceBindingMismatch
+AuthorityMismatch
+```
+
+---
+
+## 8. What is next after warning cleanup
+
+The next real implementation phase is:
+
+```text
+Phase 10 Round 2 — Split local ROC→ROX and ROX→ROC semantics more explicitly, still without live SPL token CPI.
+```
+
+The build plan says Phase 10 should implement actual mint/burn semantics after the state machine compiles, including ROC burn observation fields, ROX mint authority model, reverse ROX burn fields, ROC release/recovery model, mint binding, token account binding, replay protection, challenge window, halt/recovery controls, and events. 
+
+Recommended Phase 10 Round 2 scope:
+
+```text
+1. Add explicit operation kind / settlement side helpers:
+   - is_roc_to_rox()
+   - is_rox_to_roc()
+   - requires_internal_roc_burn_evidence()
+   - requires_external_rox_burn_evidence()
+
+2. Rename/generalize burn_evidence_hash if needed:
+   - current field is `burn_evidence_hash`
+   - could become `source_burn_evidence_hash`
+   - avoid churn unless needed; tests are green now.
+
+3. Add authority/mint model placeholders as state, not live CPI:
+   - config.rox_mint
+   - config.mint_authority
+   - config.bump or pda bump later
+   - authority checks for configure/finalize path
+
+4. Add replay protection inside Anchor state model:
+   - current replay protection is mostly off-chain proof / idempotency / local models.
+   - on-chain operation account currently prevents duplicate account init only if account addressing/seeds are enforced later.
+   - next step should add PDA seed strategy or operation-hash account binding comments/tests.
+   - Do not use random account init as replay protection long-term.
+
+5. Add tests:
+   - RocToRox accepts ROC burn evidence shape.
+   - RoxToRoc accepts ROX burn evidence shape.
+   - wrong direction rejects expected path.
+   - zero amount rejected.
+   - wrong mint rejected.
+   - wrong token account rejected.
+   - finalized operation cannot be replayed.
+```
+
+Do not add live CPI yet unless explicitly requested. The next patch should stay compile-tested and local.
+
+---
+
+## 9. Suggested next patch shape
+
+Recommended next patch after verifying green:
+
+```text
+Phase 10 Round 2A:
+  - Add explicit binding helper methods in programs/rox-anchor/src/state.rs.
+  - Add tests for direction-specific finalization posture.
+  - Do not add SPL token dependencies yet.
+```
+
+Good helper names:
+
+```rust
+impl OperationBindingArgs {
+    pub fn is_roc_to_rox(self) -> bool
+    pub fn is_rox_to_roc(self) -> bool
+}
+
+impl RoxAnchorOperation {
+    pub fn is_roc_to_rox(&self) -> bool
+    pub fn is_rox_to_roc(&self) -> bool
+    pub fn require_direction(&self, expected: AnchorTransferDirection) -> Result<()>
+    pub fn require_roc_to_rox(&self) -> Result<()>
+    pub fn require_rox_to_roc(&self) -> Result<()>
+}
+```
+
+Suggested tests:
+
+```rust
+roc_to_rox_direction_helper_accepts_expected_direction
+rox_to_roc_direction_helper_accepts_expected_direction
+wrong_direction_is_rejected
+direction_specific_helpers_reject_corrupt_direction
+```
+
+Why this is the right next step:
+
+```text
+It deepens Phase 10 mint/burn semantics without jumping into live SPL token CPI.
+It keeps behavior small.
+It adds real tests.
+It avoids live submission/mutation.
+It protects against direction confusion, which is one of the major bridge-risk classes.
+```
+
+---
+
+## 10. Phase 10 later rounds
+
+After Round 2A, likely sequence:
+
+### Phase 10 Round 2B — Config mint authority model
+
+Add to `RoxAnchorConfig`:
+
+```rust
+pub rox_mint: Pubkey,
+pub mint_authority: Pubkey,
+```
+
+Potentially:
+
+```rust
+pub bump: u8
+```
+
+Add config initializer args:
+
+```rust
+InitializeConfigArgs {
+    rox_mint: Pubkey,
+    mint_authority: Pubkey,
+}
+```
+
+Tests:
+
+```text
+initialize rejects default rox_mint
+initialize rejects default mint_authority
+config stores authority/mint authority
+wrong authority cannot finalize/mint-side transition
+```
+
+### Phase 10 Round 2C — PDA/seed replay protection model
+
+Add operation seed strategy:
+
+```text
+operation account should be derived from operation_id_hash
+or operation_id_hash + direction + mint
+```
+
+Need care with Anchor macro constraints. Do not overcomplicate in one patch.
+
+Tests:
+
+```text
+operation binding is stable
+operation hash cannot be swapped after initialize
+finalized operation cannot reopen/recover
+duplicate operation should fail at account/PDA level when local validator tests exist
+```
+
+### Phase 10 Round 2D — Token CPI preparation only
+
+Add dependencies only when ready:
+
+```toml
+anchor-spl = compatible version
+```
+
+Then add account contexts for mint/token accounts, but first compile only.
+
+Do not do live production minting.
+
+### Phase 10 Round 3 — Local validator tests if Anchor CLI/tooling ready
+
+Run:
+
+```bash
+anchor build
+anchor test
+```
+
+Only after plain cargo checks are clean.
+
+---
+
+## 11. Integration phase notes
+
+Phase 11 should come after Phase 10 local state-machine logic is stable.
+
+Build plan Phase 11 calls for:
+
+```text
+local_nonvalue_roc_to_rox.rs
+local_nonvalue_rox_to_roc.rs
+coordinator_relayer_boundary.rs
+crablink_status_display.rs
+```
+
+Purpose:
+
+```text
+Wire proof engine to coordinator.
+Wire coordinator output to relayer dry-run.
+Wire RPC proof evidence into proof review.
+Test ROC-to-ROX local path.
+Test ROX-to-ROC local path.
+Test status display labels.
+```
+
+Important implementation caveat:
+
+```text
+Root tests/ are not currently active as normal workspace integration tests unless there is a root package or test harness. Activate them intentionally.
+```
+
+Possible approach:
+
+```text
+Create a crate:
+  crates/rox-anchor-integration-tests
+or move tests into:
+  crates/rox-anchor-proof/tests/
+  crates/rox-anchor-coordinator/tests/
+  crates/rox-anchor-relayer/tests/
+```
+
+The cleaner short-term route is probably crate-level integration tests, not a new docs/test harness crate, unless needed.
+
+---
+
+## 12. Chaos phase notes
+
+Phase 12 should test adversarial/failure cases after integration is stable.
+
+Build plan Phase 12 calls for:
+
+```text
+challenge_griefing
+coordinator_stale_evidence
+halt_resume
+relayer_retry_storm
+rpc_equivocation
+```
+
+Expected behavior:
+
+```text
+challenge griefing remains bounded
+stale coordinator evidence is rejected
+halt/resume stays deterministic
+relayer retry storms are bounded
+RPC equivocation is detected
+```
+
+These should remain local tests. No live RPC.
+
+---
+
+## 13. Safety/authority rules to keep repeating internally
+
+ROX Anchor must not bypass RustyOnions internal ROC authority.
+
+Internal ROC authority remains:
+
+```text
+svc-wallet = mutation front-door
+ron-ledger = durable receipt/balance truth
+ron-accounting = snapshots/reports only
+svc-rewarder = capped planning only
+ron-policy = declarative gates only
+CrabLink = display/user intent only
+```
+
+Future ROX → ROC must eventually route any internal ROC issue through:
+
+```text
+svc-wallet → ron-ledger
+```
+
+Not through:
+
+```text
+Anchor program directly
+relayer directly
+coordinator directly
+RPC proof directly
+CrabLink directly
+gateway/omnigate directly
+accounting/rewarder/policy directly
+```
+
+Future ROC → ROX must eventually require:
+
+```text
+explicit user intent
+internal ROC burn proof
+deterministic proof package
+RPC/quorum evidence where applicable
+challenge window
+halt/recovery checks
+Anchor state eligibility
+only then mint-side behavior
+```
+
+But current work remains local compile/test only.
+
+---
+
+## 14. Current “do not do yet” list
+
+Do not add unless explicitly requested:
+
+```text
+live wallet calls
+live ledger mutation from this repo
+live RPC submission
+production deployment
+production minting
+production burning
+bridge settlement
+staking behavior
+liquidity behavior
+exchange-facing behavior
+fake finality
+fake success output
+client-side authority
+```
+
+Allowed now:
+
+```text
+compile-tested Rust
+local deterministic proof validation
+local CLI inspection
+local RPC proof models
+local coordinator model
+local relayer dry-run model
+compile-tested Anchor code
+Anchor state rules
+local validator tests when tooling is ready
+integration and chaos tests
+```
+
+---
+
+## 15. Known risk areas to keep in mind
+
+Major risks already covered or partially covered:
+
+```text
+replay
+domain mismatch
+direction mismatch
+cluster mismatch
+program ID mismatch
+mint mismatch
+token account mismatch
+operation ID mismatch
+idempotency key mismatch
+nonce mismatch
+missing evidence
+quorum dispute
+RPC stale evidence
+RPC disputed signatures
+challenge-open blocking
+halt blocking
+recovery-required blocking
+relayer retry storms bounded locally
+duplicate relayer idempotency locally rejected
+```
+
+Major risks still needing deeper work:
+
+```text
+on-chain replay/account seed enforcement
+PDA derivation and bump strategy
+Anchor account constraints
+SPL token mint authority model
+token account owner/mint validation
+real local validator tests
+cross-crate integration tests
+chaos tests
+upgrade authority policy
+key rotation / authority recovery
+stuck challenge recovery
+CrabLink stale/offline status language
+```
+
+---
+
+## 16. Commands to run at next session start
+
+Run this first:
+
+```bash
+cd /Users/mymac/Desktop/rox-anchor
+
+cargo fmt -p rox-anchor
+cargo check -p rox-anchor
+cargo test -p rox-anchor
+cargo check --workspace
+```
+
+Then, if clean, run the focused non-Anchor services once:
+
+```bash
+cargo test -p rox-anchor-core
+cargo test -p rox-anchor-proof
+cargo test -p rox-anchor-cli
+cargo test -p rox-anchor-rpc-proof
+cargo test -p rox-anchor-coordinator
+cargo test -p rox-anchor-relayer
+```
+
+Then smoke the binaries:
+
+```bash
+cargo run -p rox-anchor-cli -- check
+cargo run -p rox-anchor-rpc-proof
+cargo run -p rox-anchor-coordinator
+cargo run -p rox-anchor-relayer
+```
+
+Only after those are green, continue Phase 10 Round 2.
+
+---
+
+## 17. Good next-session prompt
+
+Use this in the next session:
+
+```text
+We are continuing RustyOnions / CrabLink / ROX Anchor.
+
+Current status:
+ROX Anchor is active implementation work. Phases 0–9 are effectively green. Phase 10 Round 1 local mint/burn binding semantics have started: Anchor OperationBindingArgs now includes direction, mint, token_account, amount_atoms, and burn_evidence_hash; state tests reached 13 passing; workspace check was green with only Anchor macro warnings. A warning-cleanup patch was proposed at the end, so first verify whether it landed.
+
+Please review the attached CODEBUNDLE.md and BUILD_PLAN.md. Start by running/inspecting:
+cargo fmt -p rox-anchor
+cargo check -p rox-anchor
+cargo test -p rox-anchor
+cargo check --workspace
+
+Then fix the first failure if any. If clean, continue Phase 10 Round 2 with small compile-tested Anchor state helpers/tests for direction-specific ROC→ROX and ROX→ROC semantics. Do not add live RPC, wallet calls, production deployment, production mint/burn, settlement, staking, liquidity, exchange behavior, or fake finality.
+```
+
+---
+
+## 18. Summary
+
+Current state:
+
+```text
+Phase 0 workspace compile spine: green
+Phase 1 core shared types: green
+Phase 2 proof engine: green
+Phase 3 focused crate-local tests: green enough/current
+Phase 4 CLI check: green
+Phase 5 RPC proof local model: green
+Phase 6 coordinator local model: green
+Phase 7 relayer dry-run model: green
+Phase 8 Anchor compile foundation: green
+Phase 9 Anchor state rules: green
+Phase 10 mint/burn logic: started, local binding semantics only
+```
+
+Next action:
+
+```text
+Verify warning cleanup.
+Re-run focused Anchor checks/tests.
+Then continue Phase 10 Round 2:
+  direction-specific ROC→ROX / ROX→ROC helpers and tests,
+  no SPL CPI yet,
+  no live behavior.
+```
+
+The build remains on the right track: real Rust code, focused tests, compile checks, and no fake runtime authority.
+
+
+### END NOTE - JULY 3 2026 - 15:00 CST

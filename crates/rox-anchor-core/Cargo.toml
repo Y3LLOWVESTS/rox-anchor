@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 publish.workspace = true
 license.workspace = true
-description = "Shared core types for ROX Anchor local proof review."
+description = "Shared IDs, states, labels, and errors for ROX Anchor."
 
 [lib]
 name = "rox_anchor_core"

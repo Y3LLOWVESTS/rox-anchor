@@ -1,0 +1,25 @@
+[package]
+name = "rox-anchor"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "ROX Anchor program compile surface."
+
+[lib]
+name = "rox_anchor"
+path = "src/lib.rs"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+anchor-lang = "0.31.1"
+rox-anchor-core = { path = "../../crates/rox-anchor-core" }
+
+[features]
+idl-build = ["anchor-lang/idl-build"]
+default = []
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+anchor-program = []

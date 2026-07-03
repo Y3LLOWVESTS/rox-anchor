@@ -1,34 +1,24 @@
-// RO:WHAT — Disabled halt command-shape labels for rox-anchor-cli.
-// RO:WHY — Names future local halt-state inspection without creating operational halt authority.
-// RO:INTERACTS — commands module and future halt/recovery review design.
-// RO:INVARIANTS — Halt command shape is local review posture only and does not authorize runtime.
-// RO:SECURITY — No coordinator authority, no relayer authority, no deployment, no bridge runtime, no external settlement.
-// RO:TEST — Static checker only at this phase.
-//
-// ROX-ANCHOR:FUTURE-GATED-CONTEXT
-//
-// This disabled skeleton does not authorize runtime.
+//! RO:WHAT — Halt posture inspection notes for the ROX Anchor CLI.
+//! RO:WHY — Keeps halt reporting explicit and local before coordinator/relayer behavior expands.
+//! RO:INTERACTS — rox-anchor-core HaltPosture.
+//! RO:INVARIANTS — halted states block acceptance; CLI does not operate halt authority.
+//! RO:SECURITY — no live runtime authority, wallet, RPC, mint/burn, staking, liquidity, or settlement.
+//! RO:TEST — covered through CLI command dispatch tests.
 
-/// Disabled local halt command shape.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct HaltCommandSkeleton {
-    pub halt_label: String,
-    pub review_only: bool,
-}
+use rox_anchor_core::HaltPosture;
 
-impl HaltCommandSkeleton {
-    pub fn disabled(halt_label: impl Into<String>) -> Self {
-        Self {
-            halt_label: halt_label.into(),
-            review_only: true,
-        }
-    }
-
-    pub fn is_operational_authority(&self) -> bool {
-        false
-    }
-
-    pub fn is_runtime_authorized(&self) -> bool {
-        false
-    }
+pub fn halt_report() -> String {
+    [
+        "rox-anchor halt posture",
+        &format!(
+            "active_blocks_acceptance: {}",
+            HaltPosture::Active.blocks_acceptance()
+        ),
+        &format!(
+            "halted_blocks_acceptance: {}",
+            HaltPosture::Halted.blocks_acceptance()
+        ),
+        "authority: local inspection only",
+    ]
+    .join("\n")
 }

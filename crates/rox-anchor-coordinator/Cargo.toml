@@ -1,0 +1,23 @@
+[package]
+name = "rox-anchor-coordinator"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Local ROX Anchor coordinator model."
+
+[lib]
+name = "rox_anchor_coordinator"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rox-anchor-coordinator"
+path = "src/main.rs"
+
+[dependencies]
+rox-anchor-core = { path = "../rox-anchor-core" }
+rox-anchor-proof = { path = "../rox-anchor-proof" }
+rox-anchor-rpc-proof = { path = "../rox-anchor-rpc-proof" }
+
+[features]
+default = []

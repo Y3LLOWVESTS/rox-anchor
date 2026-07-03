@@ -1,38 +1,24 @@
-// RO:WHAT — Disabled recovery command-shape labels for rox-anchor-cli.
-// RO:WHY — Names future local recovery-case inspection without creating hidden value or authority paths.
-// RO:INTERACTS — commands module and future recovery-case review.
-// RO:INVARIANTS — Recovery command shape is review posture only and does not authorize runtime.
-// RO:SECURITY — No direct ledger mutation, no wallet call, no bridge runtime, no deployment, no staking, no liquidity, no external settlement.
-// RO:TEST — Static checker only at this phase.
-//
-// ROX-ANCHOR:FUTURE-GATED-CONTEXT
-//
-// This disabled skeleton does not authorize runtime.
+//! RO:WHAT — Recovery posture inspection notes for the ROX Anchor CLI.
+//! RO:WHY — Keeps recovery reporting explicit and local before recovery handlers expand.
+//! RO:INTERACTS — rox-anchor-core RecoveryPosture.
+//! RO:INVARIANTS — recovery-required states block acceptance until resolved by explicit code.
+//! RO:SECURITY — no live recovery authority, wallet, RPC, mint/burn, staking, liquidity, or settlement.
+//! RO:TEST — covered through CLI command dispatch tests.
 
-/// Disabled local recovery command shape.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RecoverCommandSkeleton {
-    pub recovery_label: String,
-    pub review_only: bool,
-}
+use rox_anchor_core::RecoveryPosture;
 
-impl RecoverCommandSkeleton {
-    pub fn disabled(recovery_label: impl Into<String>) -> Self {
-        Self {
-            recovery_label: recovery_label.into(),
-            review_only: true,
-        }
-    }
-
-    pub fn is_hidden_value_path(&self) -> bool {
-        false
-    }
-
-    pub fn is_runtime_authorized(&self) -> bool {
-        false
-    }
-
-    pub fn touches_ledger(&self) -> bool {
-        false
-    }
+pub fn recovery_report() -> String {
+    [
+        "rox-anchor recovery posture",
+        &format!(
+            "not_required_blocks_acceptance: {}",
+            RecoveryPosture::NotRequired.blocks_acceptance()
+        ),
+        &format!(
+            "required_blocks_acceptance: {}",
+            RecoveryPosture::Required.blocks_acceptance()
+        ),
+        "authority: local inspection only",
+    ]
+    .join("\n")
 }

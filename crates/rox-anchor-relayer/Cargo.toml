@@ -1,0 +1,22 @@
+[package]
+name = "rox-anchor-relayer"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Local ROX Anchor relayer dry-run model."
+
+[lib]
+name = "rox_anchor_relayer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rox-anchor-relayer"
+path = "src/main.rs"
+
+[dependencies]
+rox-anchor-core = { path = "../rox-anchor-core" }
+rox-anchor-proof = { path = "../rox-anchor-proof" }
+
+[features]
+default = []

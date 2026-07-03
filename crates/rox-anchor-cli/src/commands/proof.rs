@@ -1,38 +1,16 @@
-// RO:WHAT — Disabled proof command-shape labels for rox-anchor-cli.
-// RO:WHY — Names future local proof inspection without implementing proof validation, RPC, or finality.
-// RO:INTERACTS — commands module and future local proof package review.
-// RO:INVARIANTS — Proof command shape is evidence inspection only and does not authorize runtime.
-// RO:SECURITY — No RPC, wallet, Solana/Anchor runtime, bridge runtime, deployment, minting, burning, settlement, staking, liquidity, or external settlement.
-// RO:TEST — Static checker only at this phase.
-//
-// ROX-ANCHOR:FUTURE-GATED-CONTEXT
-//
-// This disabled skeleton does not authorize runtime.
+//! RO:WHAT — Proof command notes for the ROX Anchor local inspection CLI.
+//! RO:WHY — Points users toward `check` until JSON proof-package inspection is added.
+//! RO:INTERACTS — check command and rox-anchor-proof.
+//! RO:INVARIANTS — proof output is local review guidance, not finality or settlement.
+//! RO:SECURITY — no live RPC, wallet, deployment, mint/burn, staking, liquidity, or settlement.
+//! RO:TEST — covered through CLI command dispatch tests.
 
-/// Disabled local proof command shape.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ProofCommandSkeleton {
-    pub proof_label: String,
-    pub evidence_only: bool,
-}
-
-impl ProofCommandSkeleton {
-    pub fn disabled(proof_label: impl Into<String>) -> Self {
-        Self {
-            proof_label: proof_label.into(),
-            evidence_only: true,
-        }
-    }
-
-    pub fn is_finality_claim(&self) -> bool {
-        false
-    }
-
-    pub fn is_runtime_authorized(&self) -> bool {
-        false
-    }
-
-    pub fn touches_rpc(&self) -> bool {
-        false
-    }
+pub fn proof_help() -> String {
+    [
+        "rox-anchor proof",
+        "status: local inspection surface",
+        "next: use `rox-anchor check` for deterministic proof-review output",
+        "json_input: not enabled yet",
+    ]
+    .join("\n")
 }

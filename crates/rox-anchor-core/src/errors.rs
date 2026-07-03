@@ -1,40 +1,50 @@
-// RO:WHAT — Error labels for the disabled rox-anchor-core skeleton.
-// RO:WHY — Keeps future local-only validation names conservative and non-authoritative.
-// RO:INTERACTS — ids, types, and state skeleton modules.
-// RO:INVARIANTS — Error labels are not runtime decisions and do not authorize runtime.
-// RO:SECURITY — No network, wallet, Solana/Anchor, bridge runtime, deployment, or settlement behavior.
-// RO:TEST — Static checker only at this phase.
-//
-// ROX-ANCHOR:FUTURE-GATED-CONTEXT
-//
-// This disabled skeleton does not authorize runtime.
+//! RO:WHAT — Shared error type for ROX Anchor core validation.
+//! RO:WHY — Gives all crates one reusable error vocabulary for IDs and core bindings.
+//! RO:INTERACTS — ids, types, proof validation, CLI display, and local service models.
+//! RO:INVARIANTS — errors are deterministic and do not imply finality or runtime authorization.
+//! RO:SECURITY — validation-only; no wallet/RPC/deployment side effects.
+//! RO:TEST — covered by rox-anchor-core identifier tests.
 
 use core::fmt;
 
-/// Non-runtime error labels for local skeleton review.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum CoreSkeletonError {
-    EmptyIdentifier,
-    InvalidIdentifierWhitespace,
-    UnsupportedDirection,
-    UnsupportedState,
-    RuntimeNotAuthorized,
-    AuthorityBoundary,
+pub enum AnchorCoreError {
+    EmptyIdentifier {
+        kind: &'static str,
+    },
+    IdentifierHasOuterWhitespace {
+        kind: &'static str,
+    },
+    IdentifierTooLong {
+        kind: &'static str,
+        max_bytes: usize,
+        actual_bytes: usize,
+    },
+    IdentifierHasControlByte {
+        kind: &'static str,
+    },
 }
 
-impl fmt::Display for CoreSkeletonError {
+impl fmt::Display for AnchorCoreError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let label = match self {
-            Self::EmptyIdentifier => "empty identifier",
-            Self::InvalidIdentifierWhitespace => "identifier contains leading or trailing whitespace",
-            Self::UnsupportedDirection => "unsupported direction",
-            Self::UnsupportedState => "unsupported state",
-            Self::RuntimeNotAuthorized => "runtime is not authorized",
-            Self::AuthorityBoundary => "authority boundary preserved",
-        };
-
-        f.write_str(label)
+        match self {
+            Self::EmptyIdentifier { kind } => write!(f, "{kind} is empty"),
+            Self::IdentifierHasOuterWhitespace { kind } => {
+                write!(f, "{kind} has leading or trailing whitespace")
+            }
+            Self::IdentifierTooLong {
+                kind,
+                max_bytes,
+                actual_bytes,
+            } => write!(
+                f,
+                "{kind} is too long: {actual_bytes} bytes exceeds {max_bytes} bytes"
+            ),
+            Self::IdentifierHasControlByte { kind } => {
+                write!(f, "{kind} contains a control byte")
+            }
+        }
     }
 }
 
-impl std::error::Error for CoreSkeletonError {}
+impl std::error::Error for AnchorCoreError {}

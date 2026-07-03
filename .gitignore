@@ -69,6 +69,83 @@ auth/
 *.csr
 
 # =============================================================================
+
+# =============================================================================
+# Hardened secret / key material patterns — NEVER COMMIT
+# =============================================================================
+
+# dotenv / local shell config variants
+.envrc
+.direnv/
+*.env
+*.env.local
+*.env.*.local
+.env.local
+.env.development
+.env.production
+.env.test
+.envrc.local
+
+# API keys, provider tokens, credentials, and auth material
+api-keys/
+apikeys/
+keys/
+keypairs/
+wallets/
+mnemonics/
+seeds/
+seed/
+recovery/
+keystore/
+key-store/
+key_store/
+
+*.apikey
+*.api-key
+*.credentials
+*.creds
+*.passwd
+*.password
+*.mnemonic
+*.seed
+*.seed.json
+*.recovery
+*.recovery-phrase
+*.priv
+*.private
+*.private.json
+*.auth
+*.session
+*.cookie
+*.cookies
+
+# CLI/tool credential stores accidentally copied into the repo
+.netrc
+.aws/
+.gcp/
+.azure/
+.kube/
+.docker/
+.cargo/credentials
+.cargo/credentials.toml
+
+# Package-manager auth files can contain registry tokens
+.npmrc
+.pnpmrc
+.yarnrc
+
+# RPC/provider/local deployment secrets
+rpc-url.txt
+rpc-url.local
+provider-url.txt
+provider-url.local
+alchemy*.txt
+quicknode*.txt
+helius*.txt
+triton*.txt
+ankr*.txt
+infura*.txt
+
 # Solana / Anchor key material — NEVER COMMIT
 # =============================================================================
 
@@ -99,6 +176,26 @@ target/deploy/*.json
 target/deploy/*-keypair.json
 programs/**/target/deploy/*.json
 programs/**/target/deploy/*-keypair.json
+
+
+# Additional local Solana / Anchor keypair naming patterns
+*-wallet.json
+*-payer.json
+*-authority.json
+*-mint-authority.json
+*-upgrade-authority.json
+*-program-authority.json
+*-program-keypair.json
+*-validator-keypair.json
+*-faucet-keypair.json
+local-wallet*.json
+local-payer*.json
+local-authority*.json
+local-keypair*.json
+dev-wallet*.json
+dev-payer*.json
+dev-authority*.json
+dev-keypair*.json
 
 # Local Solana config accidentally copied into repo
 .config/solana/

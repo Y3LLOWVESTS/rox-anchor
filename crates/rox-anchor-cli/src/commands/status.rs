@@ -1,38 +1,25 @@
-// RO:WHAT — Disabled status command-shape labels for rox-anchor-cli.
-// RO:WHY — Keeps status wording local, stale-safe, and non-authoritative before any UI/runtime exists.
-// RO:INTERACTS — commands module and future CrabLink display-only status design.
-// RO:INVARIANTS — Status command shape is display posture only and does not authorize runtime.
-// RO:SECURITY — No client finality, no cache truth, no wallet/RPC authority, no Solana/Anchor runtime, no settlement behavior.
-// RO:TEST — Static checker only at this phase.
-//
-// ROX-ANCHOR:FUTURE-GATED-CONTEXT
-//
-// This disabled skeleton does not authorize runtime.
+//! RO:WHAT — Status-label inspection for the ROX Anchor CLI.
+//! RO:WHY — Exposes display-safe labels from rox-anchor-core without inventing finality.
+//! RO:INTERACTS — rox-anchor-core labels and lifecycle states.
+//! RO:INVARIANTS — labels are display strings only; not runtime authority.
+//! RO:SECURITY — no wallet, RPC, deployment, mint/burn, staking, liquidity, or settlement.
+//! RO:TEST — covered through CLI command dispatch tests.
 
-/// Disabled local status command shape.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct StatusCommandSkeleton {
-    pub status_label: String,
-    pub display_only: bool,
-}
+use rox_anchor_core::{label_for_lifecycle_state, AnchorLifecycleState, SAFE_STATUS_LABELS};
 
-impl StatusCommandSkeleton {
-    pub fn disabled(status_label: impl Into<String>) -> Self {
-        Self {
-            status_label: status_label.into(),
-            display_only: true,
-        }
+pub fn status_report() -> String {
+    let mut lines = vec![
+        "rox-anchor status labels".to_string(),
+        format!(
+            "finality_candidate_label: {}",
+            label_for_lifecycle_state(AnchorLifecycleState::FinalityEligible)
+        ),
+        "safe_labels:".to_string(),
+    ];
+
+    for label in SAFE_STATUS_LABELS {
+        lines.push(format!("  - {label}"));
     }
 
-    pub fn is_finality_claim(&self) -> bool {
-        false
-    }
-
-    pub fn is_runtime_authorized(&self) -> bool {
-        false
-    }
-
-    pub fn is_user_facing_bridge_claim(&self) -> bool {
-        false
-    }
+    lines.join("\n")
 }

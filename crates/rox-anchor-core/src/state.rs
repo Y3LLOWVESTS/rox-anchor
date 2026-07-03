@@ -1,64 +1,76 @@
-// RO:WHAT — State labels for the disabled rox-anchor-core skeleton.
-// RO:WHY — Provides conservative state names from the Phase 2 design without implementing a proof engine.
-// RO:INTERACTS — types, labels, and Phase 2 state/proof design docs.
-// RO:INVARIANTS — State labels are evidence posture only and do not authorize runtime.
-// RO:SECURITY — No client finality, cache finality, RPC finality, coordinator finality, relayer finality, or settlement behavior.
-// RO:TEST — Static checker only at this phase.
-//
-// ROX-ANCHOR:FUTURE-GATED-CONTEXT
-//
-// This disabled skeleton does not authorize runtime.
+//! RO:WHAT — Shared lifecycle states and blocker classification for ROX Anchor.
+//! RO:WHY — Gives proof, CLI, local services, and the future program one state vocabulary.
+//! RO:INTERACTS — labels, proof validation, coordinator decisions, relayer dry-run, and Anchor state.
+//! RO:INVARIANTS — unsafe challenge/halt/recovery/evidence states block acceptance/finalization.
+//! RO:SECURITY — state classification only; does not authorize value movement.
+//! RO:TEST — covered by rox-anchor-core lifecycle tests.
 
-/// Conservative evidence-state labels.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum AnchorState {
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum AnchorLifecycleState {
     Draft,
     Requested,
     Observed,
     ProofPackaged,
-    EvidenceInsufficient,
+    EvidenceIncomplete,
     QuorumDisputed,
     ChallengeOpen,
-    Challenged,
-    ChallengeRejected,
     ChallengeAccepted,
-    Expired,
-    FinalityEligible,
-    FinalizedByDecisionGate,
-    Failed,
-    RecoveryQueued,
-    Recovered,
+    ChallengeRejected,
     HaltRequested,
     Halted,
-    ResumeEligible,
+    RecoveryRequired,
+    RecoveryInReview,
+    RecoveryResolved,
+    FinalityEligible,
+    Finalized,
+    Failed,
     Abandoned,
 }
 
-/// Failure-closed posture classification for review.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum FailureClosedPosture {
-    ContinueReview,
-    Blocked,
-    Halted,
-    Abandoned,
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum ReviewBlocker {
+    None,
+    Evidence,
+    Challenge,
+    Halt,
+    Recovery,
+    Rejected,
+    Terminal,
 }
 
-impl AnchorState {
-    pub fn posture(self) -> FailureClosedPosture {
+impl AnchorLifecycleState {
+    pub fn blocker(self) -> ReviewBlocker {
         match self {
-            Self::EvidenceInsufficient
-            | Self::QuorumDisputed
-            | Self::ChallengeAccepted
-            | Self::Expired
-            | Self::Failed
-            | Self::RecoveryQueued => FailureClosedPosture::Blocked,
-            Self::HaltRequested | Self::Halted => FailureClosedPosture::Halted,
-            Self::Abandoned => FailureClosedPosture::Abandoned,
-            _ => FailureClosedPosture::ContinueReview,
+            Self::Draft
+            | Self::Requested
+            | Self::Observed
+            | Self::ProofPackaged
+            | Self::FinalityEligible => ReviewBlocker::None,
+            Self::EvidenceIncomplete | Self::QuorumDisputed => ReviewBlocker::Evidence,
+            Self::ChallengeOpen | Self::ChallengeAccepted => ReviewBlocker::Challenge,
+            Self::HaltRequested | Self::Halted => ReviewBlocker::Halt,
+            Self::RecoveryRequired | Self::RecoveryInReview => ReviewBlocker::Recovery,
+            Self::ChallengeRejected | Self::Failed => ReviewBlocker::Rejected,
+            Self::RecoveryResolved | Self::Finalized | Self::Abandoned => ReviewBlocker::Terminal,
         }
     }
 
-    pub fn is_finality_claim(self) -> bool {
-        false
+    pub fn blocks_acceptance(self) -> bool {
+        !matches!(self.blocker(), ReviewBlocker::None)
+    }
+
+    pub fn blocks_finalization(self) -> bool {
+        !matches!(self, Self::FinalityEligible)
+    }
+
+    pub fn is_terminal(self) -> bool {
+        matches!(
+            self,
+            Self::ChallengeRejected
+                | Self::RecoveryResolved
+                | Self::Finalized
+                | Self::Failed
+                | Self::Abandoned
+        )
     }
 }
