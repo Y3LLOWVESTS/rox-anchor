@@ -66,4 +66,12 @@ pub mod rox_anchor {
     pub fn finalize(ctx: Context<Finalize>) -> Result<()> {
         instructions::finalize::handler(ctx)
     }
+
+    pub fn finalize_roc_to_rox(ctx: Context<Finalize>) -> Result<()> {
+        instructions::finalize::handler_roc_to_rox(ctx)
+    }
+
+    pub fn finalize_rox_to_roc(ctx: Context<Finalize>) -> Result<()> {
+        instructions::finalize::handler_rox_to_roc(ctx)
+    }
 }

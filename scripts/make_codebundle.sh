@@ -4,8 +4,8 @@ set -euo pipefail
 # RO:WHAT — Generate a repo-wide ROX Anchor text/codebundle review artifact.
 # RO:WHY — One-file share/review artifact for docs, scripts, scaffold, and future placeholders without running builds.
 # RO:OUTPUT — Default: ./CODEBUNDLE.md, or the second argument.
-# RO:INVARIANTS — stable sort; no secrets; no target/node_modules/build outputs; source of truth remains repo files.
-# RO:SECURITY — skips secret/key-shaped files and local generated artifacts; does not run cargo/npm/Anchor/Solana/deploy commands.
+# RO:INVARIANTS — stable sort; respects gitignore; no secrets; no local Solana keypairs; source of truth remains repo files.
+# RO:SECURITY — skips secret/key-shaped files, ignored local files, keypair-shaped JSON, and generated artifacts.
 # RO:TEST — bash -n scripts/make_codebundle.sh && bash scripts/make_codebundle.sh . CODEBUNDLE.md.
 
 ROOT="${1:-.}"
@@ -13,66 +13,36 @@ OUT="${2:-CODEBUNDLE.md}"
 
 cd "$ROOT"
 
-EXCLUDE_SEGMENTS=(
-  "/.git/"
-  "/target/"
-  "/node_modules/"
-  "/dist/"
-  "/build/"
-  "/coverage/"
-  "/.cache/"
-  "/.turbo/"
-  "/.anchor/"
-  "/test-ledger/"
-  "/.idea/"
-  "/.vscode/"
-)
-
-EXCLUDE_NAMES=(
-  ".DS_Store"
-  "CODEBUNDLE.md"
-  "CODEBUNDLE_RS.md"
-)
-
-SENSITIVE_PATTERNS=(
-  ".env"
-  ".env.*"
-  "*.pem"
-  "*.key"
-  "*.p12"
-  "*.pfx"
-  "id.json"
-  "keypair.json"
-  "wallet.json"
-  "payer.json"
-  "authority.json"
-  "mint-authority.json"
-  "upgrade-authority.json"
-  "program-authority.json"
-  "deploy-authority.json"
-  "admin.json"
-  "owner.json"
-  "validator-keypair.json"
-  "faucet-keypair.json"
-)
+anchor_id() {
+  echo "$1" \
+    | tr '[:upper:]' '[:lower:]' \
+    | sed -E 's/[^a-z0-9 _.-]+//g; s/[[:space:]]+/-/g; s/-+/-/g; s/^-//; s/-$//'
+}
 
 is_excluded_path() {
   local p="$1"
-  local seg
-  for seg in "${EXCLUDE_SEGMENTS[@]}"; do
-    if [[ "$p" == *"$seg"* ]]; then
-      return 0
-    fi
-  done
-
   local base
   base="$(basename "$p")"
-  local name
-  for name in "${EXCLUDE_NAMES[@]}"; do
-    if [[ "$base" == "$name" ]]; then
-      return 0
-    fi
-  done
+
+  case "$p" in
+    .git/*|*/.git/*) return 0 ;;
+    target/*|*/target/*) return 0 ;;
+    node_modules/*|*/node_modules/*) return 0 ;;
+    dist/*|*/dist/*|build/*|*/build/*|coverage/*|*/coverage/*) return 0 ;;
+    .cache/*|*/.cache/*|.turbo/*|*/.turbo/*) return 0 ;;
+    .anchor/*|*/.anchor/*|.anchor-cache/*|*/.anchor-cache/*|.anchor-test/*|*/.anchor-test/*) return 0 ;;
+    test-ledger/*|*/test-ledger/*|ledger/*|*/ledger/*|local-ledger/*|*/local-ledger/*|validator-ledger/*|*/validator-ledger/*) return 0 ;;
+    .idea/*|*/.idea/*|.vscode/*|*/.vscode/*) return 0 ;;
+    .solana/*|*/.solana/*|solana/*|*/solana/*|.config/solana/*|*/.config/solana/*) return 0 ;;
+    secrets/*|*/secrets/*|private/*|*/private/*|credentials/*|*/credentials/*|tokens/*|*/tokens/*|auth/*|*/auth/*) return 0 ;;
+    api-keys/*|*/api-keys/*|apikeys/*|*/apikeys/*|keys/*|*/keys/*|keypairs/*|*/keypairs/*|wallets/*|*/wallets/*) return 0 ;;
+    mnemonics/*|*/mnemonics/*|seeds/*|*/seeds/*|seed/*|*/seed/*|recovery/*|*/recovery/*|keystore/*|*/keystore/*|key-store/*|*/key-store/*|key_store/*|*/key_store/*) return 0 ;;
+  esac
+
+  case "$base" in
+    CODEBUNDLE.md|CODEBUNDLE_RS.md|CODEBUNDLE_TAURI_APP.md) return 0 ;;
+    .DS_Store|Thumbs.db|Desktop.ini) return 0 ;;
+  esac
 
   return 1
 }
@@ -82,158 +52,123 @@ is_sensitive_path() {
   local base
   base="$(basename "$p")"
 
-  local pat
-  for pat in "${SENSITIVE_PATTERNS[@]}"; do
-    case "$base" in
-      $pat) return 0 ;;
-    esac
-  done
+  case "$base" in
+    .env|.env.*|*.env|*.env.local|*.env.*.local|.envrc|.envrc.local) return 0 ;;
+    .netrc|.npmrc|.pnpmrc|.yarnrc) return 0 ;;
+    *.pem|*.key|*.p12|*.pfx|*.crt|*.csr) return 0 ;;
+    *.secret|*.token|*.apikey|*.api-key|*.credentials|*.creds|*.passwd|*.password) return 0 ;;
+    *.mnemonic|*.seed|*.seed.json|*.recovery|*.recovery-phrase|*.priv|*.private|*.private.json|*.auth|*.session|*.cookie|*.cookies) return 0 ;;
+    id.json|keypair.json|wallet.json|payer.json|authority.json|mint-authority.json|upgrade-authority.json|program-authority.json|deploy-authority.json|admin.json|owner.json) return 0 ;;
+    validator-keypair.json|faucet-keypair.json|*-keypair.json|*.keypair.json|*.wallet.json|*.authority.json) return 0 ;;
+    *-wallet.json|*-payer.json|*-authority.json|*-mint-authority.json|*-upgrade-authority.json|*-program-authority.json|*-program-keypair.json) return 0 ;;
+    local-wallet*.json|local-payer*.json|local-authority*.json|local-keypair*.json|dev-wallet*.json|dev-payer*.json|dev-authority*.json|dev-keypair*.json) return 0 ;;
+    rpc-url.txt|rpc-url.local|provider-url.txt|provider-url.local|alchemy*.txt|quicknode*.txt|helius*.txt|triton*.txt|ankr*.txt|infura*.txt) return 0 ;;
+  esac
 
   case "$p" in
-    */secrets/*|*/private/*|*/credentials/*|*/tokens/*|*/auth/*|*/target/deploy/*.json|*/programs/*/target/deploy/*.json)
-      return 0
-      ;;
+    */target/deploy/*.json|*/programs/*/target/deploy/*.json) return 0 ;;
   esac
 
   return 1
 }
 
+is_solana_keypair_json() {
+  local f="$1"
+  [ -f "$f" ] || return 1
+
+  # Solana keypairs are commonly JSON arrays of 64 u8 integers.
+  local compact
+  compact="$(tr -d '[:space:]' < "$f" | head -c 4096 || true)"
+  printf '%s' "$compact" | grep -Eq '^\[[0-9]{1,3}(,[0-9]{1,3}){63}\]$'
+}
+
 is_text_or_empty() {
   local f="$1"
-  if [ ! -s "$f" ]; then
-    return 0
-  fi
-
+  [ ! -s "$f" ] && return 0
   grep -Iq . "$f"
 }
 
-anchor() {
-  echo "$1" \
-    | tr '[:upper:]' '[:lower:]' \
-    | sed -E 's/[^a-z0-9 _-]+//g; s/[[:space:]]+/-/g; s/-+/-/g'
-}
+FILES="$(mktemp)"
+SKIPPED="$(mktemp)"
+trap 'rm -f "$FILES" "$SKIPPED"' EXIT
 
-fence_lang() {
-  case "$1" in
-    *.rs) echo "rust" ;;
-    *.sh) echo "bash" ;;
-    *.md|*.MD) echo "markdown" ;;
-    *.toml) echo "toml" ;;
-    *.json) echo "json" ;;
-    *.ts|*.tsx) echo "typescript" ;;
-    *.js|*.jsx) echo "javascript" ;;
-    *.yml|*.yaml) echo "yaml" ;;
-    *.gitignore|.gitignore|*.gitattributes|.gitattributes) echo "text" ;;
-    *) echo "text" ;;
-  esac
-}
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git ls-files -co --exclude-standard | LC_ALL=C sort > "$FILES.raw"
+else
+  find . -type f | sed 's#^\./##' | LC_ALL=C sort > "$FILES.raw"
+fi
 
-FILES_NUL="$(mktemp)"
-FILES_SORTED_LF="$(mktemp)"
-TREE_TMP="$(mktemp)"
-SKIPPED_TMP="$(mktemp)"
-trap 'rm -f "$FILES_NUL" "$FILES_SORTED_LF" "$TREE_TMP" "$SKIPPED_TMP"' EXIT
+: > "$FILES"
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
 
-while IFS= read -r -d '' f; do
-  [[ "$f" != ./* ]] && f="./$f"
-
-  if is_excluded_path "$f"; then
+  if is_excluded_path "$f" || is_sensitive_path "$f"; then
+    echo "$f" >> "$SKIPPED"
     continue
   fi
 
-  if is_sensitive_path "$f"; then
-    printf '%s\n' "${f#./}" >> "$SKIPPED_TMP"
+  if ! is_text_or_empty "$f"; then
+    echo "$f" >> "$SKIPPED"
     continue
   fi
 
-  if is_text_or_empty "$f"; then
-    printf '%s\0' "$f" >> "$FILES_NUL"
-  else
-    printf '%s\n' "${f#./} (binary skipped)" >> "$SKIPPED_TMP"
+  if is_solana_keypair_json "$f"; then
+    echo "$f" >> "$SKIPPED"
+    continue
   fi
-done < <(find . -type f -print0)
 
-tr '\0' '\n' < "$FILES_NUL" | LC_ALL=C sort > "$FILES_SORTED_LF"
-
-FILE_COUNT="$(wc -l < "$FILES_SORTED_LF" | tr -d ' ')"
-
-{
-  echo "./"
-  awk '
-    function indent(n){ s=""; for(i=0;i<n;i++) s=s"  "; return s }
-    {
-      p=$0
-      sub(/^\.\//, "", p)
-      n=split(p, parts, "/")
-      cur=""
-      for(i=1;i<=n;i++){
-        cur = (cur=="" ? parts[i] : cur"/"parts[i])
-        if(!seen[cur]++){
-          depth=i
-          if(i<n){ print indent(depth) parts[i] "/" }
-          else   { print indent(depth) parts[i] }
-        }
-      }
-    }
-  ' "$FILES_SORTED_LF"
-} > "$TREE_TMP"
-
-NOW="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo "nogit")"
-GIT_DIRTY=""
-if git diff --quiet 2>/dev/null; then :; else GIT_DIRTY=" (dirty)"; fi
+  echo "$f" >> "$FILES"
+done < "$FILES.raw"
+rm -f "$FILES.raw"
 
 {
-  echo "<!-- Generated by scripts/make_codebundle.sh on ${NOW} -->"
+  echo "<!-- Generated by scripts/make_codebundle.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ) -->"
   echo "# Code Bundle — ROX Anchor"
   echo
   echo "> Generated for review/sharing. Source of truth remains the repo."
-  echo "> Includes text files and empty placeholders. Excludes secrets, local metadata, build outputs, dependency folders, and generated codebundles."
+  echo "> Includes tracked/unignored text files and empty placeholders."
+  echo "> Excludes secrets, ignored local metadata, build outputs, dependency folders, local Solana keys, and generated codebundles."
   echo "> This artifact is not runtime authorization."
   echo
   echo "- Root: \`$(pwd)\`"
-  echo "- Git: \`${GIT_SHA}${GIT_DIRTY}\`"
-  echo "- Files: \`${FILE_COUNT}\`"
+  if git rev-parse --short HEAD >/dev/null 2>&1; then
+    echo "- Git: \`$(git rev-parse --short HEAD)$(git diff --quiet || echo ' (dirty)')\`"
+  fi
+  echo "- Files: \`$(wc -l < "$FILES" | tr -d ' ')\`"
   echo
   echo "## Non-Authorization Notice"
   echo
   echo "This codebundle does not authorize ROX runtime, Solana runtime, bridge runtime, staking, liquidity, exchange-facing logic, or external settlement."
   echo
-  echo "## File Tree"
+  echo "## File List"
+  echo
   echo '```text'
-  cat "$TREE_TMP"
+  cat "$FILES"
   echo '```'
   echo
   echo "## Skipped Files"
-  if [ -s "$SKIPPED_TMP" ]; then
+  echo
+  if [ -s "$SKIPPED" ]; then
     echo '```text'
-    LC_ALL=C sort "$SKIPPED_TMP"
+    cat "$SKIPPED"
     echo '```'
   else
-    echo
     echo "None."
   fi
   echo
   echo "## Table of Contents"
   while IFS= read -r f; do
-    rel="${f#./}"
-    a="$(anchor "$rel")"
-    echo "- [$rel](#${a})"
-  done < "$FILES_SORTED_LF"
+    echo "- [$f](#$(anchor_id "$f"))"
+  done < "$FILES"
   echo
 
   while IFS= read -r f; do
-    rel="${f#./}"
-    a="$(anchor "$rel")"
-    lang="$(fence_lang "$rel")"
-
     echo "---"
     echo
-    echo "## $rel"
+    echo "## $f"
     echo
-    echo "<a id=\"${a}\"></a>"
+    echo "<a id=\"$(anchor_id "$f")\"></a>"
     echo
-
     if [ ! -s "$f" ]; then
       echo '```text'
       echo "(empty placeholder file)"
@@ -242,12 +177,44 @@ if git diff --quiet 2>/dev/null; then :; else GIT_DIRTY=" (dirty)"; fi
       continue
     fi
 
-    echo "\`\`\`${lang}"
+    case "$f" in
+      *.rs) lang="rust" ;;
+      *.toml) lang="toml" ;;
+      *.md|*.MD) lang="markdown" ;;
+      *.sh) lang="bash" ;;
+      *.json) lang="json" ;;
+      *.yml|*.yaml) lang="yaml" ;;
+      *) lang="text" ;;
+    esac
+
+    echo "\`\`\`$lang"
     cat "$f"
     echo
     echo '```'
     echo
-  done < "$FILES_SORTED_LF"
+  done < "$FILES"
 } > "$OUT"
 
-echo "Wrote $OUT"
+echo "== Secret failsafe scan on generated bundle =="
+
+# Reject actual included .solana files, not harmless .gitignore rules or
+# Anchor.toml provider wallet path strings.
+if grep -nE '^## \.solana/|^- \[\.solana/' "$OUT"; then
+  echo "ERROR: generated codebundle includes a .solana file section or TOC entry."
+  exit 1
+fi
+
+# Reject PEM/private-key material.
+if grep -nE 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY' "$OUT"; then
+  echo "ERROR: generated codebundle contains private key material."
+  exit 1
+fi
+
+# Solana keypairs are commonly JSON arrays of exactly 64 u8 integers. This
+# catches dangerous key content while allowing harmless path strings.
+if tr -d '[:space:]' < "$OUT" | grep -Eq '\[[0-9]{1,3}(,[0-9]{1,3}){63}\]'; then
+  echo "ERROR: generated codebundle appears to contain a Solana 64-byte keypair array."
+  exit 1
+fi
+
+echo "Wrote safe codebundle: $OUT"
