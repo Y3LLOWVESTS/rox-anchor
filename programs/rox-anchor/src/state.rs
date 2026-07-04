@@ -993,7 +993,125 @@ impl AnchorTokenSettlementExecutionReceipt {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Eq, PartialEq)]
+pub struct AnchorTokenCpiExecutionReceipt {
+    pub operation_id_hash: [u8; 32],
+    pub execution_kind: u8,
+    pub direction: u8,
+    pub mint: Pubkey,
+    pub token_account: Pubkey,
+    pub token_account_owner: Pubkey,
+    pub amount_atoms: u64,
+    pub pre_token_account_amount_atoms: u64,
+    pub post_token_account_amount_atoms: u64,
+    pub mint_authority: Pubkey,
+    pub mint_authority_bump: u8,
+    pub used_mint_authority_pda: bool,
+    pub token_mint_cpi_executed: bool,
+    pub token_burn_cpi_executed: bool,
+    pub internal_roc_release_executed: bool,
+    pub live_value_moved: bool,
+}
+
+impl AnchorTokenCpiExecutionReceipt {
+    pub fn from_readiness_and_amounts(
+        readiness: &AnchorTokenCpiReadiness,
+        pre_token_account_amount_atoms: u64,
+        post_token_account_amount_atoms: u64,
+    ) -> Result<Self> {
+        require!(
+            readiness.is_ready_for_local_token_mint_cpi(),
+            crate::RoxAnchorError::InvalidStateTransition
+        );
+
+        let expected_post_amount = pre_token_account_amount_atoms
+            .checked_add(readiness.amount_atoms)
+            .ok_or(error!(crate::RoxAnchorError::AmountBindingMismatch))?;
+
+        require!(
+            post_token_account_amount_atoms == expected_post_amount,
+            crate::RoxAnchorError::AmountBindingMismatch
+        );
+
+        Ok(Self {
+            operation_id_hash: readiness.operation_id_hash,
+            execution_kind: readiness.execution_kind,
+            direction: readiness.direction,
+            mint: readiness.mint,
+            token_account: readiness.token_account,
+            token_account_owner: readiness.token_account_owner,
+            amount_atoms: readiness.amount_atoms,
+            pre_token_account_amount_atoms,
+            post_token_account_amount_atoms,
+            mint_authority: readiness.mint_authority,
+            mint_authority_bump: readiness.mint_authority_bump,
+            used_mint_authority_pda: readiness.uses_mint_authority_pda,
+            token_mint_cpi_executed: true,
+            token_burn_cpi_executed: false,
+            internal_roc_release_executed: false,
+            live_value_moved: true,
+        })
+    }
+
+    pub fn from_rox_burn_readiness_and_amounts(
+        readiness: &AnchorTokenCpiReadiness,
+        pre_token_account_amount_atoms: u64,
+        post_token_account_amount_atoms: u64,
+    ) -> Result<Self> {
+        require!(
+            readiness.is_ready_for_local_rox_burn_cpi(),
+            crate::RoxAnchorError::InvalidStateTransition
+        );
+
+        let expected_post_amount = pre_token_account_amount_atoms
+            .checked_sub(readiness.amount_atoms)
+            .ok_or(error!(crate::RoxAnchorError::AmountBindingMismatch))?;
+
+        require!(
+            post_token_account_amount_atoms == expected_post_amount,
+            crate::RoxAnchorError::AmountBindingMismatch
+        );
+
+        Ok(Self {
+            operation_id_hash: readiness.operation_id_hash,
+            execution_kind: readiness.execution_kind,
+            direction: readiness.direction,
+            mint: readiness.mint,
+            token_account: readiness.token_account,
+            token_account_owner: readiness.token_account_owner,
+            amount_atoms: readiness.amount_atoms,
+            pre_token_account_amount_atoms,
+            post_token_account_amount_atoms,
+            mint_authority: readiness.mint_authority,
+            mint_authority_bump: readiness.mint_authority_bump,
+            used_mint_authority_pda: readiness.uses_mint_authority_pda,
+            token_mint_cpi_executed: false,
+            token_burn_cpi_executed: true,
+            internal_roc_release_executed: false,
+            live_value_moved: true,
+        })
+    }
+
+    pub fn is_live_roc_to_rox_mint_receipt(&self) -> bool {
+        self.execution_kind == AnchorTokenSettlementExecutionKind::MintRoxToTokenAccount.as_u8()
+            && self.token_mint_cpi_executed
+            && !self.token_burn_cpi_executed
+            && !self.internal_roc_release_executed
+            && self.live_value_moved
+    }
+
+    pub fn is_live_rox_to_roc_burn_receipt(&self) -> bool {
+        self.execution_kind
+            == AnchorTokenSettlementExecutionKind::VerifyRoxBurnForInternalRocRelease.as_u8()
+            && !self.token_mint_cpi_executed
+            && self.token_burn_cpi_executed
+            && !self.internal_roc_release_executed
+            && self.live_value_moved
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AnchorTokenCpiReadiness {
+    pub operation_id_hash: [u8; 32],
     pub execution_kind: u8,
     pub direction: u8,
     pub mint: Pubkey,
@@ -1091,6 +1209,7 @@ impl AnchorTokenCpiReadiness {
         }
 
         Ok(Self {
+            operation_id_hash: receipt.operation_id_hash,
             execution_kind: receipt.execution_kind,
             direction: receipt.direction,
             mint: receipt.mint,
@@ -1120,6 +1239,14 @@ impl AnchorTokenCpiReadiness {
     }
 
     pub fn is_ready_for_internal_roc_release_review(&self) -> bool {
+        self.requires_anchor_spl
+            && self.uses_mint_authority_pda
+            && !self.requires_token_mint_cpi
+            && self.requires_internal_roc_release
+            && !self.live_value_moved
+    }
+
+    pub fn is_ready_for_local_rox_burn_cpi(&self) -> bool {
         self.requires_anchor_spl
             && self.uses_mint_authority_pda
             && !self.requires_token_mint_cpi
@@ -3955,6 +4082,151 @@ mod tests {
         assert!(!readiness.live_value_moved);
         assert!(readiness.is_ready_for_local_token_mint_cpi());
         assert!(!readiness.is_ready_for_internal_roc_release_review());
+    }
+
+    #[test]
+    fn token_cpi_execution_receipt_accepts_live_roc_to_rox_mint_delta() {
+        let (program_id, config_key, configured, operation, receipt, event) =
+            finalized_cpi_fixture(AnchorTransferDirection::RocToRox);
+
+        let readiness = AnchorTokenCpiReadiness::from_config_receipt_and_planned_event(
+            &configured,
+            &program_id,
+            &config_key,
+            &receipt,
+            &event,
+        )
+        .unwrap();
+        let pre_amount = 11;
+        let post_amount = pre_amount + readiness.amount_atoms;
+
+        let executed_receipt = AnchorTokenCpiExecutionReceipt::from_readiness_and_amounts(
+            &readiness,
+            pre_amount,
+            post_amount,
+        )
+        .unwrap();
+
+        assert_eq!(
+            executed_receipt.operation_id_hash,
+            operation.operation_id_hash
+        );
+        assert_eq!(executed_receipt.pre_token_account_amount_atoms, pre_amount);
+        assert_eq!(
+            executed_receipt.post_token_account_amount_atoms,
+            post_amount
+        );
+        assert!(executed_receipt.is_live_roc_to_rox_mint_receipt());
+        assert!(executed_receipt.live_value_moved);
+
+        let executed_event = crate::RoxAnchorTokenSettlementExecuted::from_cpi_receipt(
+            operation.authority,
+            &operation,
+            executed_receipt,
+        )
+        .unwrap();
+
+        assert_eq!(executed_event.amount_atoms, readiness.amount_atoms);
+        assert!(executed_event.token_mint_cpi_executed);
+        assert!(!executed_event.token_burn_cpi_executed);
+        assert!(!executed_event.internal_roc_release_executed);
+        assert!(executed_event.live_value_moved);
+    }
+
+    #[test]
+    fn token_cpi_execution_receipt_accepts_live_rox_to_roc_burn_delta() {
+        let (program_id, config_key, configured, operation, receipt, event) =
+            finalized_cpi_fixture(AnchorTransferDirection::RoxToRoc);
+
+        let readiness = AnchorTokenCpiReadiness::from_config_receipt_and_planned_event(
+            &configured,
+            &program_id,
+            &config_key,
+            &receipt,
+            &event,
+        )
+        .unwrap();
+        let pre_amount = readiness.amount_atoms + 11;
+        let post_amount = pre_amount - readiness.amount_atoms;
+
+        assert!(readiness.is_ready_for_internal_roc_release_review());
+        assert!(readiness.is_ready_for_local_rox_burn_cpi());
+
+        let executed_receipt = AnchorTokenCpiExecutionReceipt::from_rox_burn_readiness_and_amounts(
+            &readiness,
+            pre_amount,
+            post_amount,
+        )
+        .unwrap();
+
+        assert_eq!(
+            executed_receipt.operation_id_hash,
+            operation.operation_id_hash
+        );
+        assert_eq!(executed_receipt.pre_token_account_amount_atoms, pre_amount);
+        assert_eq!(
+            executed_receipt.post_token_account_amount_atoms,
+            post_amount
+        );
+        assert!(!executed_receipt.token_mint_cpi_executed);
+        assert!(executed_receipt.token_burn_cpi_executed);
+        assert!(!executed_receipt.internal_roc_release_executed);
+        assert!(executed_receipt.is_live_rox_to_roc_burn_receipt());
+        assert!(executed_receipt.live_value_moved);
+
+        let executed_event = crate::RoxAnchorTokenSettlementExecuted::from_cpi_receipt(
+            operation.authority,
+            &operation,
+            executed_receipt,
+        )
+        .unwrap();
+
+        assert_eq!(executed_event.amount_atoms, readiness.amount_atoms);
+        assert!(!executed_event.token_mint_cpi_executed);
+        assert!(executed_event.token_burn_cpi_executed);
+        assert!(!executed_event.internal_roc_release_executed);
+        assert!(executed_event.live_value_moved);
+    }
+
+    #[test]
+    fn token_cpi_execution_receipt_rejects_wrong_delta_or_release_path() {
+        let (program_id, config_key, configured, _operation, receipt, event) =
+            finalized_cpi_fixture(AnchorTransferDirection::RocToRox);
+
+        let readiness = AnchorTokenCpiReadiness::from_config_receipt_and_planned_event(
+            &configured,
+            &program_id,
+            &config_key,
+            &receipt,
+            &event,
+        )
+        .unwrap();
+
+        assert!(AnchorTokenCpiExecutionReceipt::from_readiness_and_amounts(
+            &readiness,
+            11,
+            11 + readiness.amount_atoms - 1,
+        )
+        .is_err());
+
+        let (program_id, config_key, configured, _operation, receipt, event) =
+            finalized_cpi_fixture(AnchorTransferDirection::RoxToRoc);
+
+        let release_readiness = AnchorTokenCpiReadiness::from_config_receipt_and_planned_event(
+            &configured,
+            &program_id,
+            &config_key,
+            &receipt,
+            &event,
+        )
+        .unwrap();
+
+        assert!(AnchorTokenCpiExecutionReceipt::from_readiness_and_amounts(
+            &release_readiness,
+            11,
+            11 + release_readiness.amount_atoms,
+        )
+        .is_err());
     }
 
     #[test]

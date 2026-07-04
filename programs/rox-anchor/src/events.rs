@@ -8,8 +8,8 @@
 use anchor_lang::prelude::*;
 
 use crate::state::{
-    AnchorFinalizePlan, AnchorTokenSettlementExecutionReceipt, OperationStateCode,
-    RoxAnchorOperation,
+    AnchorFinalizePlan, AnchorTokenCpiExecutionReceipt, AnchorTokenSettlementExecutionReceipt,
+    OperationStateCode, RoxAnchorOperation,
 };
 
 #[event]
@@ -83,6 +83,96 @@ pub struct RoxAnchorTokenSettlementPlanned {
     pub token_mint_cpi_planned: bool,
     pub internal_roc_release_planned: bool,
     pub live_value_moved: bool,
+}
+
+#[event]
+pub struct RoxAnchorTokenSettlementExecuted {
+    pub authority: Pubkey,
+    pub operation_id_hash: [u8; 32],
+    pub execution_kind: u8,
+    pub direction: u8,
+    pub mint: Pubkey,
+    pub token_account: Pubkey,
+    pub token_account_owner: Pubkey,
+    pub amount_atoms: u64,
+    pub pre_token_account_amount_atoms: u64,
+    pub post_token_account_amount_atoms: u64,
+    pub mint_authority: Pubkey,
+    pub mint_authority_bump: u8,
+    pub used_mint_authority_pda: bool,
+    pub token_mint_cpi_executed: bool,
+    pub token_burn_cpi_executed: bool,
+    pub internal_roc_release_executed: bool,
+    pub live_value_moved: bool,
+}
+
+impl RoxAnchorTokenSettlementExecuted {
+    pub fn from_cpi_receipt(
+        authority: Pubkey,
+        operation: &RoxAnchorOperation,
+        receipt: AnchorTokenCpiExecutionReceipt,
+    ) -> Result<Self> {
+        require!(
+            operation.state_code() == Some(OperationStateCode::Finalized),
+            crate::RoxAnchorError::InvalidStateTransition
+        );
+        require!(
+            operation.authority == authority,
+            crate::RoxAnchorError::AuthorityMismatch
+        );
+        require!(
+            receipt.operation_id_hash == operation.operation_id_hash,
+            crate::RoxAnchorError::OperationBindingMismatch
+        );
+        require!(
+            receipt.direction == operation.direction,
+            crate::RoxAnchorError::DirectionBindingMismatch
+        );
+        require!(
+            receipt.mint == operation.mint,
+            crate::RoxAnchorError::MintBindingMismatch
+        );
+        require!(
+            receipt.token_account == operation.token_account,
+            crate::RoxAnchorError::TokenAccountBindingMismatch
+        );
+        require!(
+            receipt.amount_atoms == operation.amount_atoms,
+            crate::RoxAnchorError::AmountBindingMismatch
+        );
+        require!(
+            receipt.used_mint_authority_pda,
+            crate::RoxAnchorError::MintAuthorityMismatch
+        );
+        require!(
+            receipt.token_account_owner != Pubkey::default(),
+            crate::RoxAnchorError::InvalidBinding
+        );
+        require!(
+            receipt.is_live_roc_to_rox_mint_receipt() || receipt.is_live_rox_to_roc_burn_receipt(),
+            crate::RoxAnchorError::InvalidStateTransition
+        );
+
+        Ok(Self {
+            authority,
+            operation_id_hash: receipt.operation_id_hash,
+            execution_kind: receipt.execution_kind,
+            direction: receipt.direction,
+            mint: receipt.mint,
+            token_account: receipt.token_account,
+            token_account_owner: receipt.token_account_owner,
+            amount_atoms: receipt.amount_atoms,
+            pre_token_account_amount_atoms: receipt.pre_token_account_amount_atoms,
+            post_token_account_amount_atoms: receipt.post_token_account_amount_atoms,
+            mint_authority: receipt.mint_authority,
+            mint_authority_bump: receipt.mint_authority_bump,
+            used_mint_authority_pda: receipt.used_mint_authority_pda,
+            token_mint_cpi_executed: receipt.token_mint_cpi_executed,
+            token_burn_cpi_executed: receipt.token_burn_cpi_executed,
+            internal_roc_release_executed: receipt.internal_roc_release_executed,
+            live_value_moved: receipt.live_value_moved,
+        })
+    }
 }
 
 impl RoxAnchorTokenSettlementPlanned {

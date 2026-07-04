@@ -21,3 +21,6 @@ rox-anchor-rpc-proof = { path = "../rox-anchor-rpc-proof" }
 
 [features]
 default = []
+
+[dev-dependencies]
+rox-anchor-relayer = { path = "../rox-anchor-relayer" }

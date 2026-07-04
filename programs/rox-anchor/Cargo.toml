@@ -13,13 +13,19 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
+# Anchor build-sbf currently routes through Cargo 1.79, which cannot parse
+# zeroize_derive 1.5.0's edition-2024 manifest. Keep this exact pin until
+# the Anchor/Solana build toolchain is upgraded.
+zeroize_derive = "=1.4.2"
 rox-anchor-core = { path = "../../crates/rox-anchor-core" }
 
 [features]
-idl-build = ["anchor-lang/idl-build"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 default = []
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 anchor-program = []
+

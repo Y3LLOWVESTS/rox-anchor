@@ -25,6 +25,8 @@ pub use state::*;
 // crate root. Because account contexts live in instruction submodules, re-export
 // those generated modules here while keeping the one-file-per-instruction layout.
 pub(crate) use instructions::finalize::__client_accounts_finalize;
+pub(crate) use instructions::finalize::__client_accounts_finalize_roc_to_rox_mint;
+pub(crate) use instructions::finalize::__client_accounts_finalize_rox_to_roc_burn;
 pub(crate) use instructions::halt::__client_accounts_halt;
 pub(crate) use instructions::initialize::__client_accounts_initialize;
 pub(crate) use instructions::observe_burn::__client_accounts_observe_burn;
@@ -73,5 +75,12 @@ pub mod rox_anchor {
 
     pub fn finalize_rox_to_roc(ctx: Context<Finalize>) -> Result<()> {
         instructions::finalize::handler_rox_to_roc(ctx)
+    }
+
+    pub fn finalize_roc_to_rox_mint(ctx: Context<FinalizeRocToRoxMint>) -> Result<()> {
+        instructions::finalize::handler_roc_to_rox_mint(ctx)
+    }
+    pub fn finalize_rox_to_roc_burn(ctx: Context<FinalizeRoxToRocBurn>) -> Result<()> {
+        instructions::finalize::handler_rox_to_roc_burn(ctx)
     }
 }

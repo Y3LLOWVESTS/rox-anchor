@@ -6216,3 +6216,1373 @@ These notes are ready to paste into the next session.
 
 
 ### END NOTE - JULY 3 2026 - 19:47 CST
+
+
+### BEGIN NOTE - JULY 3 2026 - 20:35 CST
+
+Below is the comprehensive next-session handoff. This is written so you can paste it directly into the next ROX Anchor session and continue without re-explaining the project.
+
+# ROX Anchor — Comprehensive Carry-Over Notes for Next Session
+
+## 0. Session opener
+
+We are continuing active implementation work on **RustyOnions / CrabLink / ROX Anchor**.
+
+```text
+RustyOnions = backend/substrate/value-plane.
+CrabLink = Tauri-first product/client for crab:// links, b3 assets, RON Passports, internal ROC paid access, creator pages, receipts, and future UX surfaces.
+ROX Anchor = Rust + Solana/Anchor implementation surface for the ROC ↔ ROX anchor path.
+```
+
+Current posture:
+
+```text
+Implementation-first.
+QuickChain-style code/test/check/fix loop.
+Real Rust code + focused tests + compile checks + fixes before expansion.
+No docs-only gate work.
+No placeholder scaffold theater.
+No live bridge runtime.
+No production mint/burn.
+No live wallet calls.
+No live RPC submission.
+No production deployment.
+No staking/liquidity/exchange-facing behavior.
+No fake finality or fake success output.
+```
+
+The latest attached codebundle was generated from `/Users/mymac/Desktop/rox-anchor`, records Git `88c1bc5`, includes `94` files, and explicitly says the codebundle is not runtime authorization and does not authorize ROX runtime, Solana runtime, bridge runtime, staking, liquidity, exchange-facing logic, or external settlement. 
+
+The build plan remains the authority for phase order. It says every phase should write Rust code, run focused compile/tests, fix failures before moving forward, avoid broad planning docs/decision gates, and avoid live deployment, live wallet calls, live RPC submission, or real value movement until local program/tests are compile-green. 
+
+---
+
+## 1. Current phase and completion estimate
+
+Current phase:
+
+```text
+Phase 10 — ROX / ROC Mint-Burn Program Logic
+Current round complete: Phase 10 Round 2X
+Status: COMPLETE / GREEN through local CPI readiness gate
+```
+
+Estimated completion after this session:
+
+```text
+Entire ROX Anchor local implementation: ~77–78%
+Best single-number estimate: 78%
+```
+
+Interpretation:
+
+```text
+We are deep into Phase 10, but not done with Phase 10.
+Phases 0–9 are effectively green.
+Phase 10 is active and significantly advanced.
+Phase 11 integration tests, Phase 12 chaos tests, and Phase 13 final local green run remain.
+Production/live readiness remains intentionally not authorized.
+```
+
+Why it is not higher yet:
+
+```text
+Still missing:
+- anchor-spl dependency and typed SPL token account/mint contexts
+- actual local SPL token CPI path
+- mint_to CPI for ROC→ROX
+- burn/verified burn mechanics for ROX→ROC
+- local validator transaction tests proving token behavior
+- cross-crate integration tests
+- chaos tests
+- final local green run
+- production/deployment policy, intentionally deferred
+```
+
+---
+
+## 2. Latest verified terminal state
+
+Latest terminal output confirmed:
+
+```text
+Phase 10 Round 2X patch status: 0
+cargo fmt -p rox-anchor: status 0
+cargo test -p rox-anchor: 88 passed
+cargo check -p rox-anchor: status 0
+cargo check --workspace: status 0
+anchor build: status 0
+anchor test: status 0
+```
+
+Full `anchor test` also confirmed the rest of the workspace suite stayed green:
+
+```text
+rox-anchor: 88 tests passed
+rox-anchor-cli unit: 4 tests passed
+rox-anchor-cli integration check_command: 3 tests passed
+rox-anchor-coordinator: 6 tests passed
+rox-anchor-core: 5 tests passed
+rox-anchor-proof: 5 tests passed
+rox-anchor-relayer: 6 tests passed
+rox-anchor-rpc-proof: 7 tests passed
+doc-tests: all green / zero tests
+```
+
+Current exact green summary:
+
+```text
+cargo test -p rox-anchor: 88 passed
+cargo check -p rox-anchor: green
+cargo check --workspace: green
+anchor build: green
+anchor test: green full suite
+```
+
+---
+
+## 3. Phase status summary
+
+### Phase 0 — Workspace Recovery and Compile Spine
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Accomplished:
+
+```text
+- Root workspace compiles.
+- Workspace includes all six Rust crates and the Anchor program.
+- cargo check --workspace is green.
+- Anchor.toml is present and anchor test delegates to cargo test --workspace.
+```
+
+Current workspace members:
+
+```text
+crates/rox-anchor-core
+crates/rox-anchor-proof
+crates/rox-anchor-cli
+crates/rox-anchor-coordinator
+crates/rox-anchor-relayer
+crates/rox-anchor-rpc-proof
+programs/rox-anchor
+```
+
+The codebundle confirms all six crates, the Anchor program, scripts, unit test placeholders, integration test placeholders, and chaos test placeholders are present. 
+
+---
+
+### Phase 1 — Core Type Foundation
+
+```text
+Status: COMPLETE / GREEN
+```
+
+`rox-anchor-core` owns shared language:
+
+```text
+domains
+operation IDs
+idempotency keys
+nonces
+cluster IDs
+program IDs
+mint IDs
+token account IDs
+directions
+lifecycle states
+challenge posture
+halt posture
+recovery posture
+safe labels
+shared errors
+```
+
+Important invariant:
+
+```text
+Other crates must not invent duplicate state machines, labels, directions, or acceptance rules.
+```
+
+Tests green:
+
+```text
+rox-anchor-core: 5 passed
+```
+
+---
+
+### Phase 2 — Local Proof Engine
+
+```text
+Status: COMPLETE / GREEN
+```
+
+`rox-anchor-proof` owns deterministic local proof review.
+
+Behavior covered:
+
+```text
+valid package accepted
+missing evidence blocks acceptance
+binding mismatches rejected
+replay operation ID rejected
+replay idempotency key rejected
+replay nonce rejected
+challenge posture blocks acceptance
+halt posture blocks acceptance
+recovery posture blocks acceptance
+quorum disagreement / disputed evidence classified
+deterministic finding order
+```
+
+Tests green:
+
+```text
+rox-anchor-proof: 5 passed
+```
+
+---
+
+### Phase 3 — Unit Test Lift
+
+```text
+Status: COMPLETE ENOUGH / GREEN FOR CURRENT SURFACE
+```
+
+Current reality:
+
+```text
+- Active tests are crate-local.
+- Root tests/unit, tests/integration, and tests/chaos exist as future surfaces.
+- Because the workspace root is virtual, root-level test files should not be assumed active until intentionally wired through a harness package or moved into crate-level tests.
+```
+
+The build plan still lists Phase 11 and Phase 12 root integration/chaos files as intended future work. 
+
+---
+
+### Phase 4 — CLI Inspection Tool
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Current behavior:
+
+```text
+cargo run -p rox-anchor-cli -- check
+```
+
+This uses real proof/core behavior, not fake success strings.
+
+CLI tests green:
+
+```text
+rox-anchor-cli unit: 4 passed
+rox-anchor-cli integration check_command: 3 passed
+```
+
+Current CLI fixtures already prove:
+
+```text
+valid fixture prints accepted review
+mismatch fixture prints rejection findings
+halt fixture prints halt-blocked review
+challenge fixture reports blocked status
+replay fixture uses real replay rejection
+unknown command is error
+default command runs check
+```
+
+Future CLI work, later:
+
+```text
+Add JSON input support once integration/chaos surfaces are stable.
+Do not add live wallet/RPC behavior to CLI.
+```
+
+---
+
+### Phase 5 — RPC Proof Local Evidence Model
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Current behavior:
+
+```text
+local RPC observation model
+readiness validation
+commitment classification
+matching observation agreement
+binding mismatch rejection
+stale observation rejection
+too-few matching sources rejection
+conflicting signature / equivocation detection
+redacted report shape
+```
+
+Tests green:
+
+```text
+rox-anchor-rpc-proof: 7 passed
+```
+
+Still local only:
+
+```text
+No live RPC calls.
+No live Solana submission.
+No production evidence fetch.
+```
+
+---
+
+### Phase 6 — Coordinator Local Model
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Current behavior:
+
+```text
+local observer input model
+queue capacity enforcement
+duplicate operation rejection
+stale RPC evidence rejection
+handoff to rpc-proof and proof engine
+accepted observations produce proof review
+redacted report preserves decision shape
+```
+
+Tests green:
+
+```text
+rox-anchor-coordinator: 6 passed
+```
+
+Important invariant:
+
+```text
+Coordinator must keep calling core/proof/rpc-proof behavior.
+It must not invent separate bridge acceptance rules.
+```
+
+---
+
+### Phase 7 — Relayer Local Dry-Run Model
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Current behavior:
+
+```text
+bounded retry policy
+readiness rejects zero limits
+blocked proof review does not submit
+accepted proof review produces dry-run receipt
+redacted receipt report keeps local shape
+idempotency replay rejected
+```
+
+Tests green:
+
+```text
+rox-anchor-relayer: 6 passed
+```
+
+Still dry-run only:
+
+```text
+No live transaction submission.
+No live Solana RPC.
+No production relay.
+No fake live success.
+```
+
+---
+
+### Phase 8 — Anchor Program Compile Foundation
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Current Anchor program files:
+
+```text
+programs/rox-anchor/src/lib.rs
+programs/rox-anchor/src/errors.rs
+programs/rox-anchor/src/events.rs
+programs/rox-anchor/src/state.rs
+programs/rox-anchor/src/instructions/initialize.rs
+programs/rox-anchor/src/instructions/observe_burn.rs
+programs/rox-anchor/src/instructions/open_challenge.rs
+programs/rox-anchor/src/instructions/resolve_challenge.rs
+programs/rox-anchor/src/instructions/halt.rs
+programs/rox-anchor/src/instructions/recover.rs
+programs/rox-anchor/src/instructions/finalize.rs
+```
+
+Current proof:
+
+```text
+cargo check -p rox-anchor: green
+anchor build: green
+anchor test: green
+```
+
+---
+
+### Phase 9 — Anchor Program State Rules
+
+```text
+Status: COMPLETE / GREEN
+```
+
+State rules implemented and tested:
+
+```text
+initialize config
+observe burn / operation binding
+open challenge
+resolve challenge
+halt
+recover
+finalize only when eligible
+reject challenge-open finalization
+reject accepted-challenge finalization
+reject halted finalization
+reject recovery-required finalization
+reject wrong authority
+reject wrong mint/config binding
+reject corrupt direction
+reject zero amount
+reject zero burn evidence hash
+reject finalized operation reopening
+```
+
+Important current state types:
+
+```text
+RoxAnchorConfig
+RoxAnchorOperation
+OperationBindingArgs
+OperationStateCode
+AnchorTransferDirection
+AnchorSettlementAction
+AnchorFinalizePlan
+AnchorTokenSettlementBinding
+AnchorTokenAccountConstraintSnapshot
+AnchorTokenSettlementExecutionPlan
+AnchorTokenSettlementExecutionReceipt
+AnchorTokenCpiReadiness
+```
+
+---
+
+## 4. What we did in this session
+
+This session advanced Phase 10 from local binding/finalization semantics into a much more complete local settlement-readiness chain.
+
+Session started with earlier state around Phase 10 Round 2T and continued through:
+
+```text
+Round 2U — token-settlement execution plan
+Round 2V — execution receipt
+Round 2W — planned settlement event snapshot
+Round 2X — token CPI readiness gate
+```
+
+Everything remained local, deterministic, compile-tested, and non-value-moving.
+
+---
+
+## 5. Round-by-round details from this session
+
+### Phase 10 Round 2U — Token-settlement execution plan
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Added:
+
+```text
+AnchorTokenSettlementExecutionKind
+AnchorTokenSettlementExecutionPlan
+```
+
+Execution kinds:
+
+```text
+MintRoxToTokenAccount
+VerifyRoxBurnForInternalRocRelease
+```
+
+Purpose:
+
+```text
+Create a deterministic local execution-plan layer from:
+- derived config
+- program ID
+- config key
+- token settlement binding
+- finalize plan
+- token account constraint snapshot
+```
+
+Behavior:
+
+```text
+ROC→ROX maps to MintRoxToTokenAccount.
+ROX→ROC maps to VerifyRoxBurnForInternalRocRelease.
+PDA-derived mint authority must be valid.
+Settlement must match config.
+Token account snapshot must match settlement and finalize plan.
+ROX→ROC requires token account amount >= plan amount.
+```
+
+Rejected:
+
+```text
+wrong program ID
+wrong config key
+manual/wrong mint authority
+wrong snapshot mint
+empty token account owner
+short ROX balance
+tampered plan flags
+```
+
+---
+
+### Phase 10 Round 2V — Execution receipt
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Added:
+
+```text
+AnchorTokenSettlementExecutionReceipt
+```
+
+Purpose:
+
+```text
+Create a deterministic local receipt-like snapshot from:
+- finalized operation
+- finalize plan
+- execution plan
+```
+
+Important fields:
+
+```text
+operation_id_hash
+execution_kind
+direction
+mint
+token_account
+token_account_owner
+amount_atoms
+mint_authority
+mint_authority_bump
+used_mint_authority_pda
+token_mint_cpi_planned
+internal_roc_release_planned
+live_value_moved
+```
+
+Important invariant:
+
+```text
+live_value_moved = false
+```
+
+Behavior:
+
+```text
+ROC→ROX receipt records local planned mint path.
+ROX→ROC receipt records local internal ROC release-review path.
+Receipt validates operation/plan/execution consistency.
+Receipt rejects fake or inconsistent direction flags.
+Receipt rejects execution plan tamper.
+Receipt rejects operation/finalize plan mismatch.
+```
+
+---
+
+### Phase 10 Round 2W — Planned settlement event snapshot
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Added:
+
+```text
+RoxAnchorTokenSettlementPlanned
+```
+
+Purpose:
+
+```text
+Create an Anchor event-safe planned-settlement snapshot from:
+- finalized operation
+- execution receipt
+```
+
+Behavior:
+
+```text
+Event records ROC→ROX planned local mint receipt.
+Event records ROX→ROC planned local release receipt.
+Event requires operation already finalized.
+Event requires authority match.
+Event requires operation ID, direction, mint, token account, and amount to match.
+Event requires PDA mint authority posture.
+Event requires non-empty token account owner.
+Event rejects fake live-value movement.
+```
+
+Rejected:
+
+```text
+pre-finalized operation
+receipt token account tamper
+receipt amount tamper
+fake live_value_moved = true
+wrong authority
+missing PDA authority flag
+invalid mint/release flags
+invalid execution kind
+```
+
+Current event posture:
+
+```text
+This is event-safe local planning only.
+It does not emit actual SPL mint/burn CPI yet.
+```
+
+---
+
+### Phase 10 Round 2X — Token CPI readiness gate
+
+```text
+Status: COMPLETE / GREEN
+```
+
+Added:
+
+```text
+AnchorTokenCpiReadiness
+```
+
+Purpose:
+
+```text
+Create a deterministic local readiness gate for a future SPL CPI path.
+```
+
+This checks consistency across:
+
+```text
+RoxAnchorConfig
+program_id
+config_key
+AnchorTokenSettlementExecutionReceipt
+RoxAnchorTokenSettlementPlanned event
+```
+
+Behavior:
+
+```text
+ROC→ROX readiness accepts planned local token mint CPI posture.
+ROX→ROC readiness accepts internal ROC release review posture.
+Readiness requires derived mint authority PDA.
+Readiness requires receipt/event operation binding match.
+Readiness requires receipt/event direction match.
+Readiness requires receipt/event mint match and config.rox_mint match.
+Readiness requires token account match.
+Readiness requires non-default token account owner.
+Readiness requires amount > 0.
+Readiness requires mint authority and bump match config.
+Readiness requires PDA flag.
+Readiness rejects live value moved.
+```
+
+Helpers added:
+
+```text
+mint_authority_bump_bytes()
+is_ready_for_local_token_mint_cpi()
+is_ready_for_internal_roc_release_review()
+```
+
+Rejected:
+
+```text
+wrong program ID
+wrong config key
+receipt/event token account mismatch
+receipt/event amount mismatch
+invalid execution kind
+mint authority tamper
+fake live_value_moved = true
+missing PDA flag
+```
+
+Current critical invariant:
+
+```text
+AnchorTokenCpiReadiness has requires_anchor_spl = true,
+but the program still does not depend on anchor-spl and does not call mint_to or burn.
+It is a readiness model, not execution.
+```
+
+The current codebundle shows `AnchorTokenCpiReadiness` carrying execution kind, direction, mint, token account, token account owner, amount, mint authority, bump, PDA flag, future anchor-spl requirement, CPI/release flags, and live-value movement posture. 
+
+---
+
+## 6. Current `rox-anchor` test surface after this session
+
+Current Anchor program tests:
+
+```text
+88 total rox-anchor tests
+88 passed
+0 failed
+```
+
+Major test categories now covered:
+
+```text
+authority helpers
+config mint authority binding
+config ROX mint binding
+config initialization rejection for empty mint bindings
+config mismatch blocks finalize
+challenge blocks finalization
+halt and recovery blockers
+operation state round trips
+direction code round trips
+direction-specific helper acceptance
+corrupt direction rejection
+operation PDA derivation
+operation PDA rejection for wrong account/bump
+mint authority PDA derivation
+mint authority PDA signer seeds
+mint authority PDA rejection for wrong bump/empty binding
+local mint-burn binding initialization
+operation finalize eligibility
+finalized operation cannot reopen
+finalize plan matching
+finalize plan tamper rejection
+finalized event shape
+finalized event builder tamper rejection
+token settlement binding derivation
+derived settlement binding PDA authority
+derived binding rejection for manual authority/wrong program/config
+token account constraint snapshot acceptance/rejection
+execution plan ROC→ROX and ROX→ROC derivation
+execution plan tamper rejection
+execution receipt ROC→ROX and ROX→ROC recording
+execution receipt tamper rejection
+planned settlement event recording
+planned settlement event tamper rejection
+CPI readiness accepting ROC→ROX planned event
+CPI readiness accepting ROX→ROC planned event
+CPI readiness rejecting program/config mismatch
+CPI readiness rejecting receipt/event mismatch
+CPI readiness rejecting mint authority/live value/PDA tamper
+```
+
+---
+
+## 7. Current build plan position
+
+The build plan defines Phase 10 as implementing ROX/ROC mint-burn semantics after the state machine compiles, including ROC burn observation fields, ROX mint authority model, reverse ROX burn fields, ROC release/recovery model, mint binding, token account binding, replay protection, challenge window, halt/recovery controls, and events. 
+
+We have implemented a large amount of Phase 10 local semantics:
+
+```text
+Done inside Phase 10:
+- ROC burn / reverse burn evidence binding shape
+- direction-specific ROC→ROX / ROX→ROC classification
+- ROX mint authority PDA model
+- config ROX mint binding
+- settlement action mapping
+- token account binding
+- token account constraint snapshot
+- finalize plan
+- execution plan
+- execution receipt
+- planned settlement event
+- CPI readiness gate
+- challenge/halt/recovery controls remain enforced
+- replay protection at proof/local relayer and operation-PDA model level
+```
+
+Still not done inside Phase 10:
+
+```text
+- anchor-spl dependency
+- typed Anchor SPL Mint / TokenAccount account contexts
+- token_program account constraint
+- mint account authority constraint against PDA
+- token account mint constraint against rox_mint
+- token account owner constraint
+- actual local mint_to CPI for ROC→ROX
+- actual local burn or burn verification path for ROX→ROC
+- local validator transaction tests that create mint/accounts and prove behavior
+```
+
+The build plan says Phase 10 exits only when local validator tests prove the mint/burn state machine works without touching production.  We are not at that exit condition yet.
+
+---
+
+## 8. Current safety boundary
+
+Absolutely still true:
+
+```text
+No live wallet calls.
+No live ledger mutation.
+No live RPC submission.
+No production deployment.
+No production minting.
+No production burning.
+No bridge settlement.
+No staking.
+No liquidity.
+No exchange-facing behavior.
+No fake finality.
+No fake success output.
+```
+
+Current code is allowed because it is:
+
+```text
+local
+compile-tested
+deterministic
+non-value-moving
+not production
+not live RPC
+not live wallet
+not live settlement
+```
+
+The codebundle itself preserves this boundary by stating it is not runtime authorization and does not authorize ROX/Solana/bridge runtime or external settlement. 
+
+---
+
+## 9. What the completed ROX Anchor path is intended to support
+
+Final intended capability after all later authorized/local-tested work:
+
+```text
+ROC → ROX:
+CrabLink user explicitly requests/authorizes anchor action
+→ internal ROC is burned/locked through RustyOnions wallet/ledger authority
+→ proof package is reviewed
+→ challenge/halt/recovery windows clear
+→ relayer submits eligible Anchor instruction
+→ ROX is minted on Solana to the bound token account
+```
+
+Reverse:
+
+```text
+ROX → ROC:
+User burns ROX on Solana
+→ Solana burn evidence is observed
+→ RPC/quorum/proof review validates it
+→ challenge/halt/recovery windows clear
+→ RustyOnions internal ROC is released/issued through svc-wallet/ron-ledger
+→ CrabLink displays backend-derived receipt/status
+```
+
+Current capability:
+
+```text
+Not live.
+Not value moving.
+Not yet SPL CPI.
+Current surface is local proof/state/planning/readiness only.
+```
+
+---
+
+## 10. What should be done next
+
+Next recommended patch:
+
+```text
+Phase 10 Round 2Y — anchor-spl dependency and typed token account/mint context preparation
+```
+
+Goal:
+
+```text
+Add the first compile-tested SPL-token surface without calling mint_to or burn yet.
+```
+
+Recommended scope:
+
+```text
+1. Add anchor-spl dependency to programs/rox-anchor/Cargo.toml, matching Anchor 0.31.1.
+2. Import typed token account/mint types.
+3. Add compile-tested account context shape or helper struct for future token CPI.
+4. Ensure config rox_mint, mint_authority PDA, token account, token account owner, amount, and readiness are still required.
+5. Add tests that prove the typed-readiness layer remains non-value-moving.
+6. Keep live_value_moved = false.
+7. Do not call mint_to.
+8. Do not call burn.
+```
+
+Important caution:
+
+```text
+The next patch should prepare account constraints/types, not perform CPI yet.
+```
+
+Suggested exact name:
+
+```text
+Phase 10 Round 2Y — Anchor SPL typed account readiness
+```
+
+Alternative if wanting one more purely local patch before dependency:
+
+```text
+Phase 10 Round 2Y — Token CPI instruction intent enum
+```
+
+But the stronger next step is likely `anchor-spl` compile preparation, since Round 2X already introduced `requires_anchor_spl = true`.
+
+---
+
+## 11. Suggested next-session first command block
+
+Start the next session with:
+
+```bash
+cd /Users/mymac/Desktop/rox-anchor
+
+cargo fmt -p rox-anchor
+cargo test -p rox-anchor
+cargo check -p rox-anchor
+cargo check --workspace
+anchor build
+anchor test
+```
+
+Expected result:
+
+```text
+rox-anchor: 88 passed
+workspace check: green
+anchor build: green
+anchor test: green
+```
+
+Then proceed to the next Phase 10 patch only if this is green.
+
+---
+
+## 12. Suggested next patch sequence after Round 2X
+
+### Round 2Y — Anchor SPL typed readiness
+
+```text
+Add anchor-spl dependency and typed account/context prep.
+No CPI calls yet.
+No mint_to.
+No burn.
+No value movement.
+```
+
+Expected tests:
+
+```text
+typed SPL readiness accepts ROC→ROX readiness
+typed SPL readiness accepts ROX→ROC readiness/review path
+rejects missing PDA posture
+rejects wrong mint
+rejects wrong token account
+rejects wrong owner
+rejects fake live value moved
+```
+
+---
+
+### Round 2Z — CPI context shape for ROC→ROX mint
+
+```text
+Define the account context needed for future mint_to:
+- config
+- operation
+- authority
+- rox_mint
+- recipient token account
+- mint authority PDA
+- token program
+```
+
+Still no CPI call unless explicitly scoped.
+
+Expected tests:
+
+```text
+context/readiness accepts exact mint/token/PDA binding
+wrong mint rejected
+wrong recipient token account rejected
+wrong mint authority rejected
+operation not finalized rejected
+challenge/halt/recovery blockers still reject
+```
+
+---
+
+### Round 3A — Local mint_to CPI behind test-only/local path
+
+```text
+Add actual mint_to only after typed contexts compile cleanly.
+Use local validator tests only.
+No production deployment.
+No live external bridge.
+```
+
+Expected tests:
+
+```text
+local validator creates mint/account
+ROC→ROX finalized eligible operation mints exact amount
+wrong authority cannot mint
+wrong token account cannot mint
+halted config cannot mint
+challenge-open operation cannot mint
+replay/finalized duplicate cannot mint twice
+```
+
+---
+
+### Round 3B — ROX→ROC burn verification / burn path
+
+Depending on desired architecture:
+
+```text
+Option A:
+Anchor program verifies observed burn evidence and finalizes local release event only.
+
+Option B:
+Anchor program includes a burn CPI when user submits token account authority locally.
+
+Either way:
+Internal ROC release must NOT be done by Anchor directly.
+Future internal ROC release routes through RustyOnions svc-wallet → ron-ledger.
+```
+
+Expected tests:
+
+```text
+burn evidence matches operation
+wrong mint rejected
+wrong token account rejected
+short balance rejected
+wrong direction rejected
+internal release remains planned/off-chain, not Anchor-mutated
+```
+
+---
+
+### Phase 11 — Integration tests
+
+The build plan says Phase 11 should wire proof engine to coordinator, coordinator to relayer dry-run, RPC proof evidence into proof review, and test local ROC→ROX / ROX→ROC paths plus status labels. 
+
+Recommended Phase 11 work:
+
+```text
+- Decide root test harness strategy.
+- Either create a dedicated workspace test crate or move integration tests into crate-level tests.
+- Wire proof → rpc-proof → coordinator → relayer dry-run → Anchor local state helpers.
+- Keep all integration tests non-value-moving unless local validator CPI tests are explicitly in scope.
+```
+
+Existing integration placeholder files:
+
+```text
+tests/integration/local_nonvalue_roc_to_rox.rs
+tests/integration/local_nonvalue_rox_to_roc.rs
+tests/integration/coordinator_relayer_boundary.rs
+tests/integration/crablink_status_display.rs
+```
+
+---
+
+### Phase 12 — Chaos tests
+
+The build plan says Phase 12 should prove bad conditions fail cleanly, including challenge griefing, stale coordinator evidence, halt/resume, relayer retry storms, and RPC equivocation. 
+
+Existing chaos placeholder files:
+
+```text
+tests/chaos/challenge_griefing.rs
+tests/chaos/coordinator_stale_evidence.rs
+tests/chaos/halt_resume.rs
+tests/chaos/relayer_retry_storm.rs
+tests/chaos/rpc_equivocation.rs
+```
+
+Recommended chaos test behavior:
+
+```text
+challenge griefing remains bounded
+stale coordinator evidence is rejected
+halt/resume remains deterministic
+relayer retry storms stay bounded
+RPC equivocation is detected
+wrong cluster/program/mint/token account cannot pass
+fake finality cannot pass
+```
+
+---
+
+### Phase 13 — Final local green run
+
+The build plan’s final phase requires:
+
+```bash
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+anchor build
+anchor test
+```
+
+Exit condition:
+
+```text
+repo compile-green
+repo test-green
+proof engine works
+CLI works
+local service models work
+Anchor program compiles
+mint/burn state machine is locally tested
+```
+
+---
+
+## 13. Files most likely touched next
+
+Likely next patch files:
+
+```text
+programs/rox-anchor/Cargo.toml
+programs/rox-anchor/src/state.rs
+programs/rox-anchor/src/instructions/finalize.rs
+programs/rox-anchor/src/instructions/mod.rs
+programs/rox-anchor/src/lib.rs
+programs/rox-anchor/src/events.rs
+```
+
+Possible later files:
+
+```text
+programs/rox-anchor/src/instructions/mint_rox.rs
+programs/rox-anchor/src/instructions/verify_rox_burn.rs
+programs/rox-anchor/src/instructions/settle.rs
+tests/integration/local_nonvalue_roc_to_rox.rs
+tests/integration/local_nonvalue_rox_to_roc.rs
+tests/chaos/*
+```
+
+Do not create broad new docs unless explicitly requested.
+
+---
+
+## 14. Current implementation chain to preserve
+
+The current local Phase 10 chain is:
+
+```text
+RoxAnchorOperation
+→ AnchorFinalizePlan
+→ AnchorTokenSettlementBinding
+→ AnchorTokenAccountConstraintSnapshot
+→ AnchorTokenSettlementExecutionPlan
+→ AnchorTokenSettlementExecutionReceipt
+→ RoxAnchorTokenSettlementPlanned
+→ AnchorTokenCpiReadiness
+```
+
+This chain is good and should not be bypassed.
+
+Future CPI should use this chain rather than recomputing loose strings or trusting raw account values without prior binding.
+
+---
+
+## 15. Critical invariants to preserve in every future patch
+
+```text
+Replay must be rejected.
+Domain mismatch must be rejected.
+Direction mismatch must be rejected.
+Cluster mismatch must be rejected.
+Program ID mismatch must be rejected.
+Mint mismatch must be rejected.
+Token account mismatch must be rejected.
+Operation ID mismatch must be rejected.
+Idempotency key mismatch must be rejected.
+Nonce mismatch must be rejected.
+Challenge state must block unsafe acceptance/finalization.
+Halt state must block unsafe acceptance/finalization.
+Recovery state must block unsafe acceptance/finalization.
+CLI output must come from proof/core behavior.
+Coordinator/RPC proof/relayer must call core/proof.
+Anchor program owns on-chain state transitions.
+No fake finality.
+No fake live value moved.
+```
+
+Specific Phase 10 invariants now added:
+
+```text
+config.rox_mint must match settlement mint.
+config.mint_authority must match derived PDA.
+mint_authority_bump must match derived PDA bump.
+token_account must match operation/finalize plan.
+token_account_mint must match ROX mint.
+token_account_owner cannot be default.
+amount_atoms must be > 0.
+burn_evidence_hash cannot be zero.
+ROC→ROX must require token mint CPI planning and not internal ROC release.
+ROX→ROC must require internal ROC release planning and not token mint CPI.
+live_value_moved must remain false until actual local CPI phase.
+```
+
+---
+
+## 16. Important anti-scope reminders for the next assistant
+
+Do not do these unless explicitly requested:
+
+```text
+git add
+git commit
+git push
+downloads
+live wallet calls
+live ledger mutation
+live RPC submission
+production deployment
+production minting
+production burning
+public bridge settlement
+staking
+liquidity
+exchange-facing behavior
+fake success output
+fake finality output
+```
+
+Patch style required:
+
+```text
+Use paste-ready terminal patches.
+Wrap terminal patches in ~~~~bash fences.
+Prefer clear scripted edits or complete file writes.
+No Python helpers for repo patches.
+No downloads.
+After every patch, include exact focused commands to run.
+```
+
+---
+
+## 17. Good next-session prompt
+
+Use this to start the next session:
+
+```text
+We are continuing RustyOnions / CrabLink / ROX Anchor.
+
+Current status:
+ROX Anchor is active implementation work. Phases 0–9 are effectively green. Phase 10 is active. The latest verified state is Phase 10 Round 2X COMPLETE / GREEN: cargo test -p rox-anchor passed 88/88, cargo check -p rox-anchor green, cargo check --workspace green, anchor build green, and anchor test green.
+
+This session added:
+- Round 2U token-settlement execution plan
+- Round 2V execution receipt
+- Round 2W planned settlement event snapshot
+- Round 2X token CPI readiness gate
+
+The current chain is:
+RoxAnchorOperation → AnchorFinalizePlan → AnchorTokenSettlementBinding → AnchorTokenAccountConstraintSnapshot → AnchorTokenSettlementExecutionPlan → AnchorTokenSettlementExecutionReceipt → RoxAnchorTokenSettlementPlanned → AnchorTokenCpiReadiness.
+
+Please review CODEBUNDLE.md and BUILD_PLAN.md. Start with:
+cargo fmt -p rox-anchor
+cargo test -p rox-anchor
+cargo check -p rox-anchor
+cargo check --workspace
+anchor build
+anchor test
+
+If green, continue Phase 10 Round 2Y with anchor-spl typed account readiness preparation. Do not call mint_to or burn yet. Do not add live RPC, live wallet calls, production deployment, production mint/burn, settlement, staking, liquidity, exchange behavior, or fake finality.
+```
+
+---
+
+## 18. Exact command block for next session
+
+```bash
+cd /Users/mymac/Desktop/rox-anchor
+
+cargo fmt -p rox-anchor
+cargo test -p rox-anchor
+cargo check -p rox-anchor
+cargo check --workspace
+anchor build
+anchor test
+```
+
+If green, proceed to:
+
+```text
+Phase 10 Round 2Y — Anchor SPL typed account readiness preparation
+```
+
+---
+
+## 19. Short final summary
+
+```text
+Current project phase:
+Phase 10 — ROX / ROC Mint-Burn Program Logic
+
+Current completed round:
+Phase 10 Round 2X — token CPI readiness gate
+
+Current green proof:
+88/88 rox-anchor tests, workspace check green, anchor build green, anchor test green
+
+Current completion estimate:
+~77–78%
+
+Next work:
+Add anchor-spl typed account/mint readiness surface without mint_to/burn yet, then local CPI context, then local validator token tests, then Phase 11 integration, Phase 12 chaos, Phase 13 final local green run.
+```
+
+
+### END NOTE - JULY 3 2026 - 20:35 CST
