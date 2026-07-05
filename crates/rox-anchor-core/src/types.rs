@@ -5,7 +5,10 @@
 //! RO:SECURITY — local/testnet type model only; no keypair loading, settlement, wallet, RPC, or mint/burn side effects.
 //! RO:TEST — covered by posture, binding, scope-lock, testnet-config, and authority tests in rox-anchor-core.
 
-use std::{collections::BTreeSet, path::Path};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    path::Path,
+};
 
 use crate::{AnchorCoreError, ClusterId, DomainId, MintId, ProgramId, TokenAccountId};
 
@@ -457,6 +460,312 @@ impl TestnetConfigReport {
     }
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ExternalArtifactPath(String);
+
+impl ExternalArtifactPath {
+    pub fn new(value: impl AsRef<str>, field: &'static str) -> Result<Self, AnchorCoreError> {
+        let clean = value.as_ref().trim();
+
+        if clean.is_empty() {
+            return Err(AnchorCoreError::MissingPrivatePilotConfigField { field });
+        }
+
+        Ok(Self(clean.to_owned()))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    pub fn redacted(&self) -> String {
+        redact_external_artifact_path(&self.0)
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ExternalObservedSignature(String);
+
+impl ExternalObservedSignature {
+    pub fn new(value: impl AsRef<str>) -> Result<Self, AnchorCoreError> {
+        let clean = value.as_ref().trim();
+
+        if clean.is_empty() {
+            return Err(AnchorCoreError::MissingPrivatePilotConfigField {
+                field: "observed_signature",
+            });
+        }
+
+        Ok(Self(clean.to_owned()))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    pub fn redacted(&self) -> String {
+        redact_external_signature(&self.0)
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PrivatePilotConfig {
+    pub testnet: TestnetConfig,
+    pub operator_label: String,
+    pub asset_label: String,
+    pub receipt_output_path: ExternalArtifactPath,
+    pub observed_signature: Option<ExternalObservedSignature>,
+}
+
+impl PrivatePilotConfig {
+    pub fn parse_external_config(input: &str) -> Result<Self, AnchorCoreError> {
+        let pairs = parse_private_pilot_config_pairs(input)?;
+
+        let environment_mode = AnchorEnvironmentMode::from_label(
+            pairs
+                .get("environment_mode")
+                .map(String::as_str)
+                .ok_or(AnchorCoreError::MissingExplicitMode)?,
+        )?;
+
+        let cluster = AnchorCluster::from_label(required_private_pilot_value(&pairs, "cluster")?)?;
+
+        let submission_mode =
+            SubmissionMode::from_label(required_private_pilot_value(&pairs, "submission_mode")?)?;
+
+        let testnet = TestnetConfig::require_explicit(
+            Some(environment_mode),
+            cluster,
+            submission_mode,
+            Some(required_private_pilot_value(&pairs, "rpc_url")?),
+            Some(required_private_pilot_value(&pairs, "payer_keypair_path")?),
+        )?;
+
+        let operator_label = validate_private_pilot_label(
+            "operator_label",
+            required_private_pilot_value(&pairs, "operator_label")?,
+        )?;
+
+        let asset_label = validate_private_pilot_label(
+            "asset_label",
+            required_private_pilot_value(&pairs, "asset_label")?,
+        )?;
+
+        let receipt_output_path = ExternalArtifactPath::new(
+            required_private_pilot_value(&pairs, "receipt_output_path")?,
+            "receipt_output_path",
+        )?;
+
+        let observed_signature = pairs
+            .get("observed_signature")
+            .map(ExternalObservedSignature::new)
+            .transpose()?;
+
+        let config = Self {
+            testnet,
+            operator_label,
+            asset_label,
+            receipt_output_path,
+            observed_signature,
+        };
+
+        config.validate()?;
+
+        Ok(config)
+    }
+
+    pub fn validate(&self) -> Result<(), AnchorCoreError> {
+        self.testnet.validate()?;
+
+        if self.testnet.environment_mode != AnchorEnvironmentMode::TestnetOnly {
+            return Err(AnchorCoreError::PrivatePilotRequiresTestnetMode {
+                environment: self.testnet.environment_mode.as_str(),
+            });
+        }
+
+        validate_private_pilot_label("operator_label", &self.operator_label)?;
+        validate_private_pilot_label("asset_label", &self.asset_label)?;
+
+        Ok(())
+    }
+
+    pub fn testnet_config(&self) -> TestnetConfig {
+        self.testnet.clone()
+    }
+
+    pub fn redacted_report(&self) -> PrivatePilotConfigReport {
+        PrivatePilotConfigReport {
+            environment_mode: self.testnet.environment_mode.as_str().to_owned(),
+            cluster: self.testnet.cluster.as_str().to_owned(),
+            submission_mode: self.testnet.submission_mode.as_str().to_owned(),
+            rpc_url: self.testnet.rpc_url.redacted(),
+            payer_keypair_path: redact_external_artifact_path(
+                self.testnet.payer_keypair_path.as_str(),
+            ),
+            operator_label: self.operator_label.clone(),
+            asset_label: self.asset_label.clone(),
+            receipt_output_path: self.receipt_output_path.redacted(),
+            observed_signature: self
+                .observed_signature
+                .as_ref()
+                .map(ExternalObservedSignature::redacted),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PrivatePilotConfigReport {
+    pub environment_mode: String,
+    pub cluster: String,
+    pub submission_mode: String,
+    pub rpc_url: String,
+    pub payer_keypair_path: String,
+    pub operator_label: String,
+    pub asset_label: String,
+    pub receipt_output_path: String,
+    pub observed_signature: Option<String>,
+}
+
+impl PrivatePilotConfigReport {
+    pub fn lines(&self) -> Vec<String> {
+        vec![
+            "private_pilot_config: redacted_external_shape".to_owned(),
+            format!("environment_mode: {}", self.environment_mode),
+            format!("cluster: {}", self.cluster),
+            format!("submission_mode: {}", self.submission_mode),
+            format!("rpc_url: {}", self.rpc_url),
+            format!("payer_keypair_path: {}", self.payer_keypair_path),
+            format!("operator_label: {}", self.operator_label),
+            format!("asset_label: {}", self.asset_label),
+            format!("receipt_output_path: {}", self.receipt_output_path),
+            format!(
+                "observed_signature: {}",
+                self.observed_signature
+                    .clone()
+                    .unwrap_or_else(|| "<none>".to_owned())
+            ),
+        ]
+    }
+}
+
+fn parse_private_pilot_config_pairs(
+    input: &str,
+) -> Result<BTreeMap<String, String>, AnchorCoreError> {
+    let mut pairs = BTreeMap::new();
+
+    for raw_line in input.lines() {
+        let line = raw_line.trim();
+
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+
+        let (key, value) = line.split_once('=').ok_or_else(|| {
+            AnchorCoreError::MalformedPrivatePilotConfigLine {
+                line: line.to_owned(),
+            }
+        })?;
+
+        let key = key.trim();
+
+        if key.is_empty() {
+            return Err(AnchorCoreError::MalformedPrivatePilotConfigLine {
+                line: line.to_owned(),
+            });
+        }
+
+        if pairs
+            .insert(key.to_owned(), strip_private_pilot_config_quotes(value))
+            .is_some()
+        {
+            return Err(AnchorCoreError::DuplicatePrivatePilotConfigField {
+                field: key.to_owned(),
+            });
+        }
+    }
+
+    Ok(pairs)
+}
+
+fn strip_private_pilot_config_quotes(value: &str) -> String {
+    let clean = value.trim();
+
+    if clean.len() >= 2 {
+        let first = clean.as_bytes()[0];
+        let last = clean.as_bytes()[clean.len() - 1];
+
+        if (first == b'"' && last == b'"') || (first == b'\'' && last == b'\'') {
+            return clean[1..clean.len() - 1].trim().to_owned();
+        }
+    }
+
+    clean.to_owned()
+}
+
+fn required_private_pilot_value<'a>(
+    pairs: &'a BTreeMap<String, String>,
+    field: &'static str,
+) -> Result<&'a str, AnchorCoreError> {
+    pairs
+        .get(field)
+        .map(String::as_str)
+        .ok_or(AnchorCoreError::MissingPrivatePilotConfigField { field })
+}
+
+fn validate_private_pilot_label(
+    field: &'static str,
+    value: impl AsRef<str>,
+) -> Result<String, AnchorCoreError> {
+    let clean = value.as_ref().trim();
+
+    if clean.is_empty() {
+        return Err(AnchorCoreError::MissingPrivatePilotConfigField { field });
+    }
+
+    if label_is_public_or_production(clean) {
+        return Err(AnchorCoreError::PublicOrProductionPrivatePilotLabel {
+            field,
+            label: clean.to_owned(),
+        });
+    }
+
+    Ok(clean.to_owned())
+}
+
+fn redact_external_artifact_path(value: &str) -> String {
+    let clean = value.trim();
+    let extension = Path::new(clean)
+        .extension()
+        .and_then(|extension| extension.to_str());
+
+    match extension {
+        Some(extension) if !extension.is_empty() => {
+            format!("<redacted-external-path>/*.{extension}")
+        }
+        _ => "<redacted-external-path>".to_owned(),
+    }
+}
+
+fn redact_external_signature(value: &str) -> String {
+    let chars: Vec<char> = value.chars().collect();
+
+    if chars.len() <= 12 {
+        return "<redacted-signature>".to_owned();
+    }
+
+    let first: String = chars.iter().take(8).copied().collect();
+    let last: String = chars
+        .iter()
+        .rev()
+        .take(4)
+        .copied()
+        .collect::<Vec<char>>()
+        .into_iter()
+        .rev()
+        .collect();
+
+    format!("{first}…{last}")
+}
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum OperatorRole {
     Observer,

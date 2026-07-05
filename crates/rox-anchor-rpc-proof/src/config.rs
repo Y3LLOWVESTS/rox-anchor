@@ -1,11 +1,14 @@
-//! RO:WHAT — Configuration for local RPC proof quorum review and non-secret testnet config.
-//! RO:WHY — Keeps thresholds and BUILD_PLAN2 testnet configuration explicit instead of hard-coded.
+//! RO:WHAT — Configuration for local RPC proof quorum review and non-secret testnet/private-pilot config.
+//! RO:WHY — Keeps thresholds and BUILD_PLAN2/3 configuration explicit instead of hard-coded.
 //! RO:INTERACTS — readiness.rs, quorum.rs, and rox-anchor-core safety/config types.
 //! RO:INVARIANTS — config is local/testnet review policy only; mainnet/public launch scope is not representable.
 //! RO:SECURITY — no credentials, live RPC calls, live RPC submission, or finality authority are used.
-//! RO:TEST — covered by readiness, scope-lock, and testnet-config tests.
+//! RO:TEST — covered by readiness, scope-lock, testnet-config, and private-pilot config tests.
 
-use rox_anchor_core::{AnchorSafetyProfile, TestnetConfig, TestnetConfigReport};
+use rox_anchor_core::{
+    AnchorSafetyProfile, PrivatePilotConfig, PrivatePilotConfigReport, TestnetConfig,
+    TestnetConfigReport,
+};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RpcProofConfig {
@@ -54,5 +57,30 @@ impl RpcProofTestnetConfig {
 
     pub fn redacted_report(&self) -> TestnetConfigReport {
         self.testnet.redacted_report()
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RpcProofPrivatePilotConfig {
+    pub proof: RpcProofConfig,
+    pub pilot: PrivatePilotConfig,
+}
+
+impl RpcProofPrivatePilotConfig {
+    pub fn from_external_config_text(
+        proof: RpcProofConfig,
+        input: &str,
+    ) -> Result<Self, rox_anchor_core::AnchorCoreError> {
+        let pilot = PrivatePilotConfig::parse_external_config(input)?;
+        Ok(Self { proof, pilot })
+    }
+
+    pub fn validate(&self) -> Result<(), rox_anchor_core::AnchorCoreError> {
+        self.proof.safety.validate()?;
+        self.pilot.validate()
+    }
+
+    pub fn redacted_report(&self) -> PrivatePilotConfigReport {
+        self.pilot.redacted_report()
     }
 }

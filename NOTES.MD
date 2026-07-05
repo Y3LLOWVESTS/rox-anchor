@@ -11168,3 +11168,1990 @@ That is exactly what BUILD_PLAN2 Phase 12 is meant to prove.
 
 
 ### END NOTE - JULY 4 2026 - 18:25 CST
+
+
+### BEGIN NOTE - JULY 4 2026 - 20:35 CST
+
+Here are the carry-over notes for the next session. The latest terminal output confirms the corrected `BUILD_PLAN3.md` was written, then `cargo fmt --all`, `cargo test --workspace`, `cargo check --workspace`, `anchor build`, `anchor test`, `scripts/check_testnet_readiness_gate.sh`, and `scripts/make_codebundle.sh` all completed green, ending with the readiness gate passing and `Wrote safe codebundle: CODEBUNDLE.md`. 
+
+# ROX Anchor — Comprehensive Carry-Over Notes for Next Session
+
+## 0. Session Status Summary
+
+We are continuing work on **RustyOnions / CrabLink / ROX Anchor**.
+
+Current active workstream:
+
+```text
+ROX Anchor — BUILD_PLAN3 private testnet pilot preparation
+```
+
+Current status:
+
+```text
+BUILD_PLAN.md: complete / green / parked
+BUILD_PLAN2.md: complete / green / parked
+BUILD_PLAN3.md: created / corrected / ready to begin
+ROX Anchor local implementation: complete / green / parked
+ROX Anchor testnet-only hardening: complete / green / parked
+Private testnet pilot readiness: proven for review
+Private testnet pilot execution: next
+Public launch/mainnet/production bridge: not authorized
+```
+
+The latest terminal output confirms the repo is green after the `BUILD_PLAN3.md` correction:
+
+```text
+cargo fmt --all: green
+cargo test --workspace: green
+cargo check --workspace: green
+anchor build: green
+anchor test: green
+scripts/check_testnet_readiness_gate.sh: green
+scripts/make_codebundle.sh: green
+safe CODEBUNDLE.md regenerated
+```
+
+Important boundary:
+
+```text
+We are not launching publicly.
+We are not deploying to mainnet.
+We are not authorizing production bridge settlement.
+We are not authorizing public ROX mint/burn.
+We are not releasing real internal ROC.
+We are not adding staking, liquidity, exchange-facing behavior, or public claim/bridge UI.
+```
+
+The next session should begin from a clean, green baseline and start **BUILD_PLAN3 Phase 0 / Phase 1**.
+
+---
+
+## 1. What We Accomplished in This Session
+
+### 1.1 Confirmed BUILD_PLAN2 Is Fully Complete
+
+We confirmed that **every phase in BUILD_PLAN2 is complete / green / parked**.
+
+BUILD_PLAN2 covered the testnet-only hardening layer:
+
+```text
+Phase 0  — Freeze local green baseline
+Phase 1  — Testnet scope locks and safety flags
+Phase 2  — Testnet configuration model
+Phase 3  — Operator key and authority safety model
+Phase 4  — Read-only live RPC adapter
+Phase 5  — Transaction simulation model
+Phase 6  — Test-only mint and token account harness
+Phase 7  — Testnet deployment drill
+Phase 8  — Capped testnet submission path
+Phase 9  — End-to-end testnet shadow flow
+Phase 10 — Security regression expansion
+Phase 11 — Observability, receipts, and audit trail
+Phase 12 — Halt, recovery, and kill-switch drills
+Phase 13 — Testnet chaos drills
+Phase 14 — Audit preparation
+Phase 15 — Testnet readiness gate
+```
+
+The final BUILD_PLAN2 status is:
+
+```text
+complete / green / parked
+```
+
+The final readiness posture is:
+
+```text
+Private testnet pilot readiness is proven.
+Public launch remains unauthorized.
+Production bridge remains unauthorized.
+Mainnet remains unauthorized.
+Public mint/burn remains unauthorized.
+Exchange/liquidity/staking remains unauthorized.
+```
+
+---
+
+### 1.2 Confirmed Final Anchor Tooling Stamp
+
+Earlier in the session, we had a Cargo/readiness-side green status. Then we ran the optional final Anchor tooling commands:
+
+```bash
+anchor build
+anchor test
+bash scripts/make_codebundle.sh
+```
+
+Those passed.
+
+This gave the full final green stamp:
+
+```text
+anchor build: green
+anchor test: green
+workspace tests: green
+doc-tests: green
+secret failsafe scan: green
+safe CODEBUNDLE.md regenerated
+```
+
+This means the current implementation is not merely Cargo-green; it is also Anchor-tooling-green.
+
+---
+
+### 1.3 Clarified What ROX Anchor Can and Cannot Do Right Now
+
+We clarified the current practical capability:
+
+What we can do now:
+
+```text
+compile and test the Anchor program
+prove the ROC ↔ ROX state machine locally
+model ROC-to-ROX burn-observation -> ROX mint-intent
+model ROX-to-ROC burn-observation -> internal ROC release-intent
+reject replay
+reject mismatches
+reject wrong authority
+reject wrong mint/account
+reject challenge/halt/recovery bypasses
+run testnet readiness, deployment-drill, shadow-flow, chaos, audit, and capped-submit checks
+```
+
+What we cannot claim yet:
+
+```text
+real production ROC burn -> real ROX mint
+real ROX burn -> real internal ROC release
+public bridge settlement
+mainnet launch
+public ROX token launch
+public bridge UI
+exchange/staking/liquidity readiness
+```
+
+Correct interpretation:
+
+```text
+Local/testnet proof shape: yes
+Private capped testnet pilot readiness: yes
+Production bridge settlement: no
+Public mainnet ROX mint/burn: no
+```
+
+---
+
+### 1.4 Estimated Overall ROX Anchor Completion
+
+We estimated the full ROX Anchor project at roughly:
+
+```text
+70% complete overall
+```
+
+Breakdown:
+
+```text
+BUILD_PLAN.md implementation layer: 100%
+BUILD_PLAN2 testnet hardening/readiness layer: 100%
+Private testnet pilot execution: 0–10%
+Production/mainnet bridge readiness: future work
+```
+
+The next major chunk is not more local scaffolding. It is the controlled private testnet pilot layer.
+
+---
+
+### 1.5 Created BUILD_PLAN3.md
+
+We created a new plan:
+
+```text
+BUILD_PLAN3.md
+```
+
+Title:
+
+```text
+ROX Anchor Build Plan 3
+Private Testnet Pilot / Controlled Live-Testnet Operations
+```
+
+Purpose:
+
+```text
+Move from testnet readiness to a controlled private testnet pilot.
+```
+
+Core meaning:
+
+```text
+BUILD_PLAN3 may introduce carefully gated, explicit, capped, private testnet operations.
+```
+
+Critical non-authorization boundary:
+
+```text
+BUILD_PLAN3 does not authorize public launch.
+BUILD_PLAN3 does not authorize mainnet deployment.
+BUILD_PLAN3 does not authorize public ROX mint/burn.
+BUILD_PLAN3 does not authorize production bridge settlement.
+BUILD_PLAN3 does not authorize production ROC release.
+BUILD_PLAN3 does not authorize exchange-facing behavior.
+BUILD_PLAN3 does not authorize staking.
+BUILD_PLAN3 does not authorize liquidity.
+BUILD_PLAN3 does not authorize real user value movement.
+```
+
+Allowed BUILD_PLAN3 work:
+
+```text
+private devnet/testnet deployment
+external non-committed testnet keypairs
+test-only ROX mint
+test-only token accounts
+test-only amounts
+read-only live RPC verification
+transaction simulation
+strictly capped private testnet submission
+explicit operator approval before every live send path
+receipt-backed pilot runs
+operator safety drills
+halt/recovery drills
+upgrade/key-rotation drills
+multi-RPC observation checks
+private pilot runbooks
+CrabLink/internal ROC dry-run adapter work
+shadow ROC burn-intent modeling
+shadow ROC release-intent modeling
+no real internal ROC mutation
+```
+
+---
+
+### 1.6 Verified BUILD_PLAN3.md for Correctness
+
+We reviewed the first version of BUILD_PLAN3 and confirmed it was fundamentally correct:
+
+```text
+correct scope
+correct safety boundary
+correct private testnet pilot direction
+correct no-production/no-mainnet/no-public-launch language
+correct continuation after BUILD_PLAN2
+```
+
+We identified one sequencing improvement:
+
+Original order:
+
+```text
+Phase 8  — Explicit capped private testnet sender
+Phase 9  — Private ROC-to-ROX testnet pilot flow
+Phase 10 — Private ROX-to-ROC testnet pilot flow
+Phase 11 — Pilot receipt ledger and audit trail
+Phase 12 — Pilot CLI command surface
+Phase 13 — CrabLink / internal ROC dry-run adapter
+```
+
+Improved order:
+
+```text
+Phase 8  — Explicit capped private testnet sender
+Phase 9  — Pilot receipt ledger and audit trail
+Phase 10 — Pilot CLI command surface
+Phase 11 — CrabLink / internal ROC dry-run adapter
+Phase 12 — Private ROC-to-ROX testnet pilot flow
+Phase 13 — Private ROX-to-ROC testnet pilot flow
+```
+
+Reason:
+
+```text
+The forward/reverse pilot flows depend on receipts, CLI operator commands, and dry-run ROC intent/release shapes. Those should exist before the full pilot flows.
+```
+
+We also improved Phase 4 wording.
+
+Original Phase 4 title:
+
+```text
+Real Private Testnet Deployment Drill
+```
+
+Corrected Phase 4 title:
+
+```text
+Private Testnet Deployment Drill / Optional Deployment
+```
+
+Reason:
+
+```text
+The phase should support a checked deployment drill and optional actual private testnet deploy, without making actual deployment sound automatic or required.
+```
+
+---
+
+### 1.7 Patched BUILD_PLAN3.md
+
+We wrote a complete file replacement patch for `BUILD_PLAN3.md`.
+
+The patch:
+
+```text
+rewrote BUILD_PLAN3.md
+kept the non-negotiable scope boundary
+kept the private testnet pilot purpose
+renamed Phase 4 safely
+moved receipt ledger before pilot flows
+moved CLI command surface before pilot flows
+moved CrabLink/internal ROC dry-run adapter before pilot flows
+renumbered Phases 9–13 correctly
+updated the final status wording
+updated the build order summary
+preserved the first-command section
+```
+
+Corrected Phase order is now:
+
+```text
+Phase 0  — Freeze BUILD_PLAN2 green baseline
+Phase 1  — Private pilot operator workspace hygiene
+Phase 2  — External testnet config loader
+Phase 3  — Testnet program artifact manifest
+Phase 4  — Private testnet deployment drill / optional deployment
+Phase 5  — Test-only mint initialization runbook
+Phase 6  — Live read-only RPC verification against testnet
+Phase 7  — Simulation-only pilot transaction plans
+Phase 8  — Explicit capped private testnet sender
+Phase 9  — Pilot receipt ledger and audit trail
+Phase 10 — Pilot CLI command surface
+Phase 11 — CrabLink / internal ROC dry-run adapter
+Phase 12 — Private ROC-to-ROX testnet pilot flow
+Phase 13 — Private ROX-to-ROC testnet pilot flow
+Phase 14 — Live testnet chaos and incident drills
+Phase 15 — Authority, upgrade, halt, and recovery operational drills
+Phase 16 — Private testnet pilot closeout gate
+```
+
+---
+
+### 1.8 Ran Final Validation Commands After BUILD_PLAN3 Patch
+
+After patching `BUILD_PLAN3.md`, the following command batch was run:
+
+```bash
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+anchor build
+anchor test
+bash scripts/check_testnet_readiness_gate.sh .
+bash scripts/make_codebundle.sh
+```
+
+Result:
+
+```text
+all green
+```
+
+Key confirmations from latest terminal output:
+
+```text
+cargo fmt --all completed
+cargo test --workspace passed
+cargo check --workspace passed
+anchor build passed
+anchor test passed
+testnet readiness gate passed
+secret failsafe scan passed
+safe CODEBUNDLE.md regenerated
+```
+
+Program tests:
+
+```text
+programs/rox-anchor: 96 tests passed
+```
+
+The test suite covered, among many others:
+
+```text
+test-only mint harness rejection/acceptance
+challenge blocking
+halt/recovery blocking
+config mint authority binding
+wrong authority rejection
+wrong mint rejection
+direction helper rejection
+finalize plan validation
+finalized event tamper rejection
+PDA derivation checks
+token account constraint snapshots
+token CPI readiness
+token CPI execution receipts
+ROC-to-ROX finalization classification
+ROX-to-ROC finalization classification
+settlement binding derivation
+planned event receipt checks
+wrong direction rejection
+```
+
+CLI tests remained green, including:
+
+```text
+check command
+audit command
+posture audit
+proof read-only RPC command
+relayer audit
+status display boundary
+testnet config status
+testnet deployment drill checker
+testnet readiness gate
+kill-switch drill command
+capped submit report
+```
+
+Coordinator tests remained green, including:
+
+```text
+readiness
+queue capacity
+duplicate operation rejection
+stale RPC evidence rejection
+valid observation handoff to proof
+authority readiness
+audit records
+coordinator-relayer boundary
+stale evidence chaos
+halt/recovery finalization gate
+local nonvalue bidirectional flow
+testnet shadow flow
+transaction simulation gate
+```
+
+Core tests remained green, including:
+
+```text
+identifier validation
+lifecycle state classification
+safe deterministic labels
+posture helpers
+kill-switch drills
+operator authority model
+test-only asset harness
+testnet config model
+testnet scope locks
+```
+
+Proof tests remained green, including:
+
+```text
+valid fixture accepted
+binding mismatches rejected in deterministic order
+missing/disputed evidence blocks acceptance
+challenge/halt/recovery postures block acceptance
+replay of operation ID/idempotency key/nonce rejected
+challenge griefing
+halt/resume behavior
+```
+
+Relayer tests remained green, including:
+
+```text
+bounded retry
+readiness rejection of zero limits
+blocked proof does not submit
+dry-run receipt generation
+idempotency replay rejection
+authority readiness
+capped testnet submission
+halt/recovery submit gate
+retry storm containment
+testnet audit record
+testnet chaos drills
+transaction simulation
+testnet scope locks
+```
+
+RPC proof tests remained green, including:
+
+```text
+readiness threshold rejection
+binding mismatch rejection
+matching RPC observations
+conflicting signatures
+redaction
+stale observation rejection
+too few sources
+read-only RPC adapter
+RPC audit records
+RPC equivocation chaos
+RPC-to-proof boundary
+testnet chaos drills
+testnet config model
+testnet scope locks
+```
+
+The readiness gate confirmed:
+
+```text
+BUILD_PLAN2.md found
+Anchor.toml found
+audit docs found
+testnet readiness doc found
+audit prep checker found
+deployment drill checker found
+testnet readiness checker found
+testnet readiness gate tests found
+build plan phase 15 recognized
+phase 15 non-launch boundary recognized
+private testnet pilot exit condition recognized
+workspace test/check command references present
+readiness audit/deploy/gate references present
+private pilot boundary present
+mainnet-beta rejection test present
+no public launch flags test present
+authority rotation test present
+wrong-authority halt/recovery test present
+ROC-to-ROX shadow flow test present
+ROX-to-ROC shadow flow test present
+capped submit all-gates test present
+receipt persistence test present
+kill-switch halt drill test present
+Anchor.toml has no mainnet program section
+Anchor.toml provider cluster is not mainnet
+tracked files do not include common Solana key material names
+Phase 14 audit prep checker remains green
+testnet deployment drill checker remains green
+Phase 15 testnet readiness gate checks passed
+private testnet-only pilot review surface is present
+public launch/mainnet/production settlement/public mint-burn/staking/liquidity/exchange behavior remain unauthorized
+script did not deploy, submit, mint, burn, settle, call RPC, or load a wallet
+```
+
+Final bundle result:
+
+```text
+== Secret failsafe scan on generated bundle ==
+Wrote safe codebundle: CODEBUNDLE.md
+```
+
+---
+
+## 2. Current Final Status at End of Session
+
+Final status:
+
+```text
+BUILD_PLAN.md: COMPLETE / GREEN / PARKED
+BUILD_PLAN2.md: COMPLETE / GREEN / PARKED
+BUILD_PLAN3.md: CREATED / CORRECTED / READY TO BEGIN
+ROX Anchor implementation: GREEN
+ROX Anchor testnet hardening: GREEN
+ROX Anchor private testnet pilot readiness: GREEN
+ROX Anchor private testnet pilot execution: NEXT
+```
+
+Current codebase health:
+
+```text
+cargo fmt --all: green
+cargo test --workspace: green
+cargo check --workspace: green
+anchor build: green
+anchor test: green
+testnet readiness gate: green
+safe codebundle generation: green
+```
+
+Current build phase:
+
+```text
+Ready to begin BUILD_PLAN3 Phase 0.
+```
+
+Important nuance:
+
+```text
+BUILD_PLAN3 has been created and validated, but its implementation phases are not yet worked through.
+```
+
+We have a strong starting baseline for Phase 0 because the final validation commands are already green, but in the next session we should still formally begin with Phase 0 and preserve the green baseline before modifying code.
+
+---
+
+## 3. What BUILD_PLAN3 Means
+
+BUILD_PLAN3 is not another local-only proof plan.
+
+It is the next safe layer:
+
+```text
+private testnet pilot
+controlled live-testnet operations
+external non-committed keys
+test-only assets
+read-only RPC
+simulation
+explicit capped submit
+receipts
+operator drills
+CrabLink/internal ROC dry-run adapter
+```
+
+BUILD_PLAN3 is still not:
+
+```text
+mainnet
+public launch
+production bridge
+public token launch
+real ROC release
+real user funds
+public bridge UI
+staking
+liquidity
+exchange-facing behavior
+```
+
+The mental model:
+
+```text
+BUILD_PLAN.md  = local implementation
+BUILD_PLAN2.md = testnet-only hardening/readiness
+BUILD_PLAN3.md = private testnet pilot
+future plan     = production-readiness/mainnet/public decision, if ever authorized
+```
+
+---
+
+## 4. BUILD_PLAN3 Phase-by-Phase Carry-Over
+
+### Phase 0 — Freeze BUILD_PLAN2 Green Baseline
+
+Purpose:
+
+```text
+Create a clean starting point for private testnet pilot work.
+```
+
+Current status:
+
+```text
+Ready to begin.
+```
+
+Evidence already available:
+
+```text
+The final command batch is green.
+```
+
+Recommended next-session first action:
+
+```bash
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+anchor build
+anchor test
+bash scripts/check_testnet_readiness_gate.sh .
+bash scripts/make_codebundle.sh
+```
+
+Then mark Phase 0 baseline as confirmed.
+
+Expected Phase 0 exit:
+
+```text
+The repo starts BUILD_PLAN3 from a known green and secret-safe state.
+```
+
+No code change may be needed for Phase 0 unless we decide to add a `BUILD_PLAN3` baseline checker.
+
+Possible optional Phase 0 patch:
+
+```text
+Add scripts/check_build_plan3_baseline.sh
+Add crates/rox-anchor-cli/tests/build_plan3_baseline.rs
+Check BUILD_PLAN3.md exists
+Check BUILD_PLAN.md and BUILD_PLAN2.md exist
+Check readiness gate remains green
+Check no common key material tracked
+Check Anchor.toml has no mainnet section
+Check BUILD_PLAN3 non-authorization boundary exists
+```
+
+But avoid unnecessary checker theater. If we add a checker, it must be useful and should not replace code work.
+
+---
+
+### Phase 1 — Private Pilot Operator Workspace Hygiene
+
+Purpose:
+
+```text
+Prepare the operator-side environment without committing secrets.
+```
+
+Likely first real BUILD_PLAN3 implementation phase.
+
+Work items:
+
+```text
+define expected local-only pilot directory layout
+ensure keys/RPC URLs/deployment outputs/pilot receipts stay outside tracked source
+extend .gitignore only if necessary
+add checker rejecting tracked key/RPC/provider secret material
+add tests for checker
+document local-only artifact layout
+do not generate or load real keypairs in tests
+```
+
+Likely files:
+
+```text
+.gitignore
+scripts/check_private_pilot_hygiene.sh
+crates/rox-anchor-cli/tests/private_pilot_hygiene.rs
+docs/pilot/PRIVATE_TESTNET_OPERATOR_WORKSPACE.md
+```
+
+Recommended implementation shape:
+
+```text
+1. Create docs/pilot/PRIVATE_TESTNET_OPERATOR_WORKSPACE.md.
+2. Add local ignored directories if missing:
+   - .rox-anchor-private-pilot/
+   - private-pilot/
+   - pilot-receipts/
+   - pilot-artifacts/
+   - pilot-config/
+3. Add a script that checks tracked files for common forbidden key names and provider/RPC token files.
+4. Add a CLI integration test that runs the checker.
+5. Run focused tests.
+```
+
+Commands:
+
+```bash
+cargo fmt -p rox-anchor-cli
+bash scripts/check_private_pilot_hygiene.sh .
+cargo test -p rox-anchor-cli --test private_pilot_hygiene
+cargo test -p rox-anchor-cli
+```
+
+Exit condition:
+
+```text
+Private pilot workspace model exists and tracked files cannot include common key/RPC secret material.
+```
+
+---
+
+### Phase 2 — External Testnet Config Loader
+
+Purpose:
+
+```text
+Move from in-code config models to an explicit external pilot config format without storing secrets.
+```
+
+Important rule:
+
+```text
+The config may reference external paths and redacted URLs, but it must not commit secrets.
+```
+
+Work items:
+
+```text
+private pilot config shape
+external RPC URL
+external keypair path
+explicit mode
+mainnet-beta rejection
+public/production label rejection
+redacted reports
+fixture configs with no secrets
+tests for valid config, missing fields, mainnet rejection, redaction
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-core/src/types.rs
+crates/rox-anchor-rpc-proof/src/config.rs
+crates/rox-anchor-relayer/src/config.rs
+crates/rox-anchor-coordinator/src/config.rs
+crates/rox-anchor-cli/src/commands/status.rs
+crates/rox-anchor-cli/tests/private_pilot_config.rs
+```
+
+Potential approach:
+
+```text
+Reuse existing testnet config types where possible.
+Do not duplicate safety profile/state enums.
+Add private pilot config wrappers only if needed.
+Keep all validation deterministic.
+```
+
+Commands:
+
+```bash
+cargo fmt -p rox-anchor-core -p rox-anchor-rpc-proof -p rox-anchor-relayer -p rox-anchor-coordinator -p rox-anchor-cli
+cargo test -p rox-anchor-core
+cargo test -p rox-anchor-rpc-proof
+cargo test -p rox-anchor-relayer
+cargo test -p rox-anchor-coordinator
+cargo test -p rox-anchor-cli --test private_pilot_config
+```
+
+Exit condition:
+
+```text
+Private pilot config can be loaded, validated, and redacted without secrets or production/mainnet ambiguity.
+```
+
+---
+
+### Phase 3 — Testnet Program Artifact Manifest
+
+Purpose:
+
+```text
+Track deployment artifacts safely without treating them as production truth.
+```
+
+Work items:
+
+```text
+non-secret deployment manifest
+program ID
+cluster
+build hash
+IDL hash
+deploy slot if supplied
+operator-visible labels
+mainnet-beta rejection
+empty program ID rejection
+Anchor.toml binding check
+path redaction
+manifest validation tests
+no deployment success claims from manifest presence alone
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-core/src/types.rs
+crates/rox-anchor-cli/src/commands/status.rs
+crates/rox-anchor-cli/tests/testnet_program_manifest.rs
+docs/pilot/TESTNET_PROGRAM_MANIFEST.md
+```
+
+Important distinction:
+
+```text
+A manifest can describe an artifact.
+A manifest does not prove deployment success.
+A manifest does not authorize production runtime.
+```
+
+Commands:
+
+```bash
+cargo fmt -p rox-anchor-core -p rox-anchor-cli
+cargo test -p rox-anchor-core
+cargo test -p rox-anchor-cli --test testnet_program_manifest
+cargo test -p rox-anchor-cli
+anchor build
+```
+
+Exit condition:
+
+```text
+Private pilot can describe deployed testnet program artifact without storing secrets or claiming production finality.
+```
+
+---
+
+### Phase 4 — Private Testnet Deployment Drill / Optional Deployment
+
+Purpose:
+
+```text
+Prepare or perform the first real private testnet deployment using external keys, without treating the drill as production launch.
+```
+
+Important:
+
+```text
+Actual deploy is optional.
+External keys required.
+No committed secrets.
+No production claim.
+```
+
+Likely files:
+
+```text
+scripts/check_private_testnet_deploy.sh
+docs/pilot/PRIVATE_TESTNET_DEPLOYMENT_RUNBOOK.md
+crates/rox-anchor-cli/tests/private_testnet_deploy_drill.rs
+```
+
+Manual command remains commented/optional:
+
+```bash
+# anchor deploy --provider.cluster testnet --provider.wallet /external/path/to/testnet-payer.json
+```
+
+Exit condition:
+
+```text
+Deployment drill is reproducible, external-key-only, redacted, and non-production.
+```
+
+Clippy checkpoint after Phase 4:
+
+```bash
+cargo clippy -p rox-anchor-cli --all-targets -- -D warnings
+```
+
+---
+
+### Phase 5 — Test-Only Mint Initialization Runbook
+
+Purpose:
+
+```text
+Initialize private testnet state with test-only assets.
+```
+
+Work items:
+
+```text
+test-only ROX mint initialization checklist
+explicit testnet mode
+explicit test-only mint label
+tiny supply/cap limits
+mint authority separation
+halt/recovery authorities
+public/production label rejection
+redacted initialization intent reports
+initialization intent validation tests
+```
+
+Likely files:
+
+```text
+programs/rox-anchor/src/state.rs
+programs/rox-anchor/src/instructions/initialize.rs
+crates/rox-anchor-core/src/types.rs
+crates/rox-anchor-cli/tests/test_only_mint_initialization.rs
+docs/pilot/TEST_ONLY_MINT_INITIALIZATION.md
+```
+
+Commands:
+
+```bash
+cargo fmt -p rox-anchor-core -p rox-anchor -p rox-anchor-cli
+cargo test -p rox-anchor-core
+cargo test -p rox-anchor
+cargo test -p rox-anchor-cli --test test_only_mint_initialization
+anchor build
+anchor test
+```
+
+Exit condition:
+
+```text
+Private testnet initialization can only target explicit test-only assets with separated authority and tiny caps.
+```
+
+---
+
+### Phase 6 — Live Read-Only RPC Verification Against Testnet
+
+Purpose:
+
+```text
+Verify deployed private testnet state through live read-only RPC.
+```
+
+Work items:
+
+```text
+read-only RPC command path
+current slot fetch
+program account status
+config account status if supplied
+mint account status if supplied
+token account status if supplied
+convert live reads into RPC proof observations
+reject stale/missing/disputed/mismatched observations
+keep all submission disabled
+fake-adapter tests for failures
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-rpc-proof/src/rpc.rs
+crates/rox-anchor-rpc-proof/src/quorum.rs
+crates/rox-anchor-rpc-proof/src/readiness.rs
+crates/rox-anchor-cli/src/commands/proof.rs
+crates/rox-anchor-cli/tests/private_testnet_read_only_rpc.rs
+```
+
+Optional manual command:
+
+```bash
+# cargo run -p rox-anchor-cli -- proof read-only --config /external/path/to/private-testnet.toml
+```
+
+Exit condition:
+
+```text
+Private pilot can verify testnet state using read-only RPC without transaction submission.
+```
+
+---
+
+### Phase 7 — Simulation-Only Pilot Transaction Plans
+
+Purpose:
+
+```text
+Create actual pilot transaction plans but do not send them.
+```
+
+Work items:
+
+```text
+transaction plan models for initialize/observe/challenge/resolve/halt/recover/finalize
+require accepted proof before simulation
+require accepted coordinator decision before simulation
+require relayer dry-run before simulation
+require read-only RPC verification before simulation
+reject halted/challenged/recovery-required/stale/disputed/mismatched inputs
+deterministic simulation reports
+tests proving no bypass
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-relayer/src/submit.rs
+crates/rox-anchor-relayer/src/receipts.rs
+crates/rox-anchor-coordinator/src/decision.rs
+crates/rox-anchor-cli/src/commands/submit.rs
+crates/rox-anchor-relayer/tests/private_pilot_simulation.rs
+```
+
+Exit condition:
+
+```text
+Private pilot transaction plans can be simulated only after all prior proof and read-only gates pass.
+```
+
+---
+
+### Phase 8 — Explicit Capped Private Testnet Sender
+
+Purpose:
+
+```text
+Introduce first real send-capable path, still disabled by default and restricted to private testnet.
+```
+
+Work items:
+
+```text
+explicit send-capable adapter behind TestnetSubmitCapped
+operator approval required
+external config required
+testnet/devnet cluster required
+mainnet-beta rejected
+accepted proof required
+accepted coordinator decision required
+relayer dry-run required
+successful simulation required
+retry cap required
+amount cap required
+operation cap required
+receipt output path required
+no halt/challenge/recovery blocker
+tests for every missing guard
+send never default
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-relayer/src/submit.rs
+crates/rox-anchor-relayer/src/receipts.rs
+crates/rox-anchor-relayer/src/config.rs
+crates/rox-anchor-cli/src/commands/submit.rs
+crates/rox-anchor-relayer/tests/private_testnet_sender.rs
+crates/rox-anchor-cli/tests/private_testnet_submit_command.rs
+```
+
+Optional manual command:
+
+```bash
+# cargo run -p rox-anchor-cli -- submit capped-testnet \
+#   --config /external/path/to/private-testnet.toml \
+#   --receipt-out /external/path/to/receipt.json \
+#   --operator-approval "I_APPROVE_PRIVATE_TESTNET_CAPPED_SUBMIT"
+```
+
+Exit condition:
+
+```text
+The only live send path is private-testnet-only, capped, explicit, simulation-backed, receipt-backed, and impossible from default mode.
+```
+
+Clippy checkpoint after Phase 8:
+
+```bash
+cargo clippy -p rox-anchor-relayer --all-targets -- -D warnings
+cargo clippy -p rox-anchor-cli --all-targets -- -D warnings
+```
+
+---
+
+### Phase 9 — Pilot Receipt Ledger and Audit Trail
+
+Purpose:
+
+```text
+Make every private pilot action inspectable and replay-resistant before full pilot flows.
+```
+
+Work items:
+
+```text
+pilot receipt IDs
+receipt chain/hash linkage if needed
+persist proof review
+persist RPC quorum
+persist coordinator decision
+persist simulation result
+persist send authorization
+persist transaction signature when present
+persist readback verification
+redact secrets and sensitive paths
+reject duplicate receipt IDs
+reject mismatched operation IDs
+reject receipts claiming live submit when no send occurred
+reject receipts claiming production settlement
+deterministic display tests
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-relayer/src/receipts.rs
+crates/rox-anchor-relayer/src/audit.rs
+crates/rox-anchor-cli/src/commands/status.rs
+crates/rox-anchor-relayer/tests/private_pilot_receipts.rs
+crates/rox-anchor-cli/tests/private_pilot_receipt_display.rs
+```
+
+Exit condition:
+
+```text
+Every private pilot action has a redacted, deterministic, replay-resistant receipt trail.
+```
+
+---
+
+### Phase 10 — Pilot CLI Command Surface
+
+Purpose:
+
+```text
+Make private pilot operations usable without unsafe defaults before full ROC↔ROX pilot flows.
+```
+
+Work items:
+
+```text
+pilot status commands
+read-only proof command
+simulation-only command
+capped submit command
+receipt inspect command
+halt/recovery drill command support for pilot mode
+explicit flags for every non-read-only path
+unknown/ambiguous flag rejection
+help output tests proving production/mainnet/public launch modes do not exist
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-cli/src/commands/mod.rs
+crates/rox-anchor-cli/src/commands/proof.rs
+crates/rox-anchor-cli/src/commands/submit.rs
+crates/rox-anchor-cli/src/commands/status.rs
+crates/rox-anchor-cli/tests/private_pilot_cli.rs
+```
+
+Exit condition:
+
+```text
+CLI can run private pilot read-only, simulation, capped submit, status, and receipt inspection paths without unsafe defaults.
+```
+
+---
+
+### Phase 11 — CrabLink / Internal ROC Dry-Run Adapter
+
+Purpose:
+
+```text
+Prepare future CrabLink/RustyOnions handoff before running ROC↔ROX pilot flows, without real ROC mutation.
+```
+
+Work items:
+
+```text
+dry-run internal ROC burn-intent input shape
+dry-run internal ROC release-intent output shape
+test-only values
+explicit non-production mode
+do not call svc-wallet
+do not mutate ron-ledger
+do not unlock paid content
+do not let CrabLink claim final settlement
+display-safe status tests
+tests proving no wallet/ledger mutation path exists
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-core/src/types.rs
+crates/rox-anchor-coordinator/src/observer.rs
+crates/rox-anchor-cli/src/commands/status.rs
+crates/rox-anchor-coordinator/tests/internal_roc_dry_run_adapter.rs
+crates/rox-anchor-cli/tests/crablink_private_pilot_status.rs
+docs/pilot/CRABLINK_INTERNAL_ROC_DRY_RUN_ADAPTER.md
+```
+
+Exit condition:
+
+```text
+ROX Anchor can exchange dry-run intent/status shapes with future CrabLink/RustyOnions integration without mutating real ROC or claiming final settlement.
+```
+
+---
+
+### Phase 12 — Private ROC-to-ROX Testnet Pilot Flow
+
+Purpose:
+
+```text
+Run forward bridge shape privately with test-only inputs after receipt, CLI, and dry-run adapter surfaces exist.
+```
+
+Work items:
+
+```text
+model CrabLink/internal ROC burn-intent input
+do not burn real ROC
+explicit test operation ID
+explicit idempotency key
+nonce
+proof review
+RPC quorum review
+coordinator decision
+relayer dry-run
+simulation
+optional explicitly approved capped private testnet transaction
+mint only test ROX
+persist receipt
+verify receipt by read-only RPC
+replay/mismatch/wrong mint/wrong token/stale RPC/halted path tests
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-coordinator/tests/private_roc_to_rox_pilot.rs
+crates/rox-anchor-relayer/tests/private_roc_to_rox_pilot.rs
+crates/rox-anchor-rpc-proof/tests/private_roc_to_rox_readback.rs
+crates/rox-anchor-cli/tests/private_roc_to_rox_command.rs
+docs/pilot/ROC_TO_ROX_PRIVATE_PILOT.md
+```
+
+Exit condition:
+
+```text
+Private ROC-to-ROX pilot flow can mint only test ROX after every proof, simulation, cap, and receipt gate passes.
+```
+
+Clippy checkpoint after Phase 12:
+
+```bash
+cargo clippy -p rox-anchor-cli --all-targets -- -D warnings
+cargo clippy -p rox-anchor-relayer --all-targets -- -D warnings
+cargo clippy -p rox-anchor-rpc-proof --all-targets -- -D warnings
+```
+
+---
+
+### Phase 13 — Private ROX-to-ROC Testnet Pilot Flow
+
+Purpose:
+
+```text
+Run reverse bridge shape privately without real internal ROC release.
+```
+
+Work items:
+
+```text
+observe test ROX burn evidence
+do not release real ROC
+produce internal ROC release-intent only
+explicit test operation ID
+explicit idempotency key
+nonce
+proof review
+RPC quorum review
+coordinator decision
+relayer dry-run
+simulation where applicable
+persist receipt
+verify burn/readback by read-only RPC
+prove no direct internal ROC mutation
+prove future real ROC path must delegate to svc-wallet/ron-ledger
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-coordinator/tests/private_rox_to_roc_pilot.rs
+crates/rox-anchor-relayer/tests/private_rox_to_roc_pilot.rs
+crates/rox-anchor-rpc-proof/tests/private_rox_to_roc_readback.rs
+crates/rox-anchor-cli/tests/private_rox_to_roc_command.rs
+docs/pilot/ROX_TO_ROC_PRIVATE_PILOT.md
+```
+
+Exit condition:
+
+```text
+Private ROX-to-ROC pilot flow can prove test ROX burn evidence and produce only a dry-run internal ROC release-intent, with no real ROC mutation.
+```
+
+---
+
+### Phase 14 — Live Testnet Chaos and Incident Drills
+
+Purpose:
+
+```text
+Prove private testnet operations fail safely under realistic conditions.
+```
+
+Required drills:
+
+```text
+RPC outage during read-only proof
+RPC disagreement during readback
+stale slot/readback evidence
+wrong program ID
+wrong mint
+wrong token account
+missing program account
+missing config account
+missing receipt file
+receipt tamper
+duplicate receipt
+duplicate operation ID
+duplicate idempotency key
+nonce reuse
+operator approval omitted
+wrong authority attempted
+halt before simulation
+halt after simulation before submit
+halt after capped testnet submit
+recovery during pending operation
+simulation passes but send disabled
+send enabled but cap exceeded
+readback missing after send
+```
+
+Exit condition:
+
+```text
+Private testnet chaos drills fail safely, deterministically, and with inspectable receipts.
+```
+
+---
+
+### Phase 15 — Authority, Upgrade, Halt, and Recovery Operational Drills
+
+Purpose:
+
+```text
+Practice human/operator safety procedures before any broader pilot.
+```
+
+Work items:
+
+```text
+upgrade authority checklist
+mint authority checklist
+halt authority checklist
+recovery authority checklist
+wrong-authority rejection drill
+key rotation intent drill
+halted-system read-only status drill
+recovery-from-halt drill
+redacted operator reports
+tests proving no private key exposure or production-safety claims
+```
+
+Likely files:
+
+```text
+docs/pilot/PRIVATE_PILOT_AUTHORITY_DRILLS.md
+docs/pilot/PRIVATE_PILOT_HALT_RECOVERY_DRILLS.md
+crates/rox-anchor-core/tests/private_pilot_authority_drills.rs
+crates/rox-anchor-cli/tests/private_pilot_drill_reports.rs
+```
+
+Exit condition:
+
+```text
+Private pilot authority, upgrade, halt, and recovery procedures are tested, redacted, and operator-readable.
+```
+
+---
+
+### Phase 16 — Private Testnet Pilot Closeout Gate
+
+Purpose:
+
+```text
+Decide whether ROX Anchor has completed the private testnet pilot and is ready for a separate future production-readiness plan.
+```
+
+Work items:
+
+```text
+confirm all local tests pass
+confirm all Anchor tests pass
+confirm all private pilot checks pass
+confirm private pilot receipts exist if manual runs were performed
+confirm no key material is tracked
+confirm no public launch behavior
+confirm no mainnet behavior
+confirm no production settlement behavior
+confirm no real ROC release behavior
+confirm no public bridge UI
+confirm no exchange/staking/liquidity behavior
+confirm halt/recovery drills
+confirm known pilot failures documented
+confirm any next plan is separate and explicitly scoped
+```
+
+Likely files:
+
+```text
+docs/pilot/PRIVATE_TESTNET_PILOT_CLOSEOUT.md
+scripts/check_private_testnet_pilot_closeout.sh
+crates/rox-anchor-cli/tests/private_testnet_pilot_closeout.rs
+```
+
+Exit condition:
+
+```text
+ROX Anchor private testnet pilot is complete / green / parked.
+Future production-readiness may be drafted separately.
+No public/mainnet/production behavior is authorized by BUILD_PLAN3.
+```
+
+Final Clippy checkpoint:
+
+```bash
+cargo clippy -p rox-anchor-core --all-targets -- -D warnings
+cargo clippy -p rox-anchor-proof --all-targets -- -D warnings
+cargo clippy -p rox-anchor-cli --all-targets -- -D warnings
+cargo clippy -p rox-anchor-rpc-proof --all-targets -- -D warnings
+cargo clippy -p rox-anchor-coordinator --all-targets -- -D warnings
+cargo clippy -p rox-anchor-relayer --all-targets -- -D warnings
+cargo clippy -p rox-anchor --all-targets -- -D warnings
+```
+
+---
+
+## 5. Key Invariants to Preserve in Next Session
+
+### 5.1 Core Ownership
+
+```text
+rox-anchor-core owns:
+- shared IDs
+- domains
+- directions
+- states
+- labels
+- challenge posture
+- halt posture
+- recovery posture
+- testnet scope types
+- authority role concepts where shared
+- reusable errors
+```
+
+Do not create competing enums in CLI/coordinator/relayer/RPC proof.
+
+---
+
+### 5.2 Proof Ownership
+
+```text
+rox-anchor-proof owns deterministic proof review.
+```
+
+It must remain the source for:
+
+```text
+valid acceptance
+missing evidence
+disputed evidence
+replay rejection
+binding mismatch rejection
+challenge blocking
+halt blocking
+recovery blocking
+deterministic findings
+```
+
+---
+
+### 5.3 Replay Rejection
+
+Always reject reuse of:
+
+```text
+operation ID
+idempotency key
+nonce
+```
+
+Any BUILD_PLAN3 private pilot flow must retain this.
+
+---
+
+### 5.4 Binding Rejection
+
+Always reject mismatches in:
+
+```text
+source domain
+target domain
+direction
+cluster
+program ID
+mint
+token account
+operation ID
+idempotency key
+nonce
+authority
+receipt ID
+simulation result
+readback result
+```
+
+---
+
+### 5.5 No Hidden Live Behavior
+
+Live behavior must be:
+
+```text
+explicit
+capped
+testnet/devnet only
+operator-approved
+receipt-backed
+not default
+impossible from local-only/simulate-only mode
+blocked by halt/challenge/recovery
+blocked by missing receipt
+blocked by failed simulation
+blocked by missing proof/coordinator/relayer acceptance
+```
+
+No command should silently:
+
+```text
+load a wallet
+call live RPC submission
+deploy
+mint
+burn
+settle
+release ROC
+claim finality
+```
+
+---
+
+### 5.6 CrabLink Boundary
+
+CrabLink is future display/user-intent surface only.
+
+CrabLink must not:
+
+```text
+create bridge receipts
+create balances
+claim bridge finality
+release paid content based on pilot state
+mutate internal ROC
+bypass svc-wallet/ron-ledger
+display production settlement
+```
+
+Allowed future CrabLink statuses:
+
+```text
+private pilot
+test-only
+dry-run
+pending proof
+pending readback
+simulation only
+capped testnet submit
+not production
+not final
+manual review required
+halted
+recovery required
+```
+
+---
+
+### 5.7 Internal ROC Boundary
+
+For real future ROC mutation, only this path is acceptable:
+
+```text
+svc-wallet -> ron-ledger
+```
+
+ROX Anchor must not directly mutate:
+
+```text
+ron-ledger
+svc-wallet balance state
+internal ROC balances
+paid access truth
+CrabLink display balances
+```
+
+BUILD_PLAN3 Phase 11 should explicitly prove that the adapter is dry-run only.
+
+---
+
+## 6. Recommended Next-Session Opening Prompt
+
+Use this prompt in the next session:
+
+```text
+We are continuing RustyOnions / CrabLink / ROX Anchor.
+
+Current status:
+BUILD_PLAN.md is complete / green / parked.
+BUILD_PLAN2.md is complete / green / parked.
+BUILD_PLAN3.md has been created, corrected, and is ready to begin.
+
+The latest terminal output after patching BUILD_PLAN3 shows:
+cargo fmt --all: green
+cargo test --workspace: green
+cargo check --workspace: green
+anchor build: green
+anchor test: green
+scripts/check_testnet_readiness_gate.sh: green
+scripts/make_codebundle.sh: green
+
+Current workstream:
+BUILD_PLAN3 — Private Testnet Pilot / Controlled Live-Testnet Operations.
+
+Important boundary:
+No mainnet, no public launch, no production bridge settlement, no public ROX mint/burn, no real internal ROC release, no staking, no liquidity, no exchange-facing behavior, no real user funds.
+
+Please start with BUILD_PLAN3 Phase 0, confirm the green baseline, then proceed to Phase 1: Private Pilot Operator Workspace Hygiene. Use QuickChain-style patches: real code/checkers/tests, focused commands, fix first failure before expanding.
+```
+
+---
+
+## 7. Files to Attach in Next Session
+
+Minimum:
+
+```text
+BUILD_PLAN3.md
+latest CODEBUNDLE.md
+latest terminal output
+```
+
+Recommended:
+
+```text
+BUILD_PLAN.md
+BUILD_PLAN2.md
+IDB.md
+TODO.md
+NOTES.MD
+```
+
+Only attach the large historical RustyOnions/CrabLink docs if needed. For the next coding session, the most useful files are:
+
+```text
+BUILD_PLAN3.md
+CODEBUNDLE.md
+Pasted terminal output
+```
+
+---
+
+## 8. Immediate Next Commands for Next Session
+
+Start with:
+
+```bash
+cd /Users/mymac/Desktop/rox-anchor
+
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+anchor build
+anchor test
+bash scripts/check_testnet_readiness_gate.sh .
+bash scripts/make_codebundle.sh
+```
+
+Then begin BUILD_PLAN3 Phase 0.
+
+If Phase 0 is treated as baseline-only, then the first real patch should be Phase 1:
+
+```text
+Private Pilot Operator Workspace Hygiene
+```
+
+Likely first Phase 1 patch:
+
+```text
+docs/pilot/PRIVATE_TESTNET_OPERATOR_WORKSPACE.md
+scripts/check_private_pilot_hygiene.sh
+crates/rox-anchor-cli/tests/private_pilot_hygiene.rs
+.gitignore additions if needed
+```
+
+Focused commands after Phase 1 patch:
+
+```bash
+bash scripts/check_private_pilot_hygiene.sh .
+cargo test -p rox-anchor-cli --test private_pilot_hygiene
+cargo test -p rox-anchor-cli
+cargo test --workspace
+```
+
+---
+
+## 9. Completion Estimate After This Session
+
+Updated estimate:
+
+```text
+ROX Anchor local implementation: 100%
+ROX Anchor testnet hardening/readiness: 100%
+BUILD_PLAN3 plan creation: 100%
+BUILD_PLAN3 implementation: 0%
+Entire ROX Anchor project: ~70%
+```
+
+After BUILD_PLAN3 completes, the project would likely be around:
+
+```text
+85–90% complete toward private/testnet operational confidence
+```
+
+Remaining after BUILD_PLAN3 would be a separate future plan for:
+
+```text
+external audit
+production authority/multisig
+mainnet decision gate
+public bridge UI gating
+real RustyOnions svc-wallet/ron-ledger adapter
+production incident response
+economic limits
+public launch controls
+legal/compliance review
+mainnet deployment
+production settlement
+```
+
+Do not start that future production plan until BUILD_PLAN3 is green/parked and explicitly requested.
+
+---
+
+## 10. Recommended First Patch in Next Session
+
+The best first implementation patch is:
+
+```text
+BUILD_PLAN3 Phase 1 — Private Pilot Operator Workspace Hygiene
+```
+
+Why Phase 1 first:
+
+```text
+Before any private testnet config, manifest, deploy drill, read-only RPC, simulation, or capped send path, we need the operator workspace and secret hygiene boundary locked.
+```
+
+Expected patch contents:
+
+```text
+1. Create docs/pilot/PRIVATE_TESTNET_OPERATOR_WORKSPACE.md.
+2. Create scripts/check_private_pilot_hygiene.sh.
+3. Add crates/rox-anchor-cli/tests/private_pilot_hygiene.rs.
+4. Possibly extend .gitignore for:
+   - .rox-anchor-private-pilot/
+   - private-pilot/
+   - pilot-receipts/
+   - pilot-artifacts/
+   - pilot-config/
+   - *.pilot-receipt.json
+   - *.pilot-manifest.json
+   - *.pilot-config.toml
+5. Run focused tests.
+```
+
+Script should check for:
+
+```text
+common Solana keypair names
+testnet keypair artifacts
+private pilot key material
+provider token files
+RPC URL local files
+raw secret-like filenames
+committed pilot receipts containing obvious secret names
+```
+
+The script should not:
+
+```text
+load wallets
+call RPC
+deploy
+submit
+mint
+burn
+settle
+read real external secret files
+```
+
+Test should verify:
+
+```text
+checker exists
+checker passes current repo
+checker references BUILD_PLAN3/private pilot boundary
+checker rejects key material patterns
+checker does not claim deployment/submission/success
+```
+
+---
+
+## 11. Git Commit Message Options
+
+If committing this session’s work:
+
+Longer:
+
+```text
+Add BUILD_PLAN3 private testnet pilot plan
+```
+
+Ten-word option:
+
+```text
+Add corrected BUILD_PLAN3 for private testnet pilot operations
+```
+
+Seven-word option:
+
+```text
+Add private testnet pilot build plan
+```
+
+Very short:
+
+```text
+Add BUILD_PLAN3 private pilot plan
+```
+
+---
+
+## 12. Final Carry-Over Bottom Line
+
+This session completed the transition from BUILD_PLAN2 into BUILD_PLAN3.
+
+We:
+
+```text
+confirmed BUILD_PLAN2 is complete / green / parked
+confirmed the final Anchor tooling stamp is green
+clarified current ROC↔ROX capability
+estimated overall ROX Anchor completion around 70%
+created BUILD_PLAN3.md
+verified BUILD_PLAN3 for correctness
+fixed BUILD_PLAN3 phase ordering and Phase 4 wording
+ran the full green command suite after the patch
+regenerated a safe CODEBUNDLE.md
+```
+
+The next session should not redesign the plan. It should begin implementing it.
+
+Next active target:
+
+```text
+BUILD_PLAN3 Phase 0 -> Phase 1
+```
+
+First meaningful implementation target:
+
+```text
+Private Pilot Operator Workspace Hygiene
+```
+
+End-state target for BUILD_PLAN3:
+
+```text
+ROX Anchor private testnet pilot complete / green / parked,
+with no public/mainnet/production bridge behavior authorized.
+```
+
+This should be enough to restart cleanly in the next session with `BUILD_PLAN3.md`, the new codebundle, and the terminal output.
+
+
+### END NOTE - JULY 4 2026 - 20:35 CST

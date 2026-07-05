@@ -3,7 +3,7 @@
 //! RO:INTERACTS — ids, types, proof validation, CLI display, local service models, and future Anchor checks.
 //! RO:INVARIANTS — errors are deterministic and do not imply finality or runtime authorization.
 //! RO:SECURITY — validation-only; no wallet/RPC/deployment/keypair side effects.
-//! RO:TEST — covered by identifier, scope-lock, testnet-config, and operator-authority tests.
+//! RO:TEST — covered by identifier, scope-lock, testnet-config, operator-authority, and private-pilot config tests.
 
 use core::fmt;
 
@@ -54,6 +54,22 @@ pub enum AnchorCoreError {
     MissingPayerKeypairPath,
     EmptyRpcUrl,
     EmptyPayerKeypairPath,
+    MalformedPrivatePilotConfigLine {
+        line: String,
+    },
+    DuplicatePrivatePilotConfigField {
+        field: String,
+    },
+    MissingPrivatePilotConfigField {
+        field: &'static str,
+    },
+    PrivatePilotRequiresTestnetMode {
+        environment: &'static str,
+    },
+    PublicOrProductionPrivatePilotLabel {
+        field: &'static str,
+        label: String,
+    },
     EmptyAuthorityAssignments,
     DuplicateAuthorityRole {
         role: &'static str,
@@ -137,6 +153,23 @@ impl fmt::Display for AnchorCoreError {
             }
             Self::EmptyRpcUrl => f.write_str("external RPC URL is empty"),
             Self::EmptyPayerKeypairPath => f.write_str("external payer/keypair path is empty"),
+            Self::MalformedPrivatePilotConfigLine { line } => {
+                write!(f, "malformed private pilot config line: {line}")
+            }
+            Self::DuplicatePrivatePilotConfigField { field } => {
+                write!(f, "duplicate private pilot config field: {field}")
+            }
+            Self::MissingPrivatePilotConfigField { field } => {
+                write!(f, "missing private pilot config field: {field}")
+            }
+            Self::PrivatePilotRequiresTestnetMode { environment } => write!(
+                f,
+                "private pilot config requires testnet_only mode, got {environment}"
+            ),
+            Self::PublicOrProductionPrivatePilotLabel { field, label } => write!(
+                f,
+                "private pilot config field {field} uses forbidden public/production label: {label}"
+            ),
             Self::EmptyAuthorityAssignments => {
                 f.write_str("authority assignments must not be empty")
             }

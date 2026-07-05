@@ -1,11 +1,14 @@
-//! RO:WHAT — Local coordinator configuration and non-secret testnet config.
-//! RO:WHY — Keeps queue capacity, RPC evidence thresholds, and BUILD_PLAN2 testnet safety explicit.
+//! RO:WHAT — Local coordinator configuration and non-secret testnet/private-pilot config.
+//! RO:WHY — Keeps queue capacity, RPC evidence thresholds, and BUILD_PLAN2/3 safety explicit.
 //! RO:INTERACTS — queue, readiness, decision review, rpc-proof config, and core safety/config types.
 //! RO:INVARIANTS — config is local/testnet review posture only, not runtime authority.
 //! RO:SECURITY — no endpoints are called, no secrets are loaded, and no submission toggles are implicit.
-//! RO:TEST — covered by coordinator readiness, queue, scope-lock, and testnet-config tests.
+//! RO:TEST — covered by coordinator readiness, queue, scope-lock, testnet-config, and private-pilot config tests.
 
-use rox_anchor_core::{AnchorSafetyProfile, TestnetConfig, TestnetConfigReport};
+use rox_anchor_core::{
+    AnchorSafetyProfile, PrivatePilotConfig, PrivatePilotConfigReport, TestnetConfig,
+    TestnetConfigReport,
+};
 use rox_anchor_rpc_proof::RpcProofConfig;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -61,5 +64,32 @@ impl CoordinatorTestnetConfig {
 
     pub fn redacted_report(&self) -> TestnetConfigReport {
         self.testnet.redacted_report()
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CoordinatorPrivatePilotConfig {
+    pub coordinator: CoordinatorConfig,
+    pub pilot: PrivatePilotConfig,
+}
+
+impl CoordinatorPrivatePilotConfig {
+    pub fn from_external_config_text(
+        coordinator: CoordinatorConfig,
+        input: &str,
+    ) -> Result<Self, rox_anchor_core::AnchorCoreError> {
+        let pilot = PrivatePilotConfig::parse_external_config(input)?;
+
+        Ok(Self { coordinator, pilot })
+    }
+
+    pub fn validate(&self) -> Result<(), rox_anchor_core::AnchorCoreError> {
+        self.coordinator.safety.validate()?;
+        self.coordinator.rpc.safety.validate()?;
+        self.pilot.validate()
+    }
+
+    pub fn redacted_report(&self) -> PrivatePilotConfigReport {
+        self.pilot.redacted_report()
     }
 }

@@ -1,16 +1,28 @@
-//! RO:WHAT — Status-label, testnet-config, and authority-model inspection for the ROX Anchor CLI.
+//! RO:WHAT — Status-label, testnet-config, private-pilot-config, and authority-model inspection for the ROX Anchor CLI.
 //! RO:WHY — Exposes display-safe labels and redacted hardening surfaces without inventing finality.
-//! RO:INTERACTS — rox-anchor-core labels, lifecycle states, testnet config reports, and authority model.
+//! RO:INTERACTS — rox-anchor-core labels, lifecycle states, config reports, and authority model.
 //! RO:INVARIANTS — labels/config/authority reports are display strings only; not runtime authority.
 //! RO:SECURITY — no wallet, RPC call, key loading, deployment, mint/burn, staking, liquidity, or settlement.
-//! RO:TEST — covered through CLI command dispatch, status display tests, and authority status tests.
+//! RO:TEST — covered through CLI command dispatch, status display tests, authority status tests, and private-pilot config tests.
 
 use rox_anchor_core::{
     label_for_lifecycle_state, AnchorCluster, AnchorEnvironmentMode, AnchorLifecycleState,
     AnchorOperationalPosture, AuthorityAssignment, AuthorityKeyId, AuthorityMap,
-    AuthorityRotationIntent, AuthoritySeparationMode, OperatorRole, SubmissionMode, TestnetConfig,
-    SAFE_STATUS_LABELS,
+    AuthorityRotationIntent, AuthoritySeparationMode, OperatorRole, PrivatePilotConfig,
+    SubmissionMode, TestnetConfig, SAFE_STATUS_LABELS,
 };
+
+const PRIVATE_PILOT_STATUS_CONFIG: &str = r#"
+environment_mode = "testnet_only"
+cluster = "devnet"
+submission_mode = "simulate_only"
+rpc_url = "https://private-devnet.invalid/status-provider-token"
+payer_keypair_path = "/external/pilot-keys/status-payer.json"
+operator_label = "private-pilot-status-operator"
+asset_label = "test-only-rox-status-asset"
+receipt_output_path = "/external/pilot-receipts/status-receipt.json"
+observed_signature = "5JstatusPrivatePilotSignature1111222233334444"
+"#;
 
 pub fn status_report() -> String {
     let mut lines = vec![
@@ -40,6 +52,19 @@ pub fn status_report() -> String {
     for line in example.redacted_report().lines() {
         lines.push(format!("  {line}"));
     }
+
+    lines.push("private_pilot_config_surface: redacted_external_config_loader".to_string());
+
+    let private_pilot = PrivatePilotConfig::parse_external_config(PRIVATE_PILOT_STATUS_CONFIG)
+        .expect("static private pilot status config should validate");
+
+    for line in private_pilot.redacted_report().lines() {
+        lines.push(format!("  {line}"));
+    }
+
+    lines.push("private_pilot_config_runtime_effects: disabled".to_string());
+    lines.push("private_pilot_config_wallet_loading: disabled".to_string());
+    lines.push("private_pilot_config_rpc_calls: disabled".to_string());
 
     lines.push("phase12_kill_switch_surface: local_drill_only".to_string());
 

@@ -363,3 +363,39 @@ test-validator-ledger/
 *.testnet-wallet.json
 *.testnet-authority.json
 *.testnet-payer.json
+
+# =============================================================================
+# ROX Anchor private pilot local artifacts — NEVER COMMIT
+# =============================================================================
+# BUILD_PLAN3 private pilot work may use local-only operator artifacts.
+# Keep all pilot keys, RPC URLs, deployment outputs, receipts, ledgers, and
+# unredacted audit captures outside tracked source.
+
+.rox-anchor-pilot/
+.rox-anchor-private-pilot/
+private-pilot/
+
+pilot-artifacts/
+pilot-rpc/
+pilot-keys/
+pilot-keypairs/
+pilot-wallets/
+pilot-secrets/
+pilot-receipts/
+pilot-audit/
+pilot-deploy/
+pilot-ledger/
+pilot-tmp/
+
+*.pilot-config.local.toml
+*.pilot-config.local.json
+*.pilot-rpc.txt
+*.pilot-provider.txt
+*.pilot-keypair.json
+*.pilot-wallet.json
+*.pilot-authority.json
+*.pilot-payer.json
+*.pilot-receipt.json
+*.pilot-audit.json
+*.pilot-deploy-output.json
+*.pilot-ledger.json
