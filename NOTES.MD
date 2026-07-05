@@ -7586,3 +7586,3585 @@ Add anchor-spl typed account/mint readiness surface without mint_to/burn yet, th
 
 
 ### END NOTE - JULY 3 2026 - 20:35 CST
+
+
+### BEGIN NOTE - JULY 3 2026 - 23:15 CST
+
+Use these as the next-session carryover notes.
+
+# ROX Anchor Carryover Notes — Local Plan Complete / BUILD_PLAN2 Ready
+
+## Session Status
+
+We made major progress in this session. The original ROX Anchor local implementation build plan is now complete, green, and ready to park.
+
+Current status:
+
+```text
+ROX Anchor local implementation build plan: COMPLETE / GREEN / PARKED
+BUILD_PLAN.md: preserve as completed reference
+BUILD_PLAN2.md: written and ready as the next active plan
+Next workstream: testnet-only production-readiness / security hardening
+Public launch: not authorized
+Mainnet: not authorized
+Public mint/burn: not authorized
+Production bridge settlement: not authorized
+Exchange/liquidity/staking: not authorized
+```
+
+The final local closeout sequence passed:
+
+```bash
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+anchor build
+anchor test
+```
+
+The terminal output showed the full workspace suite passing, the Anchor program tests passing, `cargo check --workspace` passing, `anchor build` passing, and `anchor test` passing. The Anchor program suite showed 91 tests passing, with no failures. 
+
+This means the original local implementation plan can be treated as finished and parked. The next session should not restart planning for the local implementation. It should begin from `BUILD_PLAN2.md`.
+
+---
+
+## What We Accomplished In This Session
+
+### 1. Finished Phase 12 — Chaos Tests
+
+We completed the last explicit Phase 12 chaos item: RPC equivocation detection.
+
+Added:
+
+```text
+crates/rox-anchor-rpc-proof/tests/rpc_equivocation_chaos.rs
+```
+
+The new chaos test target covered:
+
+```text
+conflicting RPC signatures are disputed, not accepted as agreement
+same-source equivocation is flagged and disputed
+repeated equivocation reviews remain deterministic
+clean RPC agreement after an equivocation case can still accept
+```
+
+The focused test passed:
+
+```text
+rpc_equivocation_chaos: 4 passed / 0 failed
+```
+
+The broader RPC proof crate also passed:
+
+```text
+rox-anchor-rpc-proof unit tests: 7 passed / 0 failed
+rpc_to_proof_boundary: 3 passed / 0 failed
+rpc_equivocation_chaos: 4 passed / 0 failed
+```
+
+This completed the final Phase 12 item:
+
+```text
+RPC equivocation is detected
+```
+
+Phase 12 status:
+
+```text
+Phase 12 — Chaos Tests: COMPLETE / GREEN
+```
+
+---
+
+### 2. Ran Phase 13 — Final Local Green Run
+
+After Phase 12 completed, we ran the final closeout sequence:
+
+```bash
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+anchor build
+anchor test
+```
+
+Everything passed.
+
+The final output confirmed:
+
+```text
+rox-anchor program tests: 91 passed
+rox-anchor-cli tests: passed
+rox-anchor-coordinator tests: passed
+rox-anchor-core tests: passed
+rox-anchor-proof tests: passed
+rox-anchor-relayer tests: passed
+rox-anchor-rpc-proof tests: passed
+doc-tests: passed
+cargo check --workspace: passed
+anchor build: passed
+anchor test: passed
+```
+
+Phase 13 status:
+
+```text
+Phase 13 — Final Local Green Run: COMPLETE / GREEN
+```
+
+Overall original plan status:
+
+```text
+BUILD_PLAN.md: COMPLETE / GREEN / PARKED
+```
+
+---
+
+### 3. Created BUILD_PLAN2.md
+
+We created the next build plan:
+
+```text
+BUILD_PLAN2.md
+```
+
+Title:
+
+```text
+ROX Anchor Build Plan 2
+Testnet-Only Production Readiness / Security Hardening
+```
+
+Purpose:
+
+```text
+Move from a local compile-tested implementation to a controlled testnet-only hardening surface.
+```
+
+The new plan is explicitly not:
+
+```text
+a public launch plan
+a mainnet plan
+an exchange/liquidity/staking plan
+authorization to make public ROX mint/burn available
+authorization for production bridge settlement
+```
+
+The plan correctly keeps the original completed `BUILD_PLAN.md` around for reference and makes `BUILD_PLAN2.md` the next active workstream. It includes phases from baseline freeze through private testnet readiness gate. 
+
+---
+
+### 4. Verified BUILD_PLAN2.md Completeness
+
+We reviewed `BUILD_PLAN2.md` and confirmed it is complete enough to use as the next-session build plan.
+
+It includes:
+
+```text
+precondition that BUILD_PLAN.md is complete / green / parked
+clear testnet-only scope
+hard forbidden list
+allowed testnet/localnet scope
+QuickChain-style build rules
+local green baseline freeze
+testnet safety flags
+testnet configuration model
+operator key and authority model
+read-only live RPC adapter
+transaction simulation model
+test-only mint/token harness
+testnet deployment drill
+capped testnet submission path
+end-to-end testnet shadow flow
+security regression expansion
+observability / receipts / audit trail
+halt / recovery / kill-switch drills
+testnet chaos drills
+audit preparation
+private testnet readiness gate
+final non-authorization for public launch/mainnet/production bridge
+```
+
+Only optional future edits were identified:
+
+```text
+change Status from draft to active when Phase 0 begins
+make Phase 8 wording extra explicit: testnet transaction submission with test-only assets only
+make Phase 15 title extra explicit: private testnet pilot only
+```
+
+These are optional wording improvements, not missing structural phases.
+
+---
+
+### 5. Counted Current Production Rust LOC
+
+We ran `cloc` on production Rust, excluding `target`, `.git`, `node_modules`, `tests`, and lock files.
+
+Current production Rust count:
+
+```text
+Rust files: 58
+Blank lines: 1,092
+Comment lines: 354
+Code lines: 7,328
+```
+
+Breakdown:
+
+```text
+programs/rox-anchor:        4,814 Rust code lines
+crates/rox-anchor-cli:        433 Rust code lines
+crates/rox-anchor-coordinator: 768 Rust code lines
+crates/rox-anchor-core:       405 Rust code lines
+crates/rox-anchor-proof:      823 Rust code lines
+crates/rox-anchor-relayer:    460 Rust code lines
+crates/rox-anchor-rpc-proof:  669 Rust code lines
+```
+
+Interpretation:
+
+```text
+ROX Anchor is much leaner than expected.
+The majority of code is concentrated in the Anchor program, where state-transition rules belong.
+The supporting crates are intentionally small and focused.
+The project is serious but not bloated.
+```
+
+A reasonable expected size for this scope could have been 12k–20k Rust LOC. The current 7,328 production Rust LOC means the implementation stayed compact while still covering the local proof/coordinator/relayer/Anchor state surfaces.
+
+---
+
+## Current Completion Estimate
+
+### Original local implementation plan
+
+```text
+BUILD_PLAN.md completion: 100%
+Status: COMPLETE / GREEN / PARKED
+```
+
+### BUILD_PLAN2 implementation
+
+```text
+BUILD_PLAN2 implementation completion: 0%
+Status: written / ready / not started
+```
+
+### Overall ROX Anchor path including private testnet readiness
+
+```text
+Approximate overall ROX Anchor completion toward private testnet readiness: ~60%
+```
+
+Reasoning:
+
+```text
+The local implementation foundation is complete.
+The Anchor program compiles and tests green.
+The proof engine, RPC proof model, coordinator, relayer, and CLI are green.
+Integration and chaos coverage are green.
+The next major work is testnet-only hardening, not rebuilding the local foundation.
+```
+
+What remains is not “make the local thing work.” It is:
+
+```text
+testnet safety gates
+testnet config model
+operator authority/key model
+read-only RPC adapter
+simulation-before-submit path
+test-only mint/token harness
+capped testnet submission
+private testnet shadow flow
+expanded adversarial tests
+audit maps
+halt/recovery drills
+private testnet readiness gate
+```
+
+---
+
+## Active Project Boundary Going Forward
+
+This is extremely important for the next session.
+
+We are not launching a public Solana token.
+
+We are not enabling public mint/burn.
+
+We are not enabling production bridge settlement.
+
+We are not making exchange-facing, liquidity, staking, or public bridge behavior.
+
+The next plan is strictly:
+
+```text
+localnet + devnet/testnet only
+test-only assets only
+controlled private testnet pilot readiness only
+read-only RPC before simulation
+simulation before testnet submission
+testnet submission capped, explicit, and gated
+no default live submission
+no production settlement
+no real user value movement
+```
+
+Any mainnet/public launch behavior must be a separate future plan after testnet hardening, audit preparation, private testnet pilot proof, and explicit authorization.
+
+---
+
+## Final State Of Original BUILD_PLAN.md
+
+The original build plan produced and proved:
+
+```text
+rox-anchor-core shared type foundation
+rox-anchor-proof deterministic proof validation
+rox-anchor-cli check/status behavior
+rox-anchor-rpc-proof local RPC evidence/quorum model
+rox-anchor-coordinator local decision model
+rox-anchor-relayer dry-run model
+compile-tested Anchor program
+Anchor state rules
+local ROC ↔ ROX mint/burn semantics
+local nonvalue bidirectional flows
+integration tests
+chaos tests
+final local green run
+```
+
+Critical invariants now covered locally:
+
+```text
+replay rejection
+idempotency rejection
+nonce reuse rejection
+domain mismatch rejection
+direction mismatch rejection
+cluster mismatch rejection
+program ID mismatch rejection
+mint mismatch rejection
+token account mismatch rejection
+operation ID mismatch rejection
+halt blocks unsafe acceptance/finalization
+challenge states block unsafe acceptance/finalization
+recovery-required state blocks unsafe acceptance/finalization
+stale RPC evidence rejection
+missing RPC evidence rejection
+disputed RPC evidence rejection
+RPC equivocation detection
+coordinator stale evidence rejection
+relayer retry storm bounding
+relayer idempotency replay rejection
+receipt capacity bounding
+status output avoids fake runtime/settlement claims
+Anchor state transition tests pass
+```
+
+Important distinction:
+
+```text
+The local mint/burn semantics are tested locally.
+This is not public mint/burn.
+This is not production bridge settlement.
+This is not public ROX runtime launch.
+```
+
+The ROX→ROC local path must continue to avoid real internal ROC release. Future real ROC release, if ever built, belongs to RustyOnions `svc-wallet -> ron-ledger`, not directly to Anchor or the relayer.
+
+---
+
+## New Active File: BUILD_PLAN2.md
+
+`BUILD_PLAN2.md` should now be the phase/round reference for future ROX Anchor work.
+
+Its build order:
+
+```text
+Phase 0  — Freeze local green baseline
+Phase 1  — Testnet scope locks and safety flags
+Phase 2  — Testnet configuration model
+Phase 3  — Operator key and authority safety model
+Phase 4  — Read-only live RPC adapter
+Phase 5  — Transaction simulation model
+Phase 6  — Test-only mint and token account harness
+Phase 7  — Testnet deployment drill
+Phase 8  — Capped testnet submission path
+Phase 9  — End-to-end testnet shadow flow
+Phase 10 — Security regression expansion
+Phase 11 — Observability, receipts, and audit trail
+Phase 12 — Halt, recovery, and kill-switch drills
+Phase 13 — Testnet chaos drills
+Phase 14 — Audit preparation
+Phase 15 — Testnet readiness gate
+```
+
+The plan ends at:
+
+```text
+Private testnet-only pilot readiness
+```
+
+It does not end at:
+
+```text
+public token launch
+mainnet launch
+public bridge
+production bridge settlement
+exchange/liquidity/staking readiness
+```
+
+---
+
+## Recommended Next-Session Opening Prompt
+
+Use something like this in the next session:
+
+```text
+We are continuing ROX Anchor.
+
+Current status:
+BUILD_PLAN.md is COMPLETE / GREEN / PARKED.
+The local ROX Anchor implementation is complete and passed the final local green run:
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+anchor build
+anchor test
+
+Current active plan:
+BUILD_PLAN2.md — Testnet-Only Production Readiness / Security Hardening.
+
+Strict boundary:
+No public Solana token launch.
+No mainnet.
+No public ROX mint/burn.
+No production bridge settlement.
+No production ROC release.
+No exchange, liquidity, staking, or public bridge UI.
+Testnet/localnet only.
+Read-only RPC before simulation.
+Simulation before capped testnet submission.
+Capped testnet submission only after explicit gates and only with test-only assets.
+
+Please start with BUILD_PLAN2 Phase 0:
+freeze the local green baseline, confirm BUILD_PLAN.md remains parked, confirm BUILD_PLAN2.md is active, and then move into Phase 1 only after the repo is still green.
+Use QuickChain-style implementation: small Rust patch, focused tests, compile/check, fix first failure before expanding.
+```
+
+---
+
+## Files To Attach In The Next Session
+
+Attach these first:
+
+```text
+BUILD_PLAN2.md
+BUILD_PLAN.md
+Cargo.toml
+Anchor.toml
+README.md
+TODO.md
+IDB.md
+latest CODEBUNDLE.md
+latest terminal output showing final green run
+```
+
+Optional but useful:
+
+```text
+COMBINED_IDB.MD
+CODEBUNDLE_RS.md if the wider RustyOnions context matters
+SESSION_PACK.md if continuing broader RustyOnions/CrabLink linkage
+```
+
+For immediate Phase 0 and Phase 1 work, the most important files are:
+
+```text
+BUILD_PLAN2.md
+BUILD_PLAN.md
+Cargo.toml
+Anchor.toml
+CODEBUNDLE.md
+latest terminal output
+```
+
+---
+
+## Next Session First Commands
+
+Start from repo root:
+
+```bash
+cd /Users/mymac/Desktop/rox-anchor
+
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+anchor build
+anchor test
+```
+
+If green, Phase 0 is effectively confirmed.
+
+Then begin Phase 1.
+
+---
+
+## Next Implementation Target: BUILD_PLAN2 Phase 0
+
+Phase 0 is a baseline freeze. It likely does not need much new code unless we decide to add a tiny status note or test to prove the active plan boundary.
+
+Phase 0 work:
+
+```text
+1. Confirm current repo green.
+2. Confirm BUILD_PLAN.md remains unchanged.
+3. Confirm BUILD_PLAN2.md is active.
+4. Confirm all new work is testnet/localnet only.
+5. Confirm no mainnet/public token behavior exists.
+```
+
+Recommended Phase 0 outcome:
+
+```text
+Phase 0 — COMPLETE / GREEN
+```
+
+Do not overbuild Phase 0.
+
+A small verification script may be useful, but avoid turning it into docs theater.
+
+---
+
+## Next Real Implementation Target: BUILD_PLAN2 Phase 1
+
+Phase 1 is where the real next code begins.
+
+Goal:
+
+```text
+Add explicit runtime/config boundaries so testnet code cannot accidentally become public launch code.
+```
+
+Likely new shared core types:
+
+```text
+AnchorRuntimeMode:
+- LocalOnly
+- TestnetOnly
+- ProductionDisabled
+
+SubmissionMode:
+- DryRunOnly
+- SimulateOnly
+- TestnetSubmitCapped
+
+AllowedCluster:
+- Localnet
+- Devnet
+- Testnet
+```
+
+Mainnet-beta must be rejected.
+
+Default mode must be non-submitting.
+
+There must be no public launch flag.
+
+Potential files:
+
+```text
+crates/rox-anchor-core/src/types.rs
+crates/rox-anchor-core/src/state.rs
+crates/rox-anchor-core/src/errors.rs
+crates/rox-anchor-relayer/src/config.rs
+crates/rox-anchor-rpc-proof/src/config.rs
+crates/rox-anchor-coordinator/src/config.rs
+```
+
+Possible tests:
+
+```text
+runtime_mode_defaults_to_non_submitting
+mainnet_beta_cluster_is_rejected
+testnet_submit_requires_explicit_mode
+production_disabled_rejects_live_submission
+public_launch_mode_does_not_exist
+submission_modes_classify_live_behavior
+```
+
+Suggested commands:
+
+```bash
+cargo fmt -p rox-anchor-core
+cargo test -p rox-anchor-core
+
+cargo fmt -p rox-anchor-relayer -p rox-anchor-rpc-proof -p rox-anchor-coordinator
+cargo test -p rox-anchor-relayer
+cargo test -p rox-anchor-rpc-proof
+cargo test -p rox-anchor-coordinator
+
+cargo test --workspace
+cargo check --workspace
+```
+
+Do not add live RPC submission in Phase 1.
+
+Do not add Solana transaction sending in Phase 1.
+
+Do not add key loading in Phase 1.
+
+---
+
+## Recommended Phase 1 Patch Shape
+
+Best first patch in the next session:
+
+```text
+Add shared safety mode types to rox-anchor-core.
+Add tests proving:
+- mainnet-beta is rejected
+- default mode is dry-run/non-submitting
+- testnet submit mode is explicit
+- production remains disabled
+- no public launch variant exists
+```
+
+Then wire those types into relayer/rpc-proof/coordinator configs in a later patch.
+
+Reasoning:
+
+```text
+rox-anchor-core should own shared safety vocabulary.
+Other crates should not invent their own competing safety flags.
+```
+
+This follows the core invariant from the original plan: core owns shared types and reusable acceptance boundaries.
+
+---
+
+## Recommended BUILD_PLAN2 Phase 1 Round Order
+
+Use small rounds:
+
+```text
+Phase 1 Round 1A:
+Add core runtime/submission/cluster safety types + tests.
+
+Phase 1 Round 1B:
+Wire relayer config to shared safety types; prove default dry-run and mainnet rejection.
+
+Phase 1 Round 1C:
+Wire rpc-proof config to shared cluster safety types; prove read-only/testnet-only behavior.
+
+Phase 1 Round 1D:
+Wire coordinator config to shared safety types; prove accepted proof cannot become live submission by default.
+
+Phase 1 Round 1E:
+Workspace green + Anchor green checkpoint.
+```
+
+This keeps the patch sequence clean.
+
+---
+
+## Security Notes For The Next Session
+
+Keep repeating these as implementation boundaries:
+
+```text
+No mainnet-beta.
+No public token launch.
+No public mint/burn.
+No production settlement.
+No production ROC release.
+No exchange-facing behavior.
+No staking.
+No liquidity.
+No public bridge UI.
+No live user funds.
+No silent live RPC submission.
+No silent wallet/key usage.
+No operator key material committed to repo.
+No fake finality.
+No fake success output.
+```
+
+Allowed:
+
+```text
+localnet
+devnet/testnet
+test-only mint
+test-only accounts
+read-only RPC
+simulation
+explicit capped testnet submission after gates
+operator safety models
+key rotation drills
+halt/recovery drills
+monitoring prototypes
+audit prep
+chaos/security tests
+```
+
+---
+
+## Important Design Principle Going Forward
+
+The next workstream must not let “testnet readiness” become “production bridge.”
+
+The correct order is:
+
+```text
+local green foundation
+→ safety flags
+→ testnet config
+→ authority model
+→ read-only RPC
+→ simulation
+→ test-only mint harness
+→ deployment drill
+→ capped testnet submission
+→ private shadow flow
+→ security regression expansion
+→ observability
+→ halt/recovery drills
+→ chaos drills
+→ audit prep
+→ private testnet readiness gate
+```
+
+Do not skip from read-only RPC directly to submission.
+
+Do not skip from simulation to public mint/burn.
+
+Do not allow CLI success strings to claim settlement.
+
+Do not allow coordinator/relayer to create their own rules instead of using core/proof.
+
+---
+
+## What Not To Do Next
+
+Do not work on:
+
+```text
+mainnet deployment
+public ROX token launch
+public bridge interface
+production minting
+production burning
+production ROC release
+staking
+liquidity pools
+exchange listings
+market-making
+public faucet
+claim page
+public bridge UI
+```
+
+Do not add:
+
+```text
+real keypair loading
+unbounded relayer retries
+default live transaction submission
+mainnet RPC URLs
+hard-coded secrets
+fake success messages
+placeholder-only crates
+new broad planning docs instead of code
+```
+
+---
+
+## Practical Next-Session Summary
+
+The next session should start like this:
+
+```text
+1. Confirm repo green.
+2. Mark BUILD_PLAN2 as active mentally, not necessarily by changing status yet.
+3. Do Phase 0 quickly.
+4. Begin Phase 1 with shared core safety types.
+5. Add focused tests.
+6. Run focused checks.
+7. Fix first failure.
+8. Only then wire relayer/rpc-proof/coordinator.
+```
+
+Most likely first patch:
+
+```text
+rox-anchor-core:
+- add runtime/testnet safety mode types
+- add cluster allowlist helpers
+- add submission mode helpers
+- add tests for mainnet rejection and non-submitting defaults
+```
+
+Expected first commands after patch:
+
+```bash
+cargo fmt -p rox-anchor-core
+cargo test -p rox-anchor-core
+cargo check --workspace
+```
+
+Then continue with relayer/rpc-proof/coordinator config integration.
+
+---
+
+## Final Carryover Status
+
+```text
+ROX Anchor local implementation:
+COMPLETE / GREEN / PARKED
+
+BUILD_PLAN.md:
+completed reference plan; keep it around
+
+BUILD_PLAN2.md:
+ready as active next build plan
+
+Next session:
+start BUILD_PLAN2 Phase 0, then Phase 1
+
+Current production Rust LOC:
+7,328
+
+Current posture:
+lean, compact, well-contained, test-green
+
+Main safety boundary:
+testnet-only hardening next; no public launch or real value movement
+```
+
+These notes are ready to carry into the next session.
+
+
+### END NOTE - JULY 3 2026 - 23:15 CST
+
+
+
+### BEGIN NOTE - JULY 4 2026 - 13:50 CST
+
+Here is the full carry-over note pack for the next ROX Anchor session.
+
+# ROX Anchor — Carry-Over Notes for Next Session
+
+## 0. Session opener
+
+We are continuing work on **RustyOnions / CrabLink / ROX Anchor**.
+
+Current active workstream:
+
+```text
+ROX Anchor BUILD_PLAN2:
+Testnet-Only Production Readiness / Security Hardening
+```
+
+The original `BUILD_PLAN.md` local implementation is complete / green / parked. The active plan is now `BUILD_PLAN2.md`, which moves the already-green local ROX Anchor implementation toward a controlled, private, testnet-only hardening surface. The current codebundle says the repo is ROX Anchor, generated from `/Users/mymac/Desktop/rox-anchor`, git state `d68e51b (dirty)`, and included 121 tracked/unignored files before the Phase 6 patch. 
+
+This is still **not** a public launch plan, not a mainnet plan, not a public bridge plan, not a staking/liquidity/exchange plan, and not production settlement authorization. `BUILD_PLAN2.md` explicitly forbids mainnet-beta deployment, public ROX minting/burning, production bridge settlement, production ROC release, exchange-facing behavior, staking, liquidity pools, public bridge UI, live value movement with real user funds, silent live RPC submission, silent wallet/key use, unbounded relayer retries, committed operator keys, fake finality, and fake success output. 
+
+Allowed in this plan:
+
+```text
+localnet tests
+devnet/testnet experiments
+test-only ROX mint metadata
+test-only token-account metadata
+test-only Anchor deployment drills
+read-only live RPC checks
+transaction simulation
+strictly capped testnet submission only after explicit gates
+operator safety drills
+key rotation drills
+upgrade authority drills
+halt/recovery drills
+monitoring / alerting prototypes
+security tests
+chaos tests
+audit prep
+private testnet-readiness proof
+```
+
+## 1. Current status summary
+
+Current state:
+
+```text
+Original BUILD_PLAN.md:
+  COMPLETE / GREEN / PARKED
+
+BUILD_PLAN2.md:
+  Phase 0 — green
+  Phase 1 — green
+  Phase 2 — green
+  Phase 3 — green
+  Phase 4 — green
+  Phase 5 — green
+  Phase 6 — green
+
+Next phase:
+  Phase 7 — Testnet Deployment Drill
+```
+
+Latest terminal output confirms the Phase 6 patch passed. The new test-only asset harness tests passed in `rox-anchor-core`, the Anchor program tests increased to **96 passed / 0 failed**, the full workspace tests passed, focused checks passed, `anchor build` passed, and `anchor test` passed with the full Anchor test suite showing **96 passed / 0 failed**. 
+
+Current rough completion estimate:
+
+```text
+Original local ROX Anchor implementation:
+  100% complete / green / parked
+
+BUILD_PLAN2 testnet-only hardening:
+  roughly 40–45% complete by phase count
+  roughly 35–40% complete by implementation weight
+
+Entire ROX Anchor project, including original local build + BUILD_PLAN2:
+  roughly 80–82% complete
+```
+
+Reason for the weighted estimate: Phases 0–6 are green, but the remaining phases include deployment drill safety, capped testnet submission, end-to-end testnet shadow flow, expanded security regressions, observability/audit trail, halt/recovery drills, testnet chaos drills, audit prep, and final readiness gate. Those are heavier and security-sensitive even though the foundation is now very strong.
+
+## 2. What we accomplished in this session block
+
+### 2.1 Phase 4 — Read-only RPC adapter was completed earlier
+
+Phase 4 added a safe, read-only RPC adapter shape in `rox-anchor-rpc-proof`.
+
+Accomplished:
+
+```text
+Added read-only RPC adapter trait.
+Added current slot read model.
+Added account status read model.
+Added signature status read model.
+Converted read-only RPC-shaped observations into existing RPC proof observations.
+Kept all submission disabled.
+Added fake adapter tests for stale, missing, mismatched, and disputed evidence.
+Updated CLI proof command to report read-only RPC adapter shape.
+Added CLI test proving proof command does not claim live submission, mint, burn, settlement, or key loading.
+```
+
+Important boundary:
+
+```text
+No real network client was added.
+No live RPC submission exists.
+No wallet/key loading exists.
+No mint/burn execution exists.
+The adapter is proof-shaped and testable, but still safe.
+```
+
+Phase 4 result:
+
+```text
+green
+```
+
+### 2.2 Phase 5 — Transaction simulation model was completed
+
+Phase 5 added a simulation-only transaction planning model.
+
+Main files touched:
+
+```text
+crates/rox-anchor-relayer/src/submit.rs
+crates/rox-anchor-relayer/tests/transaction_simulation.rs
+crates/rox-anchor-coordinator/src/decision.rs
+crates/rox-anchor-coordinator/tests/transaction_simulation_gate.rs
+```
+
+Accomplished:
+
+```text
+Added TransactionSimulationPlan.
+Added TransactionSimulationResult.
+Added TransactionSimulationStatus.
+Added simulation-only gate in relayer.
+Added coordinator helper: permits_transaction_simulation().
+Required accepted proof review before simulation.
+Required accepted coordinator decision before simulation.
+Required relayer dry-run acceptance before simulation.
+Required safe non-submitting scope.
+Required non-empty instruction plan.
+Blocked duplicate idempotency dry-run receipts from simulating.
+Blocked challenged/blocked/rejected proof reviews from simulating.
+Guaranteed live_submission=false in simulation result.
+```
+
+Tests added:
+
+```text
+accepted_proof_coordinator_and_relayer_path_can_simulate_without_live_submission
+simulation_rejects_missing_coordinator_acceptance_even_after_relayer_dry_run
+simulation_rejects_blocked_proof_reviews
+simulation_rejects_duplicate_relayer_dry_run_receipts
+simulation_rejects_empty_instruction_plan
+simulation_rejects_unsafe_or_submitting_scope
+accepted_coordinator_decision_permits_simulation_gate
+rejected_evidence_coordinator_decision_blocks_simulation_gate
+```
+
+Phase 5 result:
+
+```text
+green
+```
+
+Key invariant proven:
+
+```text
+A transaction can only become simulation-eligible after:
+  proof accepted
+  coordinator accepted
+  relayer dry-run accepted
+  safe non-submitting scope
+  non-empty instruction plan
+
+Even then:
+  live_submission=false
+```
+
+### 2.3 Phase 6 — Test-only mint and token-account harness was completed
+
+Phase 6 added deterministic test-only asset fixture validation.
+
+Main files touched:
+
+```text
+crates/rox-anchor-core/src/types.rs
+crates/rox-anchor-core/tests/test_only_asset_harness.rs
+programs/rox-anchor/src/errors.rs
+programs/rox-anchor/src/state.rs
+```
+
+Accomplished in `rox-anchor-core`:
+
+```text
+Added TEST_ONLY_MAX_AMOUNT_UNITS = 10_000.
+Added TestOnlyAssetHarnessFinding.
+Added TestOnlyMintFixture.
+Added TestOnlyTokenAccountFixture.
+Added TestOnlyAssetHarness.
+Added TestOnlyAssetHarnessReview.
+Added label review helpers.
+Added public/production/live/mainnet label rejection.
+Added explicit testnet-only mode requirement.
+Added zero amount rejection.
+Added over-cap amount rejection.
+Added token-account mint mismatch rejection.
+```
+
+Core tests added:
+
+```text
+test_only_asset_harness_accepts_explicit_testnet_simulation_fixture
+test_only_asset_harness_requires_explicit_testnet_mode
+test_only_asset_harness_rejects_public_or_production_mint_labels
+test_only_asset_harness_rejects_token_account_mint_mismatch
+test_only_asset_harness_rejects_zero_and_over_cap_amounts
+```
+
+Accomplished in Anchor program state:
+
+```text
+Added PROGRAM_TEST_ONLY_MAX_AMOUNT_UNITS = 10_000.
+Added TestOnlyMintHarnessSnapshot.
+Added validation for explicit testnet label.
+Added validation for test-only mint label.
+Added validation for test-only token-account label.
+Added public/production/live/mainnet label rejection.
+Added zero / over-cap amount rejection.
+Added mint/token-account mint binding validation.
+Added program-side unit tests.
+```
+
+Anchor errors added:
+
+```text
+TestOnlyModeRequired
+TestOnlyLabelRequired
+PublicMintLabelRejected
+PublicTokenAccountLabelRejected
+TestAmountCapExceeded
+TestTokenAccountMintMismatch
+```
+
+Program tests added:
+
+```text
+program_test_only_harness_accepts_explicit_testnet_fixture
+program_test_only_harness_rejects_local_or_missing_testnet_mode
+program_test_only_harness_rejects_public_or_production_labels
+program_test_only_harness_rejects_zero_and_over_cap_amounts
+program_test_only_harness_rejects_token_account_mint_mismatch
+```
+
+Phase 6 result:
+
+```text
+green
+```
+
+Latest terminal proof:
+
+```text
+rox-anchor-core test-only asset harness:
+  5 passed / 0 failed
+
+rox-anchor program:
+  96 passed / 0 failed
+
+workspace tests:
+  green
+
+cargo check / focused clippy:
+  green
+
+anchor build:
+  green
+
+anchor test:
+  green
+```
+
+The terminal output shows the new `test_only_mint_harness_tests` running inside the Anchor program and passing, and the final Anchor test suite also passing with 96 tests. 
+
+## 3. Current architecture state
+
+### 3.1 `rox-anchor-core`
+
+Current role:
+
+```text
+Shared source of truth for IDs, domains, directions, states, labels, challenge posture, halt posture, recovery posture, safety flags, testnet config, authority model, and test-only asset harness.
+```
+
+Important completed surfaces:
+
+```text
+typed IDs
+status labels
+lifecycle classification
+challenge/halt/recovery posture helpers
+testnet scope locks
+testnet config model
+authority roles and authority separation
+authority rotation intent
+test-only mint/token-account harness
+```
+
+Important tests currently proven:
+
+```text
+ID validation
+safe labels
+state/posture helpers
+testnet config validation
+mainnet-beta rejection
+public-launch flag absence
+authority role stability
+critical authority separation
+wrong authority redaction
+rotation intent validation
+test-only asset harness acceptance/rejection
+```
+
+### 3.2 `rox-anchor-proof`
+
+Current role:
+
+```text
+Deterministic local proof review.
+```
+
+Important completed behavior:
+
+```text
+valid package acceptance
+binding mismatch rejection
+replay rejection
+missing/disputed evidence blocking
+challenge/halt/recovery blocking
+deterministic findings
+```
+
+Important tests currently proven:
+
+```text
+valid_fixture_is_accepted_and_finality_eligible
+binding_mismatches_are_rejected_in_deterministic_order
+missing_or_disputed_evidence_blocks_acceptance
+challenge_halt_and_recovery_postures_block_acceptance
+replayed_operation_id_idempotency_key_or_nonce_is_rejected
+challenge griefing tests
+halt/resume tests
+```
+
+### 3.3 `rox-anchor-rpc-proof`
+
+Current role:
+
+```text
+Local RPC evidence model plus read-only adapter shape.
+```
+
+Important completed behavior:
+
+```text
+RPC observation model
+expected RPC binding
+commitment classification
+quorum agreement/disagreement
+stale evidence rejection
+missing evidence classification
+same-source equivocation detection
+read-only adapter trait
+fake adapter tests
+conversion from read-only signature status to proof observation
+```
+
+Important boundary:
+
+```text
+Read-only only.
+No submission.
+No wallet/keypair.
+No real network client yet.
+```
+
+### 3.4 `rox-anchor-coordinator`
+
+Current role:
+
+```text
+Local coordinator model that assembles observations and produces proof-backed decisions.
+```
+
+Important completed behavior:
+
+```text
+queue capacity enforcement
+duplicate operation rejection
+stale RPC evidence rejection
+handoff to rpc-proof
+handoff to rox-anchor-proof
+redacted decision shape
+authority-aware readiness
+simulation gate
+```
+
+Important invariant:
+
+```text
+Coordinator does not invent acceptance rules.
+It routes through rpc-proof and proof review.
+```
+
+### 3.5 `rox-anchor-relayer`
+
+Current role:
+
+```text
+Local relayer dry-run, retry, receipt, and simulation-only model.
+```
+
+Important completed behavior:
+
+```text
+bounded retry policy
+dry-run receipt generation
+idempotency replay rejection
+blocked/rejected proof uses zero attempts
+receipt capacity limits
+authority-aware readiness
+simulation-only transaction planning
+simulation result with live_submission=false
+```
+
+Important invariant:
+
+```text
+Relayer still cannot submit live transactions.
+```
+
+### 3.6 `rox-anchor-cli`
+
+Current role:
+
+```text
+Terminal inspection surface.
+```
+
+Important completed behavior:
+
+```text
+check command uses real proof fixtures
+status command includes safe labels
+status command includes testnet config shape
+status command includes redacted authority model shape
+proof command reports read-only RPC adapter shape
+tests reject fake runtime/settlement/submission claims
+```
+
+Important invariant:
+
+```text
+CLI output must not fake success, finality, settlement, mint, burn, or runtime authority.
+```
+
+### 3.7 `programs/rox-anchor`
+
+Current role:
+
+```text
+Anchor program state machine and on-chain transition surface.
+```
+
+Important completed behavior:
+
+```text
+config initialization shape
+operation PDA helpers
+mint authority PDA helpers
+direction helpers
+challenge/finalization controls
+halt/recovery controls
+mint/burn binding helpers
+token account constraint snapshots
+token settlement planned events
+token settlement execution plans
+token CPI readiness checks
+token CPI execution receipt checks
+test-only mint harness validation
+```
+
+Current Anchor test count:
+
+```text
+96 passed / 0 failed
+```
+
+## 4. Safety boundaries that must remain locked
+
+Do not add any of the following unless explicitly authorized by a later build plan:
+
+```text
+mainnet-beta deployment
+public Solana token launch
+public ROX minting
+public ROX burning
+production bridge settlement
+production ROC release
+exchange-facing behavior
+staking
+liquidity pools
+public faucet
+public claim page
+public bridge UI
+live value movement with real user funds
+silent live RPC submission
+silent wallet/key usage
+unbounded relayer retries
+operator key material committed to repo
+fake finality
+fake success output
+```
+
+Current work may continue to add:
+
+```text
+testnet-only config validation
+read-only RPC proof
+simulation-only transaction planning
+test-only mint/account metadata
+secret/key-file scans
+deployment drill scripts
+capped submit models with all gates
+shadow-flow tests
+security regressions
+observability/reporting
+halt/recovery drills
+testnet chaos tests
+audit maps
+```
+
+But live submission remains disallowed until the plan reaches Phase 8 and every preceding gate is green.
+
+## 5. Immediate next phase: Phase 7 — Testnet Deployment Drill
+
+Next session should begin with **BUILD_PLAN2 Phase 7**.
+
+Purpose:
+
+```text
+Practice a testnet deployment procedure without treating it as production.
+```
+
+This should be a safety/script/check phase, not a live deployment.
+
+Phase 7 should not run `anchor deploy`.
+
+Phase 7 should add a local deploy-drill readiness script that checks:
+
+```text
+Anchor.toml exists.
+Anchor.toml provider cluster is not mainnet-beta.
+Anchor.toml wallet path is not committed key material.
+Program ID handling is visible.
+Deployment key files are ignored by git patterns.
+Forbidden key file names are absent from the repo.
+Common Solana/Anchor keypair files are absent from tracked surfaces.
+Mainnet-beta is rejected in config/script checks.
+Target deploy keypairs are ignored.
+No public launch/public bridge/mainnet language is introduced.
+No production mint/burn behavior is introduced.
+```
+
+Likely files to touch:
+
+```text
+scripts/dev-testnet-deploy-drill-check.sh
+.gitignore maybe, only if a missing forbidden pattern is found
+Anchor.toml maybe, only if provider sanity needs adjustment
+```
+
+Recommended tests/checks:
+
+```text
+bash scripts/dev-testnet-deploy-drill-check.sh
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+anchor build
+anchor test
+```
+
+Suggested Phase 7 patch shape:
+
+```text
+1. Add scripts/dev-testnet-deploy-drill-check.sh.
+2. Script should be read-only and fail closed.
+3. Script should scan for forbidden key material file names.
+4. Script should scan Anchor.toml for mainnet-beta.
+5. Script should confirm expected ignored key paths/patterns exist in .gitignore.
+6. Script should print "testnet_deploy_drill_ready: true" only after all checks pass.
+7. Add no deployment command execution.
+8. Add no key loading.
+9. Add no RPC call.
+10. Add no live submission.
+```
+
+Potential script checks:
+
+```text
+forbid files:
+  id.json
+  keypair.json
+  wallet.json
+  payer.json
+  authority.json
+  mint-authority.json
+  upgrade-authority.json
+  program-authority.json
+  deploy-authority.json
+  admin.json
+  owner.json
+  validator-keypair.json
+  faucet-keypair.json
+  target/deploy/*.json
+  programs/**/target/deploy/*.json
+
+require .gitignore patterns:
+  .env
+  secrets/
+  private/
+  keypairs/
+  wallets/
+  mnemonics/
+  target/deploy/*.json
+  target/deploy/*-keypair.json
+  *-keypair.json
+  *.wallet.json
+  *.authority.json
+  .solana/
+  CODEBUNDLE*.md
+
+forbid text in Anchor.toml / scripts:
+  mainnet-beta
+  mainnet
+  public launch
+  production bridge
+  exchange
+  liquidity
+  staking
+```
+
+Important: `.gitignore` already has a strong secret/key material section in the codebundle, including many Solana/Anchor keypair patterns and generated deploy keypair exclusions. Use that before adding duplicate patterns.
+
+Phase 7 exit condition:
+
+```text
+A testnet deployment drill can be performed with external keys and no committed secrets.
+No live deploy is performed by the script.
+No live RPC call is performed by the script.
+No wallet/keypair is loaded by the script.
+No mainnet-beta surface is allowed.
+```
+
+## 6. Thereafter: BUILD_PLAN2 remaining phases
+
+### Phase 8 — Capped Testnet Submission Path
+
+Purpose:
+
+```text
+Add a strictly capped testnet-only transaction send path after read-only RPC and simulation are green.
+```
+
+Do not start Phase 8 until Phase 7 deploy-drill checks are green.
+
+Expected work:
+
+```text
+Add TestnetSubmitCapped path in relayer.
+Require explicit config or CLI flag.
+Require accepted proof review.
+Require accepted coordinator decision.
+Require relayer dry-run acceptance.
+Require successful simulation.
+Require retry cap.
+Require amount cap.
+Require operation cap per run.
+Require receipt persistence.
+Reject live submission in LocalOnly and SimulateOnly modes.
+Add tests proving each missing guard blocks submission.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-relayer/src/submit.rs
+crates/rox-anchor-relayer/src/retry.rs
+crates/rox-anchor-relayer/src/receipts.rs
+crates/rox-anchor-cli/src/commands/proof.rs
+crates/rox-anchor-cli/src/commands/check.rs
+```
+
+Important approach:
+
+```text
+First add the model and tests.
+Do not add a real Solana transaction sender immediately.
+If a submit function is added, it should require an injected trait/fake sender in tests.
+Default path must remain non-submitting.
+```
+
+Phase 8 exit:
+
+```text
+The only live-submission-shaped path is testnet-only, capped, explicit, receipt-backed, and impossible to trigger from default mode.
+```
+
+### Phase 9 — End-to-End Testnet Shadow Flow
+
+Purpose:
+
+```text
+Prove the ROC ↔ ROX shape against testnet-only fixtures without real ROC release or public ROX.
+```
+
+Expected work:
+
+```text
+Model ROC-to-ROX testnet shadow flow.
+Model ROX-to-ROC testnet shadow flow.
+Use fake/internal test input.
+Do not release real ROC.
+Do not expose public mint/burn.
+Use explicit test operation IDs.
+Use explicit test idempotency keys.
+Persist receipts.
+Prove replay rejection.
+Prove mismatches are rejected.
+Prove halt/challenge/recovery blockers work in testnet mode.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-coordinator/tests/
+crates/rox-anchor-relayer/tests/
+crates/rox-anchor-rpc-proof/tests/
+programs/rox-anchor/src/state.rs
+```
+
+Phase 9 exit:
+
+```text
+The testnet shadow flow proves the full shape without production value movement.
+```
+
+### Phase 10 — Security Regression Expansion
+
+Purpose:
+
+```text
+Expand adversarial tests beyond the first local chaos suite.
+```
+
+Required test groups:
+
+```text
+replay storms
+idempotency collisions
+nonce reuse
+operation ID reuse
+RPC equivocation
+RPC stale evidence
+RPC missing evidence
+RPC provider disagreement
+cluster mismatch
+program ID mismatch
+mint mismatch
+token account mismatch
+wrong direction
+wrong authority
+halt bypass attempt
+recovery bypass attempt
+challenge bypass attempt
+finalize-before-eligible attempt
+duplicate finalization attempt
+receipt tampering
+simulation result tampering
+testnet submit mode bypass attempt
+mainnet-beta rejection
+secret/key path leak check
+unbounded retry rejection
+rate-limit enforcement
+```
+
+Commands:
+
+```text
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+anchor build
+anchor test
+```
+
+Phase 10 exit:
+
+```text
+Known adversarial cases are covered by deterministic tests before broader testnet use.
+```
+
+### Phase 11 — Observability, Receipts, and Audit Trail
+
+Purpose:
+
+```text
+Make every testnet action inspectable and explainable.
+```
+
+Expected work:
+
+```text
+Add structured testnet receipt shape.
+Redact secrets and signatures as needed.
+Include proof decision.
+Include coordinator decision.
+Include RPC quorum result.
+Include relayer retry result.
+Include simulation result.
+Include submission result only in capped testnet mode.
+Include halt/challenge/recovery posture.
+Add CLI display tests.
+Add deterministic report tests.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-relayer/src/receipts.rs
+crates/rox-anchor-relayer/src/redaction.rs
+crates/rox-anchor-coordinator/src/redaction.rs
+crates/rox-anchor-rpc-proof/src/redaction.rs
+crates/rox-anchor-cli/src/commands/status.rs
+```
+
+Phase 11 exit:
+
+```text
+Every testnet-relevant action has a safe, deterministic, redacted receipt/report.
+```
+
+### Phase 12 — Halt, Recovery, and Kill-Switch Drills
+
+Purpose:
+
+```text
+Prove unsafe behavior can be stopped before any public exposure.
+```
+
+Expected work:
+
+```text
+Test halt before proof acceptance.
+Test halt after proof acceptance but before simulation.
+Test halt after simulation but before submission.
+Test halt after capped testnet submission.
+Test recovery path from halted state.
+Test wrong authority cannot halt/recover.
+Test status output reflects halt/recovery.
+Test relayer refuses submission while halted.
+Test coordinator refuses finalization while halted.
+```
+
+Phase 12 exit:
+
+```text
+Halt and recovery behavior is proven across local, simulated, and capped testnet modes.
+```
+
+### Phase 13 — Testnet Chaos Drills
+
+Purpose:
+
+```text
+Run realistic failure drills before broader testnet rollout.
+```
+
+Drills:
+
+```text
+RPC outage
+RPC disagreement
+RPC stale slots
+RPC equivocation
+program account missing
+wrong program ID
+wrong mint
+wrong token account
+reorg-like stale evidence
+duplicate relayer request
+retry storm
+receipt capacity pressure
+operator key unavailable
+wrong authority key
+halt during pending operation
+recovery during pending operation
+simulation passes but send disabled
+send enabled but cap exceeded
+```
+
+Phase 13 exit:
+
+```text
+Testnet chaos drills fail safely, deterministically, and with inspectable receipts.
+```
+
+### Phase 14 — Audit Preparation
+
+Purpose:
+
+```text
+Prepare the repo for external or self-directed security review.
+```
+
+Expected docs may be added here, but only after the real implementation/tests exist:
+
+```text
+docs/audit/INVARIANT_TEST_MAP.md
+docs/audit/AUTHORITY_MODEL.md
+docs/audit/STATE_TRANSITIONS.md
+docs/audit/RPC_BOUNDARY.md
+docs/audit/RELAYER_BOUNDARY.md
+docs/audit/HALT_RECOVERY_RUNBOOK.md
+docs/audit/TESTNET_DEPLOYMENT_RUNBOOK.md
+```
+
+Important: This is the proper time for audit docs, not earlier. Keep them tied to real tests.
+
+Phase 14 exit:
+
+```text
+Implementation has audit-ready maps and runbooks tied to real tests.
+```
+
+### Phase 15 — Testnet Readiness Gate
+
+Purpose:
+
+```text
+Decide whether ROX Anchor is ready for a private testnet pilot.
+```
+
+This is not a public launch gate.
+
+Readiness checklist:
+
+```text
+all local tests pass
+all Anchor tests pass
+all testnet-only guards pass
+mainnet-beta is rejected
+no public mint/burn path exists
+no public bridge UI exists
+no exchange/staking/liquidity behavior exists
+operator runbooks exist
+receipt/reporting works
+halt/recovery drills work
+testnet capped submission works only when explicitly enabled
+known adversarial cases are tested or documented
+```
+
+Final successful status for BUILD_PLAN2:
+
+```text
+ROX Anchor testnet-only hardening complete / green / parked.
+Private testnet pilot readiness proven.
+Public launch remains unauthorized.
+Production bridge remains unauthorized.
+Mainnet remains unauthorized.
+Public mint/burn remains unauthorized.
+Exchange/liquidity/staking remains unauthorized.
+```
+
+## 7. Recommended next-session opening prompt
+
+Use this at the start of the next session:
+
+```text
+We are continuing RustyOnions / CrabLink / ROX Anchor.
+
+Current status:
+Original BUILD_PLAN.md is COMPLETE / GREEN / PARKED.
+Active workstream is BUILD_PLAN2 — testnet-only production readiness / security hardening.
+BUILD_PLAN2 Phases 0–6 are green. Latest completed phase is Phase 6: test-only mint and token-account harness. The latest terminal output showed rox-anchor-core test-only asset harness tests passed, rox-anchor program tests increased to 96 passed, full workspace tests passed, workspace Clippy passed, anchor build passed, and anchor test passed.
+
+Next phase:
+BUILD_PLAN2 Phase 7 — Testnet Deployment Drill.
+
+Important boundaries:
+No mainnet-beta deployment, public ROX mint/burn, production bridge settlement, production ROC release, exchange-facing behavior, staking, liquidity, public bridge UI, live value movement, silent RPC submission, silent wallet/key use, committed operator keys, fake finality, or fake success output.
+
+Please begin with a small real patch for Phase 7: a local read-only deployment-drill readiness script/check surface that verifies key material is not committed, mainnet-beta is rejected, Anchor.toml/provider assumptions are safe, and the drill does not deploy, submit, load keys, or call live RPC. Use paste-ready terminal patches in ~~~~bash fences and include exact commands to run next.
+```
+
+## 8. Exact commands to run at the beginning of next session
+
+Before Phase 7 patch, run or ask for current output from:
+
+```bash
+cd /Users/mymac/Desktop/rox-anchor
+
+cargo fmt --all
+cargo test --workspace
+cargo check --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+anchor build
+anchor test
+```
+
+If the user wants to avoid a full duplicate run because the last run was just green, start Phase 7 with focused commands after patch:
+
+```bash
+bash scripts/dev-testnet-deploy-drill-check.sh
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+anchor build
+anchor test
+```
+
+## 9. Patch discipline for the next session
+
+Use the same rules that got us green:
+
+```text
+Start with the first focused behavior.
+Patch exact files.
+Run focused test/check.
+Fix first failure before expanding.
+Use Clippy after each major quarter / natural hardening boundary.
+Do not add broad docs unless the phase asks for audit/runbook docs later.
+Do not add live deployment/submission behavior.
+Do not include git add/commit/push unless explicitly requested.
+Use ~~~~bash fences for paste-ready patches.
+```
+
+For Phase 7 specifically:
+
+```text
+Prefer one script + focused command first.
+Do not alter core Rust unless needed.
+Do not add deployment commands that execute.
+Do not add external dependencies.
+Do not download anything.
+Do not require live RPC.
+Do not require real key files.
+Do not load keypairs.
+Do not write secrets.
+```
+
+## 10. Current milestone statement
+
+ROX Anchor is now in a strong position.
+
+The project has moved from:
+
+```text
+local compile-tested implementation
+```
+
+to:
+
+```text
+testnet-hardening with:
+  safety flags
+  config redaction
+  authority separation
+  read-only RPC adapter shape
+  transaction simulation gate
+  test-only mint/token-account harness
+```
+
+The next major transition is from code-level testnet hardening into operational readiness checks:
+
+```text
+Phase 7:
+  deployment drill safety
+
+Phase 8:
+  capped testnet submission model
+
+Phase 9:
+  end-to-end private testnet shadow flow
+
+Phase 10–13:
+  security regressions, observability, halt/recovery, chaos
+
+Phase 14–15:
+  audit prep and readiness gate
+```
+
+The most important principle going forward:
+
+```text
+We are allowed to get closer to Solana/devnet reality,
+but only one safety layer at a time.
+```
+
+These notes are ready to paste into the next session.
+
+
+### END NOTE - JULY 4 2026 - 13:50 CST
+
+
+### BEGIN NOTE - JULY 4 2026 - 18:25 CST
+
+Absolutely — this was a very strong session. Phase 11 is now **complete / green / parked**, and the repo is in a clean position to open the next session directly on **BUILD_PLAN2 Phase 12 — Halt, Recovery, and Kill-Switch Drills**. The latest codebundle was generated after the final posture-audit work and shows the new audit files/tests are now part of the repo surface.  BUILD_PLAN2 confirms Phase 12 is the next phase and defines the halt/recovery drill requirements. 
+
+# ROX Anchor — Carry-Over Notes for Next Session
+
+## 0. Session status
+
+We are continuing work on **RustyOnions / CrabLink / ROX Anchor**.
+
+Current active workstream:
+
+```text
+ROX Anchor
+BUILD_PLAN2 — Testnet-Only Production Readiness / Security Hardening
+```
+
+Current status:
+
+```text
+BUILD_PLAN.md: complete / green / parked
+BUILD_PLAN2 Phase 0–11: complete / green / parked
+Current next phase: BUILD_PLAN2 Phase 12 — Halt, Recovery, and Kill-Switch Drills
+```
+
+The latest local terminal output proves the final Phase 11 work is green:
+
+```text
+cargo fmt -p rox-anchor-cli
+cargo test -p rox-anchor-cli --test posture_audit_report
+cargo test -p rox-anchor-cli --test relayer_audit_report
+cargo test -p rox-anchor-cli --test audit_report
+cargo test -p rox-anchor-cli
+cargo run -p rox-anchor-cli -- --help
+cargo run -p rox-anchor-cli -- audit-posture
+cargo check --workspace
+cargo clippy -p rox-anchor-cli --all-targets -- -D warnings
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+anchor build
+anchor test
+```
+
+All of those passed in the most recent output. The final `audit-posture` command rendered the expected posture audit report with one accepted clear case and five blocked cases: challenge open, challenge accepted, halted, recovery required, and recovery in review. The full workspace test suite, focused/workspace Clippy, Anchor build, and Anchor test all passed. 
+
+The latest codebundle was generated at:
+
+```text
+2026-07-04T23:12:36Z
+Root: /Users/mymac/Desktop/rox-anchor
+Git: d68e51b (dirty)
+Files: 139
+```
+
+The codebundle includes the Phase 11 audit files and tests:
+
+```text
+crates/rox-anchor-cli/src/commands/audit.rs
+crates/rox-anchor-cli/src/commands/posture_audit.rs
+crates/rox-anchor-cli/tests/audit_report.rs
+crates/rox-anchor-cli/tests/relayer_audit_report.rs
+crates/rox-anchor-cli/tests/posture_audit_report.rs
+crates/rox-anchor-rpc-proof/src/audit.rs
+crates/rox-anchor-rpc-proof/tests/rpc_audit_record.rs
+crates/rox-anchor-coordinator/src/audit.rs
+crates/rox-anchor-coordinator/tests/coordinator_audit_record.rs
+crates/rox-anchor-relayer/src/audit.rs
+crates/rox-anchor-relayer/tests/testnet_audit_record.rs
+```
+
+The codebundle also preserves the full current project surface: core, proof, CLI, coordinator, relayer, RPC proof, Anchor program, integration tests, chaos tests, and testnet-hardening tests. 
+
+---
+
+## 1. Active project boundaries
+
+ROX Anchor is the Rust + Solana/Anchor implementation surface for the ROC ↔ ROX anchor path.
+
+This is active implementation work, not docs-only planning.
+
+The current plan is **testnet-only hardening**, not public launch. BUILD_PLAN2 explicitly says this is not a public launch plan, not a mainnet plan, not an exchange/liquidity/staking plan, and not authorization for public ROX mint/burn. 
+
+Forbidden unless explicitly moved into a future authorized plan:
+
+```text
+mainnet-beta deployment
+public Solana token launch
+public ROX minting
+public ROX burning
+production bridge settlement
+production ROC release
+exchange-facing behavior
+staking
+liquidity pools
+public faucet
+public claim page
+public bridge UI
+live value movement with real user funds
+silent live RPC submission
+silent wallet/key usage
+unbounded relayer retries
+operator key material committed to repo
+fake finality
+fake success output
+```
+
+Allowed in BUILD_PLAN2:
+
+```text
+localnet tests
+Solana devnet/testnet experiments
+test-only ROX mint
+test-only token accounts
+test-only Anchor deployment drills
+read-only live RPC checks
+transaction simulation
+strictly capped testnet transaction submission after explicit test gates
+operator safety drills
+key rotation drills
+upgrade authority drills
+halt/recovery drills
+monitoring and alerting prototypes
+security tests
+chaos tests
+audit prep
+documentation of invariants proven by tests
+```
+
+BUILD_PLAN2 also states that if future work needs anything beyond that boundary, it must become a separate build plan. 
+
+---
+
+## 2. Build discipline to preserve
+
+Continue the same QuickChain-style workflow:
+
+```text
+small behavior patch
+focused test
+cargo fmt
+focused cargo test/check
+fix first failure
+then expand
+```
+
+Do not add broad planning docs instead of code.
+
+Do not add placeholder-only scaffolding.
+
+Do not add live submission until the earlier test/simulation phases are green.
+
+Do not let CLI, coordinator, relayer, RPC proof, or testnet adapters invent competing state rules.
+
+`rox-anchor-core` and `rox-anchor-proof` remain the shared source of truth.
+
+The Anchor program remains the owner of on-chain state transitions. 
+
+Patch style for the next session:
+
+```text
+- provide paste-ready terminal patches
+- wrap terminal patches in ~~~~bash fences
+- prefer complete file writes or narrow scripted edits
+- no git add/commit/push unless explicitly requested
+- no downloads unless explicitly requested
+- run focused checks first
+- run workspace checks after focused green
+- run focused Clippy before workspace Clippy at major hardening boundaries
+```
+
+---
+
+## 3. What we accomplished in this session
+
+### 3.1 Completed BUILD_PLAN2 Phase 11
+
+Phase 11 purpose:
+
+```text
+Observability, Receipts, and Audit Trail
+```
+
+BUILD_PLAN2 required Phase 11 to make every testnet-relevant action inspectable and explainable, including structured receipt/report shape, redaction, proof decision, coordinator decision, RPC quorum result, relayer retry result, simulation result, capped submission result, halt/challenge/recovery posture, CLI display tests, and deterministic report tests. 
+
+That phase is now complete.
+
+Final status:
+
+```text
+BUILD_PLAN2 Phase 11: complete / green / parked
+```
+
+---
+
+## 4. Phase 11 implementation details
+
+### 4.1 RPC proof audit
+
+We added and/or stabilized the RPC proof audit surface.
+
+Relevant files:
+
+```text
+crates/rox-anchor-rpc-proof/src/audit.rs
+crates/rox-anchor-rpc-proof/tests/rpc_audit_record.rs
+crates/rox-anchor-cli/src/commands/proof.rs
+crates/rox-anchor-cli/tests/proof_read_only_rpc.rs
+```
+
+Current CLI command:
+
+```text
+rox-anchor proof
+```
+
+Purpose:
+
+```text
+Show deterministic read-only RPC proof audit behavior from real local RPC-proof review shape.
+```
+
+It reports:
+
+```text
+status: read_only_rpc_adapter_shape
+submission: disabled
+wallet_key_loading: disabled
+network_client: not_enabled
+current_slot
+observations_checked
+quorum_decision
+audit_record=rpc-proof-audit-v1
+expected cluster/program/mint/token account/operation ID
+minimum commitment
+observation count
+accepted observations
+required observations
+decision
+findings
+redacted observations
+evidence_consistent
+display_safe
+```
+
+Security posture:
+
+```text
+no live RPC submission
+no wallet/key loading
+no mint/burn
+no ROC release
+no settlement
+```
+
+What this proves:
+
+```text
+- RPC audit output is deterministic.
+- RPC observations can be rendered safely.
+- Signatures are redacted.
+- Agreement/disagreement/mismatch behavior is visible.
+- CLI output comes from real RPC proof behavior, not fake success strings.
+```
+
+---
+
+### 4.2 Coordinator audit
+
+We added and stabilized the coordinator audit surface.
+
+Relevant files:
+
+```text
+crates/rox-anchor-coordinator/src/audit.rs
+crates/rox-anchor-coordinator/tests/coordinator_audit_record.rs
+crates/rox-anchor-cli/src/commands/audit.rs
+crates/rox-anchor-cli/tests/audit_report.rs
+```
+
+Current CLI command:
+
+```text
+rox-anchor audit
+```
+
+Purpose:
+
+```text
+Show deterministic coordinator audit report for accepted local proof/RPC/coordinator path.
+```
+
+It reports:
+
+```text
+rox-anchor audit
+status: coordinator_audit_report
+submission: disabled
+wallet_key_loading: disabled
+network_client: not_enabled
+runtime_authority: not_enabled
+coordinator_status
+rpc_decision
+proof_decision
+permits_simulation
+audit_record=coordinator-testnet-audit-v1
+operation ID
+idempotency key
+nonce
+direction
+source/target domain
+cluster
+program ID
+mint
+token account
+current slot
+observation count
+RPC decision/findings
+proof decision/findings
+coordinator status
+permits_simulation
+status_consistent
+display_safe
+```
+
+Security posture:
+
+```text
+report-only
+no RPC submission
+no wallet/key loading
+no mint/burn
+no ROC release
+no settlement
+```
+
+Important bug fixed during this phase:
+
+```text
+The CLI dispatch already supported the audit command, but --help initially did not list it.
+We patched help_text() so audit appears in the command list.
+```
+
+Result:
+
+```text
+cargo test -p rox-anchor-cli --test audit_report: 3/3 passed
+```
+
+---
+
+### 4.3 Relayer / simulation / capped submission audit
+
+We added and stabilized the relayer audit CLI surface.
+
+Relevant files:
+
+```text
+crates/rox-anchor-relayer/src/audit.rs
+crates/rox-anchor-relayer/tests/testnet_audit_record.rs
+crates/rox-anchor-cli/src/commands/audit.rs
+crates/rox-anchor-cli/tests/relayer_audit_report.rs
+```
+
+Current CLI command:
+
+```text
+rox-anchor audit-relayer
+```
+
+Alias:
+
+```text
+rox-anchor relayer-audit
+```
+
+Purpose:
+
+```text
+Show deterministic relayer + simulation + capped testnet submission audit output without sending anything.
+```
+
+It reports:
+
+```text
+rox-anchor audit-relayer
+status: relayer_simulation_capped_audit_report
+submission: capped_testnet_report_only
+wallet_key_loading: disabled
+network_client: not_enabled
+runtime_authority: not_enabled
+relayer_status
+proof_decision
+simulation_status
+capped_submission_status
+receipt_persisted
+authorized
+live_submission_attempted
+network_submitted
+audit_record=relayer-testnet-audit-v1
+target
+attempts_used
+instruction_count
+requested_attempts
+requested_operations
+amount_units
+live_submission_permitted
+pipeline_consistent
+display_safe
+```
+
+Security posture:
+
+```text
+report-only
+no RPC submission
+no wallet/key loading
+no mint/burn execution
+no ROC release
+no settlement
+network_submitted=false
+live_submission_attempted=false
+```
+
+What this proves:
+
+```text
+- Relayer audit output is deterministic.
+- Simulation status is visible.
+- Capped submission authorization is visible.
+- Receipt persistence is visible.
+- Network submission remains false.
+- The command cannot be confused with a real submit path.
+```
+
+Result:
+
+```text
+cargo test -p rox-anchor-cli --test relayer_audit_report: 4/4 passed
+```
+
+---
+
+### 4.4 Halt / challenge / recovery posture audit
+
+We added and stabilized the proof posture audit CLI surface.
+
+Relevant files:
+
+```text
+crates/rox-anchor-cli/src/commands/posture_audit.rs
+crates/rox-anchor-cli/tests/posture_audit_report.rs
+crates/rox-anchor-proof/src/challenge.rs
+crates/rox-anchor-proof/src/recovery.rs
+crates/rox-anchor-proof/src/validate.rs
+crates/rox-anchor-proof/src/fixtures.rs
+crates/rox-anchor-core/src/state.rs
+```
+
+Current CLI command:
+
+```text
+rox-anchor audit-posture
+```
+
+Alias:
+
+```text
+rox-anchor posture-audit
+```
+
+Purpose:
+
+```text
+Show deterministic halt/challenge/recovery posture audit output from real proof review behavior.
+```
+
+It reports:
+
+```text
+rox-anchor audit-posture
+status: proof_posture_audit_report
+submission: disabled
+wallet_key_loading: disabled
+network_client: not_enabled
+runtime_authority: not_enabled
+audit_record=proof-posture-audit-v1
+case_count=6
+accepted_cases=1
+blocked_cases=5
+display_safe=true
+```
+
+Current cases:
+
+```text
+case.0 clear
+  challenge_posture=Clear
+  halt_posture=Active
+  recovery_posture=NotRequired
+  decision=Accepted
+  lifecycle_state=FinalityEligible
+  findings=PackageAccepted
+  permits_acceptance=true
+
+case.1 challenge_open
+  challenge_posture=Open
+  decision=Blocked
+  lifecycle_state=ChallengeOpen
+  findings=ChallengeOpen
+  permits_acceptance=false
+
+case.2 challenge_accepted
+  challenge_posture=Accepted
+  decision=Blocked
+  lifecycle_state=ChallengeAccepted
+  findings=ChallengeAccepted
+  permits_acceptance=false
+
+case.3 halted
+  halt_posture=Halted
+  decision=Blocked
+  lifecycle_state=Halted
+  findings=Halted
+  permits_acceptance=false
+
+case.4 recovery_required
+  recovery_posture=Required
+  decision=Blocked
+  lifecycle_state=RecoveryRequired
+  findings=RecoveryRequired
+  permits_acceptance=false
+
+case.5 recovery_in_review
+  recovery_posture=InReview
+  decision=Blocked
+  lifecycle_state=RecoveryInReview
+  findings=RecoveryInReview
+  permits_acceptance=false
+```
+
+Important fix in Round 7:
+
+```text
+The initial posture audit code called ReviewDecision::is_accepted(), but ReviewDecision did not expose that helper.
+We patched posture_audit.rs with a local helper:
+
+fn is_accepted_decision(decision: &ReviewDecision) -> bool {
+    matches!(decision, ReviewDecision::Accepted)
+}
+
+This fixed the compile failure cleanly without changing proof-core semantics.
+```
+
+Result:
+
+```text
+cargo test -p rox-anchor-cli --test posture_audit_report: 4/4 passed
+```
+
+The final terminal output confirmed the CLI command rendered correctly and all workspace/Anchor checks passed. 
+
+---
+
+## 5. Final Phase 11 CLI surface
+
+At the end of this session, `rox-anchor --help` lists:
+
+```text
+check [--fixture <name>]   review a deterministic local proof fixture
+proof                      show proof-review command notes
+audit                      show coordinator audit report
+audit-relayer              show relayer simulation and capped submission audit report
+audit-posture              show halt/challenge/recovery posture audit report
+status                     show display-safe status labels
+submit-capped              report capped testnet submit authorization
+halt                       show halt posture notes
+recover                    show recovery posture notes
+```
+
+This gives us the full Phase 11 audit chain:
+
+```text
+rox-anchor proof          -> RPC proof audit
+rox-anchor audit          -> coordinator audit
+rox-anchor audit-relayer  -> relayer/simulation/capped-submit audit
+rox-anchor audit-posture  -> halt/challenge/recovery posture audit
+```
+
+That is exactly what Phase 11 needed: every testnet-relevant action now has a deterministic, display-safe, redacted, inspectable report.
+
+---
+
+## 6. Final Phase 11 test results
+
+Latest confirmed green results:
+
+```text
+cargo test -p rox-anchor-cli --test posture_audit_report
+  4 passed
+
+cargo test -p rox-anchor-cli --test relayer_audit_report
+  4 passed
+
+cargo test -p rox-anchor-cli --test audit_report
+  3 passed
+
+cargo test -p rox-anchor-cli
+  all CLI unit/integration tests passed
+
+cargo run -p rox-anchor-cli -- --help
+  command list includes audit, audit-relayer, audit-posture
+
+cargo run -p rox-anchor-cli -- audit-posture
+  rendered proof-posture-audit-v1 safely
+
+cargo check --workspace
+  passed
+
+cargo clippy -p rox-anchor-cli --all-targets -- -D warnings
+  passed
+
+cargo clippy --workspace --all-targets -- -D warnings
+  passed
+
+cargo test --workspace
+  passed
+
+anchor build
+  passed
+
+anchor test
+  passed
+```
+
+The terminal output also confirms the Anchor program’s large unit suite passed, including 96 program tests covering config initialization, challenge resolution, binding mismatch, finalize plans, mint authority PDA derivation, token settlement binding, token CPI readiness, execution receipts, wrong authority, direction helpers, and test-only mint harness behavior. 
+
+---
+
+## 7. Current codebase shape after this session
+
+The latest codebundle includes these workspace members:
+
+```text
+crates/rox-anchor-core
+crates/rox-anchor-proof
+crates/rox-anchor-cli
+crates/rox-anchor-coordinator
+crates/rox-anchor-relayer
+crates/rox-anchor-rpc-proof
+programs/rox-anchor
+```
+
+Root files include:
+
+```text
+Anchor.toml
+BUILD_PLAN.md
+BUILD_PLAN2.md
+Cargo.lock
+Cargo.toml
+IDB.md
+README.md
+TODO.md
+NOTES.MD
+scripts/check_testnet_deploy_drill.sh
+scripts/make_codebundle.sh
+```
+
+The root `Cargo.toml` workspace includes all active crates and the Anchor program. The codebundle also preserves the current no-secret posture and notes that the artifact itself is not runtime authorization. 
+
+The codebase has mature surfaces for:
+
+```text
+core shared types
+proof review
+CLI inspection
+read-only RPC proof model
+coordinator local decision model
+relayer dry-run / simulation / capped submit model
+testnet config model
+operator authority model
+test-only asset harness
+testnet deployment drill checks
+testnet shadow flow
+security regression tests
+observability and audit reports
+Anchor program state and token settlement model
+```
+
+---
+
+## 8. Current BUILD_PLAN2 progress
+
+BUILD_PLAN2 phases:
+
+```text
+Phase 0  — Freeze Local Green Baseline
+Phase 1  — Testnet Scope Locks and Safety Flags
+Phase 2  — Testnet Configuration Model
+Phase 3  — Operator Key and Authority Safety Model
+Phase 4  — Read-Only Live RPC Adapter
+Phase 5  — Transaction Simulation Model
+Phase 6  — Test-Only Mint and Token Account Harness
+Phase 7  — Testnet Deployment Drill
+Phase 8  — Capped Testnet Submission Path
+Phase 9  — End-to-End Testnet Shadow Flow
+Phase 10 — Security Regression Expansion
+Phase 11 — Observability, Receipts, and Audit Trail
+Phase 12 — Halt, Recovery, and Kill-Switch Drills
+Phase 13 — Testnet Chaos Drills
+Phase 14 — Audit Preparation
+Phase 15 — Testnet Readiness Gate
+```
+
+Current status:
+
+```text
+Phase 0: complete / green / parked
+Phase 1: complete / green / parked
+Phase 2: complete / green / parked
+Phase 3: complete / green / parked
+Phase 4: complete / green / parked
+Phase 5: complete / green / parked
+Phase 6: complete / green / parked
+Phase 7: complete / green / parked
+Phase 8: complete / green / parked
+Phase 9: complete / green / parked
+Phase 10: complete / green / parked
+Phase 11: complete / green / parked
+Phase 12: next
+Phase 13: thereafter
+Phase 14: thereafter
+Phase 15: final readiness gate
+```
+
+BUILD_PLAN2 defines Phase 12 as the next phase and says its purpose is to prove halt/recovery behavior across local, simulated, and capped testnet modes. 
+
+---
+
+## 9. What to do first in the next session
+
+Start the next session with this status paragraph:
+
+```text
+We are continuing ROX Anchor. BUILD_PLAN.md is complete / green / parked. BUILD_PLAN2 Phase 11 — Observability, Receipts, and Audit Trail — is complete / green / parked. The latest green run passed cargo fmt/check/test, focused and workspace Clippy, cargo test --workspace, anchor build, and anchor test. Start BUILD_PLAN2 Phase 12 — Halt, Recovery, and Kill-Switch Drills. Keep all work testnet/local only: no live wallet calls, no silent live RPC submission, no production mint/burn, no production bridge settlement, no public launch behavior.
+```
+
+Then run the baseline:
+
+```bash
+cd /Users/mymac/Desktop/rox-anchor
+
+cargo check --workspace
+```
+
+If green, run the fuller baseline only if needed:
+
+```bash
+cargo fmt --all
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+anchor build
+anchor test
+```
+
+Because the last session already ended green, the next patch should not waste time rebuilding everything before writing code unless the repo changed. A good flow is:
+
+```text
+1. cargo check --workspace
+2. inspect first failure if any
+3. if green, begin Phase 12 Round 1
+4. write one focused halt/recovery drill test
+5. patch the exact crate surface needed
+6. run focused test
+7. then workspace check/test/clippy at boundary
+```
+
+---
+
+## 10. BUILD_PLAN2 Phase 12 scope
+
+Phase 12 title:
+
+```text
+Halt, Recovery, and Kill-Switch Drills
+```
+
+Purpose:
+
+```text
+Prove we can stop unsafe behavior before any public exposure.
+```
+
+Phase 12 required work:
+
+```text
+1. Test halt before proof acceptance.
+2. Test halt after proof acceptance but before simulation.
+3. Test halt after simulation but before submission.
+4. Test halt after capped testnet submission.
+5. Test recovery path from halted state.
+6. Test wrong authority cannot halt/recover.
+7. Test status output reflects halt/recovery.
+8. Test relayer refuses submission while halted.
+9. Test coordinator refuses finalization while halted.
+```
+
+Exit condition:
+
+```text
+Halt and recovery behavior is proven across local, simulated, and capped testnet modes.
+```
+
+Commands from BUILD_PLAN2:
+
+```bash
+cargo fmt --all
+cargo test --workspace
+anchor build
+anchor test
+```
+
+Source: BUILD_PLAN2 Phase 12. 
+
+---
+
+## 11. Recommended next-session implementation order
+
+### Phase 12 Round 1 — Proof-level halt drill expansion
+
+Goal:
+
+```text
+Prove halt blocks proof acceptance before downstream coordinator/relayer/simulation can do anything.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-proof/tests/halt_resume.rs
+crates/rox-anchor-proof/src/fixtures.rs
+crates/rox-anchor-proof/src/validate.rs
+```
+
+Likely tests:
+
+```text
+halt_before_proof_acceptance_blocks_review
+recovery_required_before_proof_acceptance_blocks_review
+recovery_in_review_before_proof_acceptance_blocks_review
+clear_posture_restores_acceptance
+```
+
+Expected behavior:
+
+```text
+- Halted proof packages return Blocked.
+- Lifecycle state is Halted.
+- Finding includes Halted.
+- RecoveryRequired returns Blocked.
+- RecoveryInReview returns Blocked.
+- Clear/Active/NotRequired returns Accepted for a valid package.
+```
+
+Focused commands:
+
+```bash
+cargo fmt -p rox-anchor-proof
+cargo test -p rox-anchor-proof --test halt_resume
+cargo test -p rox-anchor-proof
+```
+
+Why first:
+
+```text
+Phase 12 should begin at the source of truth: proof acceptance must block before coordinator, relayer, simulation, or CLI reports can accidentally imply progress.
+```
+
+---
+
+### Phase 12 Round 2 — Coordinator refusal while halted
+
+Goal:
+
+```text
+Prove coordinator refuses finalization/simulation progression when the proof package is halted or recovery-blocked.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-coordinator/tests/
+crates/rox-anchor-coordinator/src/decision.rs
+crates/rox-anchor-coordinator/src/audit.rs
+```
+
+Likely tests:
+
+```text
+coordinator_rejects_halted_package_before_simulation
+coordinator_rejects_recovery_required_package_before_simulation
+coordinator_audit_marks_halted_review_not_permitting_simulation
+```
+
+Expected behavior:
+
+```text
+- Coordinator decision is not Accepted.
+- permits_simulation=false.
+- audit status is display-safe but blocked.
+- relayer handoff does not happen.
+```
+
+Focused commands:
+
+```bash
+cargo fmt -p rox-anchor-coordinator
+cargo test -p rox-anchor-coordinator
+```
+
+---
+
+### Phase 12 Round 3 — Relayer refuses submission while halted
+
+Goal:
+
+```text
+Prove relayer dry-run, simulation, and capped authorization cannot be rescued by operator approval when the proof/coordinator state is halted.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-relayer/tests/
+crates/rox-anchor-relayer/src/submit.rs
+crates/rox-anchor-relayer/src/audit.rs
+```
+
+Likely tests:
+
+```text
+relayer_refuses_halted_proof_review
+simulation_rejects_halted_review
+capped_submit_rejects_halted_pipeline_even_with_operator_approval
+```
+
+Expected behavior:
+
+```text
+- relayer status is blocked/rejected
+- attempts_used=0 where appropriate
+- simulation_status is not Simulated
+- capped_submission_status is not Authorized
+- network_submitted=false
+- live_submission_attempted=false
+```
+
+Focused commands:
+
+```bash
+cargo fmt -p rox-anchor-relayer
+cargo test -p rox-anchor-relayer
+```
+
+---
+
+### Phase 12 Round 4 — Halt after proof acceptance but before simulation
+
+Goal:
+
+```text
+Model an accepted proof that becomes unsafe before simulation and prove simulation is blocked.
+```
+
+Likely design:
+
+```text
+Use an accepted proof/coordinator path first.
+Then introduce a halted posture or halted pipeline state before simulation.
+Ensure simulation cannot proceed on stale accepted proof.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-coordinator/tests/testnet_shadow_flow.rs
+crates/rox-anchor-relayer/tests/transaction_simulation.rs
+crates/rox-anchor-relayer/src/submit.rs
+```
+
+Expected behavior:
+
+```text
+- previously accepted proof is not enough if current posture is halted.
+- simulation must see current safety posture.
+- stale accepted decisions cannot bypass halt.
+```
+
+This is important because a kill switch only matters if it can stop operations after a prior acceptance.
+
+---
+
+### Phase 12 Round 5 — Halt after simulation but before capped submission
+
+Goal:
+
+```text
+Prove a simulation result cannot authorize capped submission after halt is triggered.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-relayer/tests/capped_testnet_submission.rs
+crates/rox-anchor-coordinator/tests/testnet_shadow_flow.rs
+```
+
+Likely tests:
+
+```text
+halt_after_simulation_blocks_capped_authorization
+operator_approval_cannot_override_halt_after_simulation
+persisted_receipt_cannot_override_halt_after_simulation
+```
+
+Expected behavior:
+
+```text
+- simulation may have passed earlier
+- current halted posture blocks capped authorization
+- explicit operator approval does not override halt
+- receipt_persisted=true does not override halt
+- network_submitted=false
+```
+
+---
+
+### Phase 12 Round 6 — Halt after capped testnet submission
+
+Goal:
+
+```text
+Model post-submission halt bookkeeping and prove later duplicate/retry/finalization behavior is stopped.
+```
+
+This one may need careful local modeling because we do not perform real network submission. The point should be:
+
+```text
+- if a capped submission authorization occurred in report-only/testnet model,
+  a subsequent halt blocks further attempts, retries, duplicate submits, or finalization claims.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-relayer/tests/capped_testnet_submission.rs
+crates/rox-anchor-relayer/tests/relayer_retry_storm.rs
+crates/rox-anchor-coordinator/tests/testnet_shadow_flow.rs
+```
+
+Expected behavior:
+
+```text
+- second attempt after halt is rejected
+- retry count stays bounded or zero
+- audit records halt as blocker
+- no fake finality
+- no network_submitted=true
+```
+
+---
+
+### Phase 12 Round 7 — Recovery restoration path
+
+Goal:
+
+```text
+Prove recovery can restore safe operation only through explicit recovery posture/state, never by bypass.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-proof/tests/halt_resume.rs
+crates/rox-anchor-coordinator/tests/
+programs/rox-anchor/src/state.rs
+```
+
+Likely tests:
+
+```text
+recovery_required_blocks_after_halt
+recovery_in_review_blocks_after_halt
+recovery_resolved_or_not_required_restores_clean_acceptance
+wrong_recovery_path_does_not_restore_acceptance
+```
+
+Expected behavior:
+
+```text
+- halted blocks
+- recovery required blocks
+- recovery in review blocks
+- active + no recovery + clear challenge allows acceptance only if binding/evidence remains valid
+```
+
+---
+
+### Phase 12 Round 8 — Wrong authority cannot halt/recover
+
+Goal:
+
+```text
+Expand authority-specific halt/recovery tests across core/program/coordinator/relayer where appropriate.
+```
+
+Existing coverage already includes wrong-authority behavior in places, including program state tests and authority model tests. The next session should inspect before adding duplicate tests.
+
+Likely files:
+
+```text
+crates/rox-anchor-core/tests/operator_authority_model.rs
+programs/rox-anchor/src/state.rs
+crates/rox-anchor-coordinator/tests/authority_readiness.rs
+crates/rox-anchor-relayer/tests/authority_readiness.rs
+```
+
+Likely tests:
+
+```text
+wrong_halt_authority_cannot_trigger_halt_drill
+wrong_recovery_authority_cannot_clear_recovery_drill
+shared_unsafe_authority_cannot_override_kill_switch
+```
+
+Expected behavior:
+
+```text
+- wrong authority is rejected
+- redacted reports do not leak key material
+- test-only authority sharing remains explicitly test-only
+```
+
+---
+
+### Phase 12 Round 9 — CLI status reflects halt/recovery
+
+Goal:
+
+```text
+Make CLI display the halt/recovery drill state safely and deterministically.
+```
+
+Likely files:
+
+```text
+crates/rox-anchor-cli/src/commands/status.rs
+crates/rox-anchor-cli/src/commands/halt.rs
+crates/rox-anchor-cli/src/commands/recover.rs
+crates/rox-anchor-cli/src/commands/posture_audit.rs
+crates/rox-anchor-cli/tests/status_display_boundary.rs
+crates/rox-anchor-cli/tests/posture_audit_report.rs
+```
+
+Potential CLI behavior:
+
+```text
+rox-anchor halt
+rox-anchor recover
+rox-anchor audit-posture
+rox-anchor status
+```
+
+Expected output principles:
+
+```text
+- status labels come from core labels/postures
+- no fake “resumed” or “safe” success if recovery is still required
+- no wallet/key loading
+- no live RPC submission
+- no settlement claims
+- display_safe=true only when report has no sensitive material
+```
+
+Focused commands:
+
+```bash
+cargo fmt -p rox-anchor-cli
+cargo test -p rox-anchor-cli
+cargo run -p rox-anchor-cli -- halt
+cargo run -p rox-anchor-cli -- recover
+cargo run -p rox-anchor-cli -- audit-posture
+```
+
+---
+
+## 12. Likely best first patch for next session
+
+The best first Phase 12 patch should probably be:
+
+```text
+BUILD_PLAN2 Phase 12 Round 1 — Coordinator/Relayer Halt Drill Skeleton
+```
+
+But do not create empty scaffold. It should add real behavior tests.
+
+A very strong first patch would add a new focused test file:
+
+```text
+crates/rox-anchor-coordinator/tests/halt_recovery_kill_switch.rs
+```
+
+Test goals:
+
+```text
+1. halted package is blocked before coordinator permits simulation
+2. recovery-required package is blocked before coordinator permits simulation
+3. blocked coordinator review cannot produce relayer dry-run receipt
+4. audit remains display-safe and reports permits_simulation=false
+```
+
+Why this may be better than adding more proof tests:
+
+```text
+The proof crate already has halt/challenge/recovery posture tests.
+Phase 12 is about drills across the pipeline.
+Coordinator is the next logical boundary after proof acceptance.
+```
+
+Alternative first patch:
+
+```text
+crates/rox-anchor-relayer/tests/halt_recovery_kill_switch.rs
+```
+
+Test goals:
+
+```text
+1. halted proof review does not submit dry-run
+2. halted proof review cannot simulate
+3. halted simulation cannot authorize capped submit
+4. operator approval cannot override halted state
+```
+
+Both are valid. My recommended order:
+
+```text
+Round 1: coordinator halt/recovery kill-switch tests
+Round 2: relayer simulation/capped-submit halt tests
+Round 3: post-simulation halt blocks capped authorization
+Round 4: recovery restoration path
+Round 5: CLI status/report drill
+Round 6: full workspace/Anchor green confirmation
+```
+
+---
+
+## 13. Current estimated completion
+
+Original BUILD_PLAN.md:
+
+```text
+complete / green / parked
+```
+
+BUILD_PLAN2:
+
+```text
+Phase 0–11 complete / green / parked
+Phase 12 next
+Phase 13 after that
+Phase 14 after that
+Phase 15 final readiness gate
+```
+
+Estimated BUILD_PLAN2 completion:
+
+```text
+about 75% complete by phase count
+about 80–85% complete by implementation weight
+```
+
+Why not higher:
+
+```text
+Phase 12 halt/recovery drills are important and security-heavy.
+Phase 13 testnet chaos drills may add multiple realistic failure simulations.
+Phase 14 audit prep will map invariants, authority, RPC, relayer, mint/burn, halt/recovery, deployment rollback, and non-goals.
+Phase 15 is the private testnet readiness gate.
+```
+
+Estimated entire ROX Anchor project status including original BUILD_PLAN and BUILD_PLAN2:
+
+```text
+about 85–90% complete toward private testnet pilot readiness
+```
+
+Caution:
+
+```text
+This does not mean public launch readiness.
+It means we are far along on local/testnet-only hardening.
+Public launch, mainnet, production settlement, public mint/burn, exchange-facing behavior, staking, liquidity, and public bridge UI remain unauthorized.
+```
+
+---
+
+## 14. What remains after Phase 12
+
+### Phase 13 — Testnet Chaos Drills
+
+Purpose:
+
+```text
+Run realistic failure drills before broader testnet rollout.
+```
+
+BUILD_PLAN2 lists drills such as:
+
+```text
+RPC outage
+RPC disagreement
+RPC stale slots
+RPC equivocation
+program account missing
+wrong program ID
+wrong mint
+wrong token account
+reorg-like stale evidence
+duplicate relayer request
+retry storm
+receipt capacity pressure
+operator key unavailable
+wrong authority key
+halt during pending operation
+recovery during pending operation
+simulation passes but send disabled
+send enabled but cap exceeded
+```
+
+Exit condition:
+
+```text
+Testnet chaos drills fail safely, deterministically, and with inspectable receipts.
+```
+
+This phase will likely extend existing chaos tests rather than invent entirely new systems, because the repo already has:
+
+```text
+tests/chaos/challenge_griefing.rs
+tests/chaos/coordinator_stale_evidence.rs
+tests/chaos/halt_resume.rs
+tests/chaos/relayer_retry_storm.rs
+tests/chaos/rpc_equivocation.rs
+```
+
+and crate-local chaos/security tests.
+
+---
+
+### Phase 14 — Audit Preparation
+
+Purpose:
+
+```text
+Prepare the repo for external or self-directed security review.
+```
+
+BUILD_PLAN2 likely expects docs/audit files such as:
+
+```text
+docs/audit/INVARIANT_TEST_MAP.md
+docs/audit/AUTHORITY_MODEL.md
+docs/audit/STATE_TRANSITIONS.md
+docs/audit/RPC_BOUNDARY.md
+docs/audit/RELAYER_BOUNDARY.md
+docs/audit/HALT_RECOVERY_RUNBOOK.md
+docs/audit/TESTNET_DEPLOYMENT_RUNBOOK.md
+```
+
+Important: when Phase 14 arrives, docs become appropriate because the code/tests will already exist. Avoid doing Phase 14-style docs during Phase 12 unless a narrow runbook is needed to support a test.
+
+Phase 14 should map:
+
+```text
+invariant -> code path -> test
+authority -> role -> rejection test
+state transition -> valid/invalid transitions
+RPC trust boundary -> what is trusted vs observed
+relayer boundary -> dry-run/simulate/capped-submit restrictions
+mint/burn boundary -> public-vs-test-only guardrails
+halt/recovery -> drills and restoration path
+deployment rollback -> external key/runbook model
+known non-goals -> public launch/mainnet/staking/liquidity/etc.
+```
+
+---
+
+### Phase 15 — Testnet Readiness Gate
+
+Purpose:
+
+```text
+Decide whether ROX Anchor is ready for a private testnet-only pilot.
+```
+
+This is not a public launch gate.
+
+It should confirm:
+
+```text
+all local tests pass
+all Anchor tests pass
+all testnet-only guards pass
+mainnet-beta is rejected
+no public mint/burn path exists
+no public bridge UI exists
+no exchange/staking/liquidity behavior exists
+operator runbooks exist
+receipt/reporting works
+halt/recovery drills work
+testnet capped submission works only when explicitly enabled
+known adversarial cases are tested or documented
+```
+
+Exit condition:
+
+```text
+ROX Anchor is ready for private testnet-only pilot.
+No public token launch is authorized.
+No public bridge is authorized.
+No production settlement is authorized.
+```
+
+---
+
+## 15. Important existing tests to know about
+
+The codebase already has strong coverage. Avoid duplicating tests blindly; extend the exact boundary that Phase 12 needs.
+
+Key existing tests include:
+
+```text
+crates/rox-anchor-proof/tests/halt_resume.rs
+crates/rox-anchor-proof/tests/challenge_griefing.rs
+crates/rox-anchor-coordinator/tests/testnet_shadow_flow.rs
+crates/rox-anchor-coordinator/tests/coordinator_stale_evidence_chaos.rs
+crates/rox-anchor-coordinator/tests/transaction_simulation_gate.rs
+crates/rox-anchor-relayer/tests/capped_testnet_submission.rs
+crates/rox-anchor-relayer/tests/transaction_simulation.rs
+crates/rox-anchor-relayer/tests/relayer_retry_storm.rs
+crates/rox-anchor-rpc-proof/tests/rpc_equivocation_chaos.rs
+crates/rox-anchor-cli/tests/posture_audit_report.rs
+programs/rox-anchor/src/state.rs tests
+```
+
+Use these as examples for new Phase 12 tests.
+
+---
+
+## 16. Suggested next-session command ladder
+
+Start:
+
+```bash
+cd /Users/mymac/Desktop/rox-anchor
+cargo check --workspace
+```
+
+If green, inspect the relevant files before patching:
+
+```bash
+sed -n '1,240p' crates/rox-anchor-coordinator/tests/testnet_shadow_flow.rs
+sed -n '1,220p' crates/rox-anchor-relayer/tests/capped_testnet_submission.rs
+sed -n '1,220p' crates/rox-anchor-relayer/tests/transaction_simulation.rs
+sed -n '1,220p' crates/rox-anchor-proof/tests/halt_resume.rs
+```
+
+After first Phase 12 patch:
+
+```bash
+cargo fmt -p rox-anchor-coordinator -p rox-anchor-relayer -p rox-anchor-proof
+cargo test -p rox-anchor-coordinator
+cargo test -p rox-anchor-relayer
+cargo test -p rox-anchor-proof
+```
+
+At a natural boundary:
+
+```bash
+cargo check --workspace
+cargo clippy -p rox-anchor-coordinator --all-targets -- -D warnings
+cargo clippy -p rox-anchor-relayer --all-targets -- -D warnings
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+anchor build
+anchor test
+```
+
+---
+
+## 17. Next-session opener prompt
+
+Use this in the next session:
+
+```text
+We are continuing ROX Anchor.
+
+Current safe status:
+BUILD_PLAN.md is complete / green / parked.
+BUILD_PLAN2 Phase 0–11 is complete / green / parked.
+Most recent completed phase: BUILD_PLAN2 Phase 11 — Observability, Receipts, and Audit Trail.
+Latest green run passed focused CLI tests, cargo test -p rox-anchor-cli, cargo check --workspace, focused/workspace Clippy -D warnings, cargo test --workspace, anchor build, and anchor test.
+
+Current workstream:
+BUILD_PLAN2 Phase 12 — Halt, Recovery, and Kill-Switch Drills.
+
+Primary references:
+BUILD_PLAN2.md
+CODEBUNDLE.md
+latest terminal output from Phase 11 completion
+
+Start with cargo check --workspace. If green, begin Phase 12 with focused Rust tests proving halt/recovery behavior across proof, coordinator, relayer, simulation, capped-submit, CLI status/reporting, and Anchor state surfaces. Use small behavior patches with focused tests. Fix the first compiler/test failure before expanding.
+
+Scope remains testnet/local only:
+no live wallet calls
+no silent live RPC submission
+no production mint/burn
+no production ROC release
+no production bridge settlement
+no public launch
+no mainnet
+no exchange/staking/liquidity behavior
+```
+
+---
+
+## 18. One-sentence GitHub push summary
+
+```text
+Complete Phase 11 audit observability chain.
+```
+
+Seven-word version:
+
+```text
+Completed deterministic ROX Anchor audit observability.
+```
+
+More technical version:
+
+```text
+Add CLI audit reports for coordinator, relayer, and posture.
+```
+
+---
+
+## 19. Final carry-over conclusion
+
+We ended this session in an excellent state.
+
+The system now has:
+
+```text
+safe deterministic RPC proof audit
+safe deterministic coordinator audit
+safe deterministic relayer/simulation/capped-submit audit
+safe deterministic halt/challenge/recovery posture audit
+CLI display tests
+deterministic output tests
+redaction/display-safety checks
+full workspace green
+Anchor build/test green
+```
+
+Phase 11 is complete and should be parked.
+
+The next session should not reopen Phase 11 unless a regression appears. Begin Phase 12 immediately.
+
+The strategic focus now shifts from “can we observe and explain every testnet action?” to:
+
+```text
+Can we stop every unsafe path at every stage?
+Can halt override prior acceptance?
+Can recovery restore operation only through explicit safe paths?
+Can wrong authorities fail cleanly?
+Can coordinator/relayer/simulation/capped-submit refuse halted states?
+Can CLI and audit output show the truth without fake success?
+```
+
+That is exactly what BUILD_PLAN2 Phase 12 is meant to prove.
+
+
+### END NOTE - JULY 4 2026 - 18:25 CST

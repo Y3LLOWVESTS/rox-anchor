@@ -10,12 +10,14 @@
 pub mod errors;
 pub mod ids;
 pub mod labels;
+pub mod operations;
 pub mod state;
 pub mod types;
 
 pub use errors::*;
 pub use ids::*;
 pub use labels::*;
+pub use operations::*;
 pub use state::*;
 pub use types::*;
 

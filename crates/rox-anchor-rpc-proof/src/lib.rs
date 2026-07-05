@@ -7,6 +7,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod audit;
 pub mod commitment;
 pub mod config;
 pub mod quorum;
@@ -14,6 +15,7 @@ pub mod readiness;
 pub mod redaction;
 pub mod rpc;
 
+pub use audit::*;
 pub use commitment::*;
 pub use config::*;
 pub use quorum::*;

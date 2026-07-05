@@ -5,9 +5,16 @@ skip-lint = false
 [programs.localnet]
 rox_anchor = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR"
 
+[programs.devnet]
+rox_anchor = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR"
+
+[programs.testnet]
+rox_anchor = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR"
+
 [provider]
 cluster = "Localnet"
 wallet = ".solana/rox-anchor-localnet-payer.json"
 
 [scripts]
 test = "cargo test --workspace"
+testnet_deploy_drill_check = "bash scripts/check_testnet_deploy_drill.sh ."

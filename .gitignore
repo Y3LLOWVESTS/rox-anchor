@@ -339,3 +339,27 @@ session-state/
 
 # ROX Anchor generated local review bundles.
 CODEBUNDLE*.md
+
+# =============================================================================
+# ROX Anchor testnet deployment drill local artifacts
+# =============================================================================
+# Phase 7 drills may create local-only deployment notes, testnet artifacts,
+# generated Anchor outputs, or operator-side key references. Keep all of them
+# outside version control unless an artifact is intentionally promoted later
+# as a redacted, non-secret audit document.
+.rox-anchor-testnet/
+.anchor-testnet/
+deploy-drills/
+testnet-deploy/
+testnet-artifacts/
+testnet-ledger/
+test-validator-ledger/
+
+*.deploy-plan.json
+*.deploy-manifest.json
+*.deploy-output.json
+*.deploy-receipt.json
+*.testnet-keypair.json
+*.testnet-wallet.json
+*.testnet-authority.json
+*.testnet-payer.json

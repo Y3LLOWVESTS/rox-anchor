@@ -3,8 +3,9 @@
 //! RO:INTERACTS — rox-anchor-proof and rox-anchor-rpc-proof.
 //! RO:INVARIANTS — valid coordinator acceptance requires RPC agreement and proof acceptance.
 //! RO:SECURITY — local review only; no live RPC, transaction submission, mint, burn, or settlement.
-//! RO:TEST — covered by valid handoff and stale evidence tests.
+//! RO:TEST — covered by valid handoff, stale evidence, and simulation-gate tests.
 
+use rox_anchor_core::{AnchorOperationalBlocker, AnchorOperationalPosture};
 use rox_anchor_proof::{
     review_proof_package, ExpectedProofBinding, ProofPackage, ProofReview, ReplaySet,
     ReviewDecision,
@@ -61,6 +62,60 @@ pub struct CoordinatorDecision {
 impl CoordinatorDecision {
     pub fn is_accepted(&self) -> bool {
         self.status == CoordinatorDecisionStatus::Accepted
+    }
+
+    pub fn permits_transaction_simulation(&self) -> bool {
+        self.is_accepted()
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CoordinatorFinalizationGateStatus {
+    Permitted,
+    CoordinatorNotAccepted,
+    ChallengeBlocked,
+    Halted,
+    RecoveryBlocked,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CoordinatorFinalizationGate {
+    pub status: CoordinatorFinalizationGateStatus,
+    pub coordinator_status: CoordinatorDecisionStatus,
+    pub posture: AnchorOperationalPosture,
+    pub permits_finalization: bool,
+}
+
+impl CoordinatorFinalizationGate {
+    pub fn is_permitted(&self) -> bool {
+        self.status == CoordinatorFinalizationGateStatus::Permitted
+    }
+}
+
+pub fn review_coordinator_finalization_gate(
+    decision: &CoordinatorDecision,
+    posture: AnchorOperationalPosture,
+) -> CoordinatorFinalizationGate {
+    let status = if !decision.is_accepted() {
+        CoordinatorFinalizationGateStatus::CoordinatorNotAccepted
+    } else {
+        match posture.primary_blocker() {
+            AnchorOperationalBlocker::None => CoordinatorFinalizationGateStatus::Permitted,
+            AnchorOperationalBlocker::Challenge => {
+                CoordinatorFinalizationGateStatus::ChallengeBlocked
+            }
+            AnchorOperationalBlocker::Halt => CoordinatorFinalizationGateStatus::Halted,
+            AnchorOperationalBlocker::Recovery => {
+                CoordinatorFinalizationGateStatus::RecoveryBlocked
+            }
+        }
+    };
+
+    CoordinatorFinalizationGate {
+        status,
+        coordinator_status: decision.status,
+        posture,
+        permits_finalization: status == CoordinatorFinalizationGateStatus::Permitted,
     }
 }
 

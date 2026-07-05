@@ -4380,3 +4380,214 @@ mod tests {
         );
     }
 }
+
+pub const PROGRAM_TEST_ONLY_MAX_AMOUNT_UNITS: u64 = 10_000;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct TestOnlyMintHarnessSnapshot<'a> {
+    pub environment_label: &'a str,
+    pub mint_label: &'a str,
+    pub token_account_label: &'a str,
+    pub mint: Pubkey,
+    pub token_account_mint: Pubkey,
+    pub amount_units: u64,
+}
+
+impl<'a> TestOnlyMintHarnessSnapshot<'a> {
+    pub fn new(
+        environment_label: &'a str,
+        mint_label: &'a str,
+        token_account_label: &'a str,
+        mint: Pubkey,
+        token_account_mint: Pubkey,
+        amount_units: u64,
+    ) -> Self {
+        Self {
+            environment_label,
+            mint_label,
+            token_account_label,
+            mint,
+            token_account_mint,
+            amount_units,
+        }
+    }
+
+    pub fn validate(&self) -> Result<()> {
+        require!(
+            fixture_label_is_explicit_testnet(self.environment_label),
+            crate::RoxAnchorError::TestOnlyModeRequired
+        );
+
+        require!(
+            !fixture_label_is_public_or_production(self.mint_label),
+            crate::RoxAnchorError::PublicMintLabelRejected
+        );
+        require!(
+            fixture_label_is_test_only(self.mint_label),
+            crate::RoxAnchorError::TestOnlyLabelRequired
+        );
+
+        require!(
+            !fixture_label_is_public_or_production(self.token_account_label),
+            crate::RoxAnchorError::PublicTokenAccountLabelRejected
+        );
+        require!(
+            fixture_label_is_test_only(self.token_account_label),
+            crate::RoxAnchorError::TestOnlyLabelRequired
+        );
+
+        require!(
+            self.amount_units > 0 && self.amount_units <= PROGRAM_TEST_ONLY_MAX_AMOUNT_UNITS,
+            crate::RoxAnchorError::TestAmountCapExceeded
+        );
+
+        require!(
+            self.mint != Pubkey::default() && self.token_account_mint == self.mint,
+            crate::RoxAnchorError::TestTokenAccountMintMismatch
+        );
+
+        Ok(())
+    }
+}
+
+fn fixture_label_is_explicit_testnet(label: &str) -> bool {
+    matches!(
+        normalized_fixture_label(label).as_str(),
+        "testnet" | "testnetonly" | "solanatestnet"
+    )
+}
+
+fn fixture_label_is_test_only(label: &str) -> bool {
+    let normalized = normalized_fixture_label(label);
+
+    !normalized.is_empty()
+        && normalized.contains("test")
+        && !fixture_label_is_public_or_production(&normalized)
+}
+
+fn fixture_label_is_public_or_production(label: &str) -> bool {
+    let normalized = normalized_fixture_label(label);
+
+    [
+        "public",
+        "production",
+        "prod",
+        "mainnet",
+        "mainnetbeta",
+        "official",
+        "live",
+        "real",
+    ]
+    .iter()
+    .any(|forbidden| normalized.contains(forbidden))
+}
+
+fn normalized_fixture_label(label: &str) -> String {
+    label
+        .trim()
+        .to_ascii_lowercase()
+        .chars()
+        .filter(|ch| ch.is_ascii_alphanumeric())
+        .collect()
+}
+
+#[cfg(test)]
+mod test_only_mint_harness_tests {
+    use super::*;
+
+    fn mint() -> Pubkey {
+        Pubkey::new_from_array([7_u8; 32])
+    }
+
+    #[test]
+    fn program_test_only_harness_accepts_explicit_testnet_fixture() {
+        let snapshot = TestOnlyMintHarnessSnapshot::new(
+            "testnet_only",
+            "test-only-rox-mint-fixture",
+            "test-only-rox-token-account-fixture",
+            mint(),
+            mint(),
+            25,
+        );
+
+        assert!(snapshot.validate().is_ok());
+    }
+
+    #[test]
+    fn program_test_only_harness_rejects_local_or_missing_testnet_mode() {
+        let snapshot = TestOnlyMintHarnessSnapshot::new(
+            "local_only",
+            "test-only-rox-mint-fixture",
+            "test-only-rox-token-account-fixture",
+            mint(),
+            mint(),
+            25,
+        );
+
+        assert!(snapshot.validate().is_err());
+    }
+
+    #[test]
+    fn program_test_only_harness_rejects_public_or_production_labels() {
+        let public_mint = TestOnlyMintHarnessSnapshot::new(
+            "testnet_only",
+            "public-production-rox-mint",
+            "test-only-rox-token-account-fixture",
+            mint(),
+            mint(),
+            25,
+        );
+
+        assert!(public_mint.validate().is_err());
+
+        let public_token_account = TestOnlyMintHarnessSnapshot::new(
+            "testnet_only",
+            "test-only-rox-mint-fixture",
+            "public-live-rox-token-account",
+            mint(),
+            mint(),
+            25,
+        );
+
+        assert!(public_token_account.validate().is_err());
+    }
+
+    #[test]
+    fn program_test_only_harness_rejects_zero_and_over_cap_amounts() {
+        let zero = TestOnlyMintHarnessSnapshot::new(
+            "testnet_only",
+            "test-only-rox-mint-fixture",
+            "test-only-rox-token-account-fixture",
+            mint(),
+            mint(),
+            0,
+        );
+
+        assert!(zero.validate().is_err());
+
+        let over_cap = TestOnlyMintHarnessSnapshot::new(
+            "testnet_only",
+            "test-only-rox-mint-fixture",
+            "test-only-rox-token-account-fixture",
+            mint(),
+            mint(),
+            PROGRAM_TEST_ONLY_MAX_AMOUNT_UNITS + 1,
+        );
+
+        assert!(over_cap.validate().is_err());
+    }
+
+    #[test]
+    fn program_test_only_harness_rejects_token_account_mint_mismatch() {
+        let snapshot = TestOnlyMintHarnessSnapshot::new(
+            "testnet_only",
+            "test-only-rox-mint-fixture",
+            "test-only-rox-token-account-fixture",
+            mint(),
+            Pubkey::new_from_array([8_u8; 32]),
+            25,
+        );
+
+        assert!(snapshot.validate().is_err());
+    }
+}

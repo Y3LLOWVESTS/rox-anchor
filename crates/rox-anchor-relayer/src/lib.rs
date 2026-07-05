@@ -7,6 +7,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod audit;
 pub mod config;
 pub mod readiness;
 pub mod receipts;
@@ -14,6 +15,7 @@ pub mod redaction;
 pub mod retry;
 pub mod submit;
 
+pub use audit::*;
 pub use config::*;
 pub use readiness::*;
 pub use receipts::*;

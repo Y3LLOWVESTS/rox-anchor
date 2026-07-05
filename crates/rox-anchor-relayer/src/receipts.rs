@@ -13,6 +13,9 @@ pub enum RelayerReceiptStatus {
     DryRunAccepted,
     ProofBlocked,
     ProofRejected,
+    ChallengeBlocked,
+    Halted,
+    RecoveryBlocked,
     DuplicateRequest,
     ReceiptCapacityReached,
 }

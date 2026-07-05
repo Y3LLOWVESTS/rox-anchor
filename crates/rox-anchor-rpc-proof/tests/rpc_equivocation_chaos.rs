@@ -42,6 +42,16 @@ fn finding_codes(review: &RpcQuorumReview) -> Vec<RpcQuorumFindingCode> {
     review.findings.clone()
 }
 
+type RpcEquivocationSnapshot = (
+    RpcQuorumDecision,
+    Vec<RpcQuorumFindingCode>,
+    u16,
+    u16,
+    u16,
+    u16,
+    u16,
+);
+
 #[test]
 fn conflicting_rpc_signatures_are_disputed_not_agreement() {
     let observations = vec![
@@ -106,15 +116,7 @@ fn repeated_rpc_equivocation_reviews_are_deterministic() {
 
     let expected = expected_binding();
     let config = RpcProofConfig::new(2, 100);
-    let mut first_snapshot: Option<(
-        RpcQuorumDecision,
-        Vec<RpcQuorumFindingCode>,
-        u16,
-        u16,
-        u16,
-        u16,
-        u16,
-    )> = None;
+    let mut first_snapshot: Option<RpcEquivocationSnapshot> = None;
 
     for _attempt in 0..64 {
         let review = review_rpc_observations(&observations, &expected, config, 50);

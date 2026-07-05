@@ -1,9 +1,9 @@
 //! RO:WHAT — Shared error type for ROX Anchor core validation.
-//! RO:WHY — Gives all crates one reusable error vocabulary for IDs and core bindings.
-//! RO:INTERACTS — ids, types, proof validation, CLI display, and local service models.
+//! RO:WHY — Gives all crates one reusable error vocabulary for IDs, safety scope, config, and authority binding.
+//! RO:INTERACTS — ids, types, proof validation, CLI display, local service models, and future Anchor checks.
 //! RO:INVARIANTS — errors are deterministic and do not imply finality or runtime authorization.
-//! RO:SECURITY — validation-only; no wallet/RPC/deployment side effects.
-//! RO:TEST — covered by rox-anchor-core identifier tests.
+//! RO:SECURITY — validation-only; no wallet/RPC/deployment/keypair side effects.
+//! RO:TEST — covered by identifier, scope-lock, testnet-config, and operator-authority tests.
 
 use core::fmt;
 
@@ -22,6 +22,59 @@ pub enum AnchorCoreError {
     },
     IdentifierHasControlByte {
         kind: &'static str,
+    },
+    MainnetBetaClusterForbidden,
+    MainnetBetaEndpointForbidden,
+    UnsupportedCluster {
+        cluster: String,
+    },
+    UnsupportedEnvironmentMode {
+        mode: String,
+    },
+    UnsupportedSubmissionMode {
+        mode: String,
+    },
+    ClusterNotAllowed {
+        cluster: &'static str,
+    },
+    UnsafeModeCluster {
+        environment: &'static str,
+        cluster: &'static str,
+    },
+    UnsafeSubmissionMode {
+        environment: &'static str,
+        cluster: &'static str,
+        submission: &'static str,
+    },
+    PublicLaunchFlagUnavailable {
+        flag: String,
+    },
+    MissingExplicitMode,
+    MissingRpcUrl,
+    MissingPayerKeypairPath,
+    EmptyRpcUrl,
+    EmptyPayerKeypairPath,
+    EmptyAuthorityAssignments,
+    DuplicateAuthorityRole {
+        role: &'static str,
+    },
+    MissingCriticalAuthorityRole {
+        role: &'static str,
+    },
+    CriticalAuthoritySharedWithoutTestOnly {
+        redacted_key: String,
+    },
+    WrongAuthority {
+        role: &'static str,
+        expected: String,
+        presented: String,
+    },
+    RotationNoOp {
+        role: &'static str,
+        redacted_key: String,
+    },
+    MissingRotationActivation {
+        role: &'static str,
     },
 }
 
@@ -43,6 +96,76 @@ impl fmt::Display for AnchorCoreError {
             Self::IdentifierHasControlByte { kind } => {
                 write!(f, "{kind} contains a control byte")
             }
+            Self::MainnetBetaClusterForbidden => {
+                f.write_str("mainnet-beta is forbidden for ROX Anchor testnet hardening")
+            }
+            Self::MainnetBetaEndpointForbidden => {
+                f.write_str("mainnet/mainnet-beta RPC endpoints are forbidden")
+            }
+            Self::UnsupportedCluster { cluster } => write!(f, "unsupported cluster: {cluster}"),
+            Self::UnsupportedEnvironmentMode { mode } => {
+                write!(f, "unsupported environment mode: {mode}")
+            }
+            Self::UnsupportedSubmissionMode { mode } => {
+                write!(f, "unsupported submission mode: {mode}")
+            }
+            Self::ClusterNotAllowed { cluster } => {
+                write!(f, "cluster is not allowed by this safety profile: {cluster}")
+            }
+            Self::UnsafeModeCluster {
+                environment,
+                cluster,
+            } => write!(
+                f,
+                "environment mode {environment} cannot be used with cluster {cluster}"
+            ),
+            Self::UnsafeSubmissionMode {
+                environment,
+                cluster,
+                submission,
+            } => write!(
+                f,
+                "submission mode {submission} is unsafe for environment {environment} and cluster {cluster}"
+            ),
+            Self::PublicLaunchFlagUnavailable { flag } => {
+                write!(f, "public launch flag is not available: {flag}")
+            }
+            Self::MissingExplicitMode => f.write_str("explicit environment mode is required"),
+            Self::MissingRpcUrl => f.write_str("external RPC URL is required"),
+            Self::MissingPayerKeypairPath => {
+                f.write_str("external payer/keypair path is required")
+            }
+            Self::EmptyRpcUrl => f.write_str("external RPC URL is empty"),
+            Self::EmptyPayerKeypairPath => f.write_str("external payer/keypair path is empty"),
+            Self::EmptyAuthorityAssignments => {
+                f.write_str("authority assignments must not be empty")
+            }
+            Self::DuplicateAuthorityRole { role } => {
+                write!(f, "duplicate authority role assignment: {role}")
+            }
+            Self::MissingCriticalAuthorityRole { role } => {
+                write!(f, "missing critical authority role: {role}")
+            }
+            Self::CriticalAuthoritySharedWithoutTestOnly { redacted_key } => write!(
+                f,
+                "one authority key owns every critical role without explicit test-only sharing: {redacted_key}"
+            ),
+            Self::WrongAuthority {
+                role,
+                expected,
+                presented,
+            } => write!(
+                f,
+                "wrong authority for role {role}: expected {expected}, presented {presented}"
+            ),
+            Self::RotationNoOp { role, redacted_key } => write!(
+                f,
+                "rotation intent for role {role} does not change authority key: {redacted_key}"
+            ),
+            Self::MissingRotationActivation { role } => write!(
+                f,
+                "rotation intent for role {role} is missing an activation slot"
+            ),
         }
     }
 }

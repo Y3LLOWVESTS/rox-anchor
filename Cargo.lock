@@ -1237,8 +1237,11 @@ dependencies = [
 name = "rox-anchor-cli"
 version = "0.1.0"
 dependencies = [
+ "rox-anchor-coordinator",
  "rox-anchor-core",
  "rox-anchor-proof",
+ "rox-anchor-relayer",
+ "rox-anchor-rpc-proof",
 ]
 
 [[package]]

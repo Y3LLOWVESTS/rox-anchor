@@ -16,7 +16,10 @@ path = "src/main.rs"
 
 [dependencies]
 rox-anchor-core = { path = "../rox-anchor-core" }
+rox-anchor-coordinator = { path = "../rox-anchor-coordinator" }
 rox-anchor-proof = { path = "../rox-anchor-proof" }
+rox-anchor-rpc-proof = { path = "../rox-anchor-rpc-proof" }
+rox-anchor-relayer = { path = "../rox-anchor-relayer" }
 
 [features]
 default = []

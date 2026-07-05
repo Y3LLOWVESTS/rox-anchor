@@ -41,4 +41,16 @@ pub enum RoxAnchorError {
     BurnEvidenceBindingMismatch,
     #[msg("ROX Anchor authority mismatch")]
     AuthorityMismatch,
+    #[msg("ROX Anchor explicit testnet-only mode is required for test-only assets")]
+    TestOnlyModeRequired,
+    #[msg("ROX Anchor test-only asset label is required")]
+    TestOnlyLabelRequired,
+    #[msg("ROX Anchor public or production mint label is forbidden")]
+    PublicMintLabelRejected,
+    #[msg("ROX Anchor public or production token account label is forbidden")]
+    PublicTokenAccountLabelRejected,
+    #[msg("ROX Anchor test-only amount exceeds cap or is zero")]
+    TestAmountCapExceeded,
+    #[msg("ROX Anchor test token account mint binding mismatch")]
+    TestTokenAccountMintMismatch,
 }
