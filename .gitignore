@@ -399,3 +399,21 @@ pilot-tmp/
 *.pilot-audit.json
 *.pilot-deploy-output.json
 *.pilot-ledger.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual private testnet local artifacts — NEVER COMMIT
+# =============================================================================
+# BUILD_PLAN4 may create real private devnet/testnet operator files outside
+# tracked source. These names are intentionally ignored in case an operator
+# creates a local workspace inside the repo by mistake.
+
+private-testnet.toml
+private-testnet.json
+actual-private-testnet.toml
+actual-private-testnet.json
+*.private-testnet.local.toml
+*.private-testnet.local.json
+*.actual-private-testnet.local.toml
+*.actual-private-testnet.local.json
+*.pilot-authority-notes.local.txt
+authority-notes.local.txt
