@@ -417,3 +417,4 @@ actual-private-testnet.json
 *.actual-private-testnet.local.json
 *.pilot-authority-notes.local.txt
 authority-notes.local.txt
+NOTES.md
