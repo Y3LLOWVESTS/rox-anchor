@@ -10,7 +10,10 @@ use std::{
     path::Path,
 };
 
-use crate::{AnchorCoreError, ClusterId, DomainId, MintId, ProgramId, TokenAccountId};
+use crate::{
+    AccountId, AnchorCoreError, ClusterId, DomainId, IdempotencyKey, MintId, Nonce, OperationId,
+    ProgramId, TokenAccountId,
+};
 
 pub const MAINNET_BETA_CLUSTER: &str = "mainnet-beta";
 
@@ -766,6 +769,201 @@ fn redact_external_signature(value: &str) -> String {
 
     format!("{first}…{last}")
 }
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TestnetProgramArtifactManifest {
+    pub cluster: AnchorCluster,
+    pub program_id: ProgramId,
+    pub expected_program_id: ProgramId,
+    pub build_hash: String,
+    pub idl_hash: String,
+    pub deploy_slot: Option<u64>,
+    pub operator_label: String,
+    pub artifact_label: String,
+    pub program_artifact_path: ExternalArtifactPath,
+    pub idl_artifact_path: ExternalArtifactPath,
+}
+
+impl TestnetProgramArtifactManifest {
+    #[allow(clippy::too_many_arguments)]
+    pub fn from_labels(
+        cluster: &str,
+        program_id: &str,
+        expected_program_id: &str,
+        build_hash: &str,
+        idl_hash: &str,
+        deploy_slot: Option<u64>,
+        operator_label: &str,
+        artifact_label: &str,
+        program_artifact_path: &str,
+        idl_artifact_path: &str,
+    ) -> Result<Self, AnchorCoreError> {
+        Self::new(
+            AnchorCluster::from_label(cluster)?,
+            ProgramId::new(program_id.to_owned())?,
+            ProgramId::new(expected_program_id.to_owned())?,
+            build_hash,
+            idl_hash,
+            deploy_slot,
+            operator_label,
+            artifact_label,
+            program_artifact_path,
+            idl_artifact_path,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        cluster: AnchorCluster,
+        program_id: ProgramId,
+        expected_program_id: ProgramId,
+        build_hash: impl AsRef<str>,
+        idl_hash: impl AsRef<str>,
+        deploy_slot: Option<u64>,
+        operator_label: impl AsRef<str>,
+        artifact_label: impl AsRef<str>,
+        program_artifact_path: impl AsRef<str>,
+        idl_artifact_path: impl AsRef<str>,
+    ) -> Result<Self, AnchorCoreError> {
+        let manifest = Self {
+            cluster,
+            program_id,
+            expected_program_id,
+            build_hash: validate_testnet_program_manifest_value("build_hash", build_hash)?,
+            idl_hash: validate_testnet_program_manifest_value("idl_hash", idl_hash)?,
+            deploy_slot,
+            operator_label: validate_testnet_program_manifest_label(
+                "operator_label",
+                operator_label,
+            )?,
+            artifact_label: validate_testnet_program_manifest_label(
+                "artifact_label",
+                artifact_label,
+            )?,
+            program_artifact_path: ExternalArtifactPath::new(
+                program_artifact_path,
+                "program_artifact_path",
+            )?,
+            idl_artifact_path: ExternalArtifactPath::new(idl_artifact_path, "idl_artifact_path")?,
+        };
+
+        manifest.validate()?;
+
+        Ok(manifest)
+    }
+
+    pub fn validate(&self) -> Result<(), AnchorCoreError> {
+        match self.cluster {
+            AnchorCluster::Devnet | AnchorCluster::Testnet => {}
+            AnchorCluster::Localnet => {
+                return Err(AnchorCoreError::ClusterNotAllowed {
+                    cluster: self.cluster.as_str(),
+                });
+            }
+        }
+
+        if self.program_id != self.expected_program_id {
+            return Err(AnchorCoreError::TestnetProgramIdMismatch {
+                expected: self.expected_program_id.as_str().to_owned(),
+                actual: self.program_id.as_str().to_owned(),
+            });
+        }
+
+        validate_testnet_program_manifest_value("build_hash", &self.build_hash)?;
+        validate_testnet_program_manifest_value("idl_hash", &self.idl_hash)?;
+        validate_testnet_program_manifest_label("operator_label", &self.operator_label)?;
+        validate_testnet_program_manifest_label("artifact_label", &self.artifact_label)?;
+
+        Ok(())
+    }
+
+    pub fn redacted_report(&self) -> TestnetProgramArtifactManifestReport {
+        TestnetProgramArtifactManifestReport {
+            cluster: self.cluster.as_str().to_owned(),
+            program_id: self.program_id.as_str().to_owned(),
+            expected_program_id: self.expected_program_id.as_str().to_owned(),
+            build_hash: self.build_hash.clone(),
+            idl_hash: self.idl_hash.clone(),
+            deploy_slot: self
+                .deploy_slot
+                .map(|slot| slot.to_string())
+                .unwrap_or_else(|| "<not-supplied>".to_owned()),
+            operator_label: self.operator_label.clone(),
+            artifact_label: self.artifact_label.clone(),
+            program_artifact_path: self.program_artifact_path.redacted(),
+            idl_artifact_path: self.idl_artifact_path.redacted(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TestnetProgramArtifactManifestReport {
+    pub cluster: String,
+    pub program_id: String,
+    pub expected_program_id: String,
+    pub build_hash: String,
+    pub idl_hash: String,
+    pub deploy_slot: String,
+    pub operator_label: String,
+    pub artifact_label: String,
+    pub program_artifact_path: String,
+    pub idl_artifact_path: String,
+}
+
+impl TestnetProgramArtifactManifestReport {
+    pub fn lines(&self) -> Vec<String> {
+        vec![
+            "testnet_program_manifest: redacted_non_secret_artifact_shape".to_owned(),
+            format!("cluster: {}", self.cluster),
+            format!("program_id: {}", self.program_id),
+            format!("expected_program_id: {}", self.expected_program_id),
+            format!("build_hash: {}", self.build_hash),
+            format!("idl_hash: {}", self.idl_hash),
+            format!("deploy_slot: {}", self.deploy_slot),
+            format!("operator_label: {}", self.operator_label),
+            format!("artifact_label: {}", self.artifact_label),
+            format!("program_artifact_path: {}", self.program_artifact_path),
+            format!("idl_artifact_path: {}", self.idl_artifact_path),
+            "manifest_is_deployment_proof: false".to_owned(),
+            "production_finality_claim: false".to_owned(),
+            "public_launch_authorized: false".to_owned(),
+        ]
+    }
+}
+
+fn validate_testnet_program_manifest_value(
+    field: &'static str,
+    value: impl AsRef<str>,
+) -> Result<String, AnchorCoreError> {
+    let clean = value.as_ref().trim();
+
+    if clean.is_empty() {
+        return Err(AnchorCoreError::MissingTestnetProgramManifestField { field });
+    }
+
+    if clean.chars().any(char::is_control) {
+        return Err(AnchorCoreError::IdentifierHasControlByte { kind: field });
+    }
+
+    Ok(clean.to_owned())
+}
+
+fn validate_testnet_program_manifest_label(
+    field: &'static str,
+    value: impl AsRef<str>,
+) -> Result<String, AnchorCoreError> {
+    let clean = validate_testnet_program_manifest_value(field, value)?;
+
+    if label_is_public_or_production(&clean) {
+        return Err(
+            AnchorCoreError::PublicOrProductionTestnetProgramManifestLabel {
+                field,
+                label: clean,
+            },
+        );
+    }
+
+    Ok(clean)
+}
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum OperatorRole {
     Observer,
@@ -1099,6 +1297,236 @@ impl RecoveryPosture {
     }
 }
 
+pub const MAX_INTERNAL_ROC_DRY_RUN_AMOUNT: u64 = 1_000_000;
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct InternalRocDryRunBurnIntent {
+    pub safety: AnchorSafetyProfile,
+    pub operation_id: OperationId,
+    pub idempotency_key: IdempotencyKey,
+    pub nonce: Nonce,
+    pub crablink_account: AccountId,
+    pub asset_label: String,
+    pub test_amount: u64,
+}
+
+impl InternalRocDryRunBurnIntent {
+    pub fn new(
+        safety: AnchorSafetyProfile,
+        operation_id: OperationId,
+        idempotency_key: IdempotencyKey,
+        nonce: Nonce,
+        crablink_account: AccountId,
+        asset_label: impl AsRef<str>,
+        test_amount: u64,
+    ) -> Result<Self, AnchorCoreError> {
+        let asset_label =
+            validate_internal_roc_dry_run_inputs("asset_label", safety, asset_label, test_amount)?;
+
+        Ok(Self {
+            safety,
+            operation_id,
+            idempotency_key,
+            nonce,
+            crablink_account,
+            asset_label,
+            test_amount,
+        })
+    }
+
+    pub fn validate(&self) -> Result<(), AnchorCoreError> {
+        validate_internal_roc_dry_run_inputs(
+            "asset_label",
+            self.safety,
+            &self.asset_label,
+            self.test_amount,
+        )?;
+
+        Ok(())
+    }
+
+    pub fn direction(&self) -> AnchorDirection {
+        AnchorDirection::RocToRox
+    }
+
+    pub fn redacted_report_lines(&self) -> Vec<String> {
+        vec![
+            "internal_roc_burn_intent: dry_run_input".to_owned(),
+            format!("direction: {}", self.direction().as_str()),
+            format!("operation_id: {}", self.operation_id),
+            format!(
+                "idempotency_key: {}",
+                redact_short_identifier("idempotency-key", self.idempotency_key.as_str())
+            ),
+            format!(
+                "nonce: {}",
+                redact_short_identifier("nonce", self.nonce.as_str())
+            ),
+            format!(
+                "crablink_account: {}",
+                redact_short_identifier("account", self.crablink_account.as_str())
+            ),
+            format!("asset_label: {}", self.asset_label),
+            format!("test_amount: {}", self.test_amount),
+            format!(
+                "environment_mode: {}",
+                self.safety.environment_mode.as_str()
+            ),
+            format!("cluster: {}", self.safety.cluster.as_str()),
+            format!("submission_mode: {}", self.safety.submission_mode.as_str()),
+            "svc_wallet_call: disabled".to_owned(),
+            "ron_ledger_mutation: disabled".to_owned(),
+            "paid_content_unlock: disabled".to_owned(),
+            "real_internal_roc_burn: disabled".to_owned(),
+            "settlement_claim: none".to_owned(),
+            "crablink_final_settlement_display: disabled".to_owned(),
+        ]
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct InternalRocDryRunReleaseIntent {
+    pub safety: AnchorSafetyProfile,
+    pub operation_id: OperationId,
+    pub idempotency_key: IdempotencyKey,
+    pub nonce: Nonce,
+    pub crablink_account: AccountId,
+    pub asset_label: String,
+    pub test_amount: u64,
+}
+
+impl InternalRocDryRunReleaseIntent {
+    pub fn new(
+        safety: AnchorSafetyProfile,
+        operation_id: OperationId,
+        idempotency_key: IdempotencyKey,
+        nonce: Nonce,
+        crablink_account: AccountId,
+        asset_label: impl AsRef<str>,
+        test_amount: u64,
+    ) -> Result<Self, AnchorCoreError> {
+        let asset_label =
+            validate_internal_roc_dry_run_inputs("asset_label", safety, asset_label, test_amount)?;
+
+        Ok(Self {
+            safety,
+            operation_id,
+            idempotency_key,
+            nonce,
+            crablink_account,
+            asset_label,
+            test_amount,
+        })
+    }
+
+    pub fn validate(&self) -> Result<(), AnchorCoreError> {
+        validate_internal_roc_dry_run_inputs(
+            "asset_label",
+            self.safety,
+            &self.asset_label,
+            self.test_amount,
+        )?;
+
+        Ok(())
+    }
+
+    pub fn direction(&self) -> AnchorDirection {
+        AnchorDirection::RoxToRoc
+    }
+
+    pub fn redacted_report_lines(&self) -> Vec<String> {
+        vec![
+            "internal_roc_release_intent: dry_run_output".to_owned(),
+            format!("direction: {}", self.direction().as_str()),
+            format!("operation_id: {}", self.operation_id),
+            format!(
+                "idempotency_key: {}",
+                redact_short_identifier("idempotency-key", self.idempotency_key.as_str())
+            ),
+            format!(
+                "nonce: {}",
+                redact_short_identifier("nonce", self.nonce.as_str())
+            ),
+            format!(
+                "crablink_account: {}",
+                redact_short_identifier("account", self.crablink_account.as_str())
+            ),
+            format!("asset_label: {}", self.asset_label),
+            format!("test_amount: {}", self.test_amount),
+            format!(
+                "environment_mode: {}",
+                self.safety.environment_mode.as_str()
+            ),
+            format!("cluster: {}", self.safety.cluster.as_str()),
+            format!("submission_mode: {}", self.safety.submission_mode.as_str()),
+            "svc_wallet_call: disabled".to_owned(),
+            "ron_ledger_mutation: disabled".to_owned(),
+            "paid_content_unlock: disabled".to_owned(),
+            "real_internal_roc_release: disabled".to_owned(),
+            "future_real_roc_path: svc-wallet -> ron-ledger only".to_owned(),
+            "settlement_claim: none".to_owned(),
+            "crablink_final_settlement_display: disabled".to_owned(),
+        ]
+    }
+}
+
+fn validate_internal_roc_dry_run_inputs(
+    field: &'static str,
+    safety: AnchorSafetyProfile,
+    asset_label: impl AsRef<str>,
+    test_amount: u64,
+) -> Result<String, AnchorCoreError> {
+    safety.validate()?;
+
+    if safety.environment_mode == AnchorEnvironmentMode::ProductionDisabled {
+        return Err(
+            AnchorCoreError::InternalRocDryRunRequiresExplicitNonProductionMode {
+                environment: safety.environment_mode.as_str(),
+            },
+        );
+    }
+
+    if !safety.submission_mode.is_non_submitting() {
+        return Err(
+            AnchorCoreError::InternalRocDryRunRequiresNonSubmittingMode {
+                submission: safety.submission_mode.as_str(),
+            },
+        );
+    }
+
+    if test_amount == 0 || test_amount > MAX_INTERNAL_ROC_DRY_RUN_AMOUNT {
+        return Err(AnchorCoreError::InvalidInternalRocDryRunAmount {
+            amount: test_amount,
+            max: MAX_INTERNAL_ROC_DRY_RUN_AMOUNT,
+        });
+    }
+
+    let clean_label = asset_label.as_ref().trim();
+
+    if clean_label.is_empty() {
+        return Err(AnchorCoreError::MissingTestOnlyInternalRocLabel {
+            field,
+            label: clean_label.to_owned(),
+        });
+    }
+
+    if label_is_public_or_production(clean_label) {
+        return Err(AnchorCoreError::PublicOrProductionInternalRocDryRunLabel {
+            field,
+            label: clean_label.to_owned(),
+        });
+    }
+
+    if !label_is_test_only_asset(clean_label) {
+        return Err(AnchorCoreError::MissingTestOnlyInternalRocLabel {
+            field,
+            label: clean_label.to_owned(),
+        });
+    }
+
+    Ok(clean_label.to_owned())
+}
+
 fn reject_mainnet_endpoint(value: &str) -> Result<(), AnchorCoreError> {
     let lowered = value.trim().to_ascii_lowercase();
 
@@ -1326,6 +1754,248 @@ impl TestOnlyAssetHarnessReview {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TestOnlyMintInitializationFinding {
+    Ready,
+    MissingTestOnlyInitializationLabel,
+    PublicOrProductionInitializationLabelRejected,
+    ZeroInitialSupply,
+    SupplyCapExceeded,
+    TestOnlyAssetHarnessBlocked,
+    MissingMintAuthority,
+    MissingHaltAuthority,
+    MissingRecoveryAuthority,
+    UnsafeAuthoritySeparation,
+}
+
+impl TestOnlyMintInitializationFinding {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Ready => "ready",
+            Self::MissingTestOnlyInitializationLabel => "missing_test_only_initialization_label",
+            Self::PublicOrProductionInitializationLabelRejected => {
+                "public_or_production_initialization_label_rejected"
+            }
+            Self::ZeroInitialSupply => "zero_initial_supply",
+            Self::SupplyCapExceeded => "supply_cap_exceeded",
+            Self::TestOnlyAssetHarnessBlocked => "test_only_asset_harness_blocked",
+            Self::MissingMintAuthority => "missing_mint_authority",
+            Self::MissingHaltAuthority => "missing_halt_authority",
+            Self::MissingRecoveryAuthority => "missing_recovery_authority",
+            Self::UnsafeAuthoritySeparation => "unsafe_authority_separation",
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TestOnlyMintInitializationIntent {
+    pub label: String,
+    pub requested_initial_supply_units: u64,
+    pub asset_harness: TestOnlyAssetHarness,
+    pub authorities: AuthorityMap,
+}
+
+impl TestOnlyMintInitializationIntent {
+    pub fn new(
+        label: impl Into<String>,
+        requested_initial_supply_units: u64,
+        asset_harness: TestOnlyAssetHarness,
+        authorities: AuthorityMap,
+    ) -> Self {
+        Self {
+            label: label.into(),
+            requested_initial_supply_units,
+            asset_harness,
+            authorities,
+        }
+    }
+
+    pub fn devnet_fixture_with_authorities(authorities: AuthorityMap) -> Self {
+        Self::new(
+            "test-only-rox-mint-initialization",
+            100,
+            TestOnlyAssetHarness::devnet_simulation_fixture(),
+            authorities,
+        )
+    }
+
+    pub fn review(&self) -> TestOnlyMintInitializationReview {
+        let asset_review = self
+            .asset_harness
+            .review_amount(self.requested_initial_supply_units);
+
+        let mut findings = Vec::new();
+
+        if label_is_public_or_production(&self.label) {
+            findings.push(
+                TestOnlyMintInitializationFinding::PublicOrProductionInitializationLabelRejected,
+            );
+        } else if !label_is_test_only_asset(&self.label) {
+            findings.push(TestOnlyMintInitializationFinding::MissingTestOnlyInitializationLabel);
+        }
+
+        if self.requested_initial_supply_units == 0 {
+            findings.push(TestOnlyMintInitializationFinding::ZeroInitialSupply);
+        }
+
+        if self.requested_initial_supply_units > self.asset_harness.mint.max_amount_units {
+            findings.push(TestOnlyMintInitializationFinding::SupplyCapExceeded);
+        }
+
+        if !asset_review.ready {
+            findings.push(TestOnlyMintInitializationFinding::TestOnlyAssetHarnessBlocked);
+        }
+
+        if self
+            .authorities
+            .authority_for_role(OperatorRole::MintAuthority)
+            .is_none()
+        {
+            findings.push(TestOnlyMintInitializationFinding::MissingMintAuthority);
+        }
+
+        if self
+            .authorities
+            .authority_for_role(OperatorRole::HaltAuthority)
+            .is_none()
+        {
+            findings.push(TestOnlyMintInitializationFinding::MissingHaltAuthority);
+        }
+
+        if self
+            .authorities
+            .authority_for_role(OperatorRole::RecoveryAuthority)
+            .is_none()
+        {
+            findings.push(TestOnlyMintInitializationFinding::MissingRecoveryAuthority);
+        }
+
+        if self.authorities.validate_critical_authorities().is_err() {
+            findings.push(TestOnlyMintInitializationFinding::UnsafeAuthoritySeparation);
+        }
+
+        if findings.is_empty() {
+            findings.push(TestOnlyMintInitializationFinding::Ready);
+        }
+
+        TestOnlyMintInitializationReview {
+            ready: findings == vec![TestOnlyMintInitializationFinding::Ready],
+            findings,
+            asset_review,
+            requested_initial_supply_units: self.requested_initial_supply_units,
+            max_initial_supply_units: self.asset_harness.mint.max_amount_units,
+        }
+    }
+
+    pub fn redacted_report_lines(&self) -> Vec<String> {
+        let review = self.review();
+        let mut lines = vec![
+            "test_only_mint_initialization_surface: redacted_intent".to_string(),
+            format!("ready: {}", review.ready),
+            format!("initialization_label: {}", self.label),
+            format!(
+                "requested_initial_supply_units: {}",
+                self.requested_initial_supply_units
+            ),
+            format!(
+                "max_initial_supply_units: {}",
+                self.asset_harness.mint.max_amount_units
+            ),
+            format!("mint_label: {}", self.asset_harness.mint.label),
+            format!("mint_id: {}", self.asset_harness.mint.mint.as_str()),
+            format!(
+                "token_account_label: {}",
+                self.asset_harness.token_account.label
+            ),
+            format!(
+                "token_account_id: {}",
+                self.asset_harness.token_account.token_account.as_str()
+            ),
+            format!(
+                "safety_environment_mode: {}",
+                self.asset_harness.safety.environment_mode.as_str()
+            ),
+            format!(
+                "safety_submission_mode: {}",
+                self.asset_harness.safety.submission_mode.as_str()
+            ),
+        ];
+
+        lines.push(format!(
+            "findings: {}",
+            review
+                .findings
+                .iter()
+                .map(|finding| finding.as_str())
+                .collect::<Vec<_>>()
+                .join(",")
+        ));
+
+        lines.push(format!(
+            "asset_harness_findings: {}",
+            review
+                .asset_review
+                .findings
+                .iter()
+                .map(|finding| test_only_asset_harness_finding_label(*finding))
+                .collect::<Vec<_>>()
+                .join(",")
+        ));
+
+        for assignment in &self.authorities.assignments {
+            lines.push(format!(
+                "authority_{}: {}",
+                assignment.role.as_str(),
+                assignment.key.redacted()
+            ));
+        }
+
+        lines.push("live_mint_initialization: disabled".to_string());
+        lines.push("wallet_loading: disabled".to_string());
+        lines.push("rpc_calls: disabled".to_string());
+        lines.push("internal_roc_mutation: disabled".to_string());
+
+        lines
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TestOnlyMintInitializationReview {
+    pub ready: bool,
+    pub findings: Vec<TestOnlyMintInitializationFinding>,
+    pub asset_review: TestOnlyAssetHarnessReview,
+    pub requested_initial_supply_units: u64,
+    pub max_initial_supply_units: u64,
+}
+
+impl TestOnlyMintInitializationReview {
+    pub fn has_finding(&self, finding: TestOnlyMintInitializationFinding) -> bool {
+        self.findings.contains(&finding)
+    }
+}
+
+fn test_only_asset_harness_finding_label(finding: TestOnlyAssetHarnessFinding) -> &'static str {
+    match finding {
+        TestOnlyAssetHarnessFinding::Ready => "ready",
+        TestOnlyAssetHarnessFinding::ExplicitTestnetModeRequired => {
+            "explicit_testnet_mode_required"
+        }
+        TestOnlyAssetHarnessFinding::TestMintLabelRequired => "test_mint_label_required",
+        TestOnlyAssetHarnessFinding::PublicOrProductionMintLabelRejected => {
+            "public_or_production_mint_label_rejected"
+        }
+        TestOnlyAssetHarnessFinding::TestTokenAccountLabelRequired => {
+            "test_token_account_label_required"
+        }
+        TestOnlyAssetHarnessFinding::PublicOrProductionTokenAccountLabelRejected => {
+            "public_or_production_token_account_label_rejected"
+        }
+        TestOnlyAssetHarnessFinding::ZeroAmount => "zero_amount",
+        TestOnlyAssetHarnessFinding::AmountCapExceeded => "amount_cap_exceeded",
+        TestOnlyAssetHarnessFinding::TokenAccountMintMismatch => "token_account_mint_mismatch",
+        TestOnlyAssetHarnessFinding::UnsafeSafetyProfile => "unsafe_safety_profile",
+    }
+}
 fn review_test_only_label(
     label: &str,
     missing_test_label: TestOnlyAssetHarnessFinding,
@@ -1340,6 +2010,27 @@ fn review_test_only_label(
     if !label_is_test_only_asset(label) {
         findings.push(missing_test_label);
     }
+}
+
+fn redact_short_identifier(kind: &str, value: &str) -> String {
+    let chars: Vec<char> = value.chars().collect();
+
+    if chars.len() <= 8 {
+        return format!("<redacted-{kind}>");
+    }
+
+    let first: String = chars.iter().take(4).copied().collect();
+    let last: String = chars
+        .iter()
+        .rev()
+        .take(4)
+        .copied()
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect();
+
+    format!("<redacted-{kind}>/{first}...{last}")
 }
 
 fn label_is_test_only_asset(label: &str) -> bool {

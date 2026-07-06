@@ -1,16 +1,16 @@
-//! RO:WHAT — Phase 13 testnet chaos drills for read-only RPC proof behavior.
-//! RO:WHY — Proves RPC outage, missing accounts, stale slots, and binding tamper fail safely.
+//! RO:WHAT — Phase 14 testnet chaos drills for read-only RPC proof behavior.
+//! RO:WHY — Proves RPC outage, missing accounts, stale slots, binding tamper, and post-send readback failures fail safely.
 //! RO:INTERACTS — ReadOnlyRpcAdapter, review_read_only_rpc_adapters, review_rpc_observations.
-//! RO:INVARIANTS — RPC chaos never fabricates agreement, finality, submission, mint, burn, or settlement.
+//! RO:INVARIANTS — RPC chaos never fabricates agreement, finality, submission success, mint, burn, or settlement.
 //! RO:SECURITY — fake in-memory adapters only; no live RPC, wallet, key loading, transaction send, or value movement.
 //! RO:TEST — cargo test -p rox-anchor-rpc-proof --test testnet_chaos_drills.
 
 use rox_anchor_core::{AccountId, ClusterId, MintId, OperationId, ProgramId, TokenAccountId};
 use rox_anchor_rpc_proof::{
-    read_only_account_status, review_read_only_rpc_adapters, review_rpc_observations,
-    ExpectedRpcBinding, ReadOnlyAccountStatus, ReadOnlyRpcAdapter, ReadOnlyRpcError,
-    ReadOnlySignatureStatus, RpcCommitmentLevel, RpcObservation, RpcProofConfig, RpcQuorumDecision,
-    RpcQuorumFindingCode,
+    read_only_account_status, review_read_only_rpc_adapters, review_readback_after_send,
+    review_rpc_observations, ExpectedRpcBinding, ReadOnlyAccountStatus, ReadOnlyRpcAdapter,
+    ReadOnlyRpcError, ReadOnlySignatureStatus, ReadbackAfterSendStatus, RpcCommitmentLevel,
+    RpcObservation, RpcProofConfig, RpcQuorumDecision, RpcQuorumFindingCode,
 };
 
 #[derive(Clone, Debug)]
@@ -261,4 +261,153 @@ fn wrong_program_mint_and_token_account_are_rejected_as_binding_tamper() {
     assert!(review.has_finding(RpcQuorumFindingCode::ProgramIdMismatch));
     assert!(review.has_finding(RpcQuorumFindingCode::MintMismatch));
     assert!(review.has_finding(RpcQuorumFindingCode::TokenAccountMismatch));
+}
+
+#[test]
+fn phase14_rpc_disagreement_during_readback_remains_disputed_and_non_successful() {
+    let adapters = vec![
+        ChaosReadOnlyRpc::healthy(
+            "rpc-dispute-a",
+            140,
+            Some(signature_status("sig-phase14-dispute-a-111111111111", 140)),
+        ),
+        ChaosReadOnlyRpc::healthy(
+            "rpc-dispute-b",
+            141,
+            Some(signature_status("sig-phase14-dispute-b-222222222222", 141)),
+        ),
+    ];
+
+    let quorum = review_read_only_rpc_adapters(
+        &adapters,
+        "sig-phase14-dispute-request-111111111111",
+        &expected_binding(),
+        RpcProofConfig::new(2, 100),
+    )
+    .expect("disputed readback should still produce local report");
+
+    assert_eq!(quorum.quorum.decision, RpcQuorumDecision::Disputed);
+
+    let review = review_readback_after_send(true, &quorum);
+
+    assert_eq!(review.status, ReadbackAfterSendStatus::DisputedReadback);
+    assert!(review.fail_safe);
+    assert!(review.network_submitted);
+    assert!(review.readback_present);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("phase14_readback_after_send_review: local_only"));
+    assert!(report.contains("status: DisputedReadback"));
+    assert!(report.contains("fail_safe: true"));
+    assert!(report.contains("success_claim: false"));
+    assert!(report.contains("finality_claim: false"));
+    assert!(report.contains("settlement_claim: none"));
+    assert!(report.contains("transaction_submission: not_performed_by_rpc_proof"));
+    assert!(report.contains("wallet_key_loading: disabled"));
+    assert!(report.contains("signing: disabled"));
+    assert!(report.contains("internal_roc_mutation: disabled"));
+}
+
+#[test]
+fn phase14_readback_missing_after_send_fails_safe_without_finality_or_settlement_claim() {
+    let adapters = vec![
+        ChaosReadOnlyRpc::healthy("rpc-missing-readback-a", 150, None),
+        ChaosReadOnlyRpc::healthy("rpc-missing-readback-b", 151, None),
+    ];
+
+    let quorum = review_read_only_rpc_adapters(
+        &adapters,
+        "sig-phase14-missing-readback-111111111111",
+        &expected_binding(),
+        RpcProofConfig::new(2, 100),
+    )
+    .expect("missing readback should still produce local report");
+
+    assert_eq!(quorum.observations_checked, 0);
+    assert_eq!(quorum.quorum.decision, RpcQuorumDecision::MissingEvidence);
+
+    let review = review_readback_after_send(true, &quorum);
+
+    assert_eq!(
+        review.status,
+        ReadbackAfterSendStatus::MissingReadbackAfterSend
+    );
+    assert!(review.fail_safe);
+    assert!(review.network_submitted);
+    assert!(!review.readback_present);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("network_submitted: true"));
+    assert!(report.contains("readback_present: false"));
+    assert!(report.contains("observations_checked: 0"));
+    assert!(report.contains("quorum_decision: MissingEvidence"));
+    assert!(report.contains("success_claim: false"));
+    assert!(report.contains("finality_claim: false"));
+    assert!(report.contains("settlement_claim: none"));
+
+    for forbidden in [
+        "settlement complete",
+        "finality: confirmed",
+        "mint complete",
+        "burn complete",
+        "access granted",
+        "roc released",
+        "loaded wallet",
+        "loaded keypair",
+    ] {
+        assert!(
+            !report.to_ascii_lowercase().contains(forbidden),
+            "report must not contain unsafe wording: {forbidden}\n{report}"
+        );
+    }
+}
+
+#[test]
+fn phase14_rejected_readback_after_send_fails_safe_without_settlement_claim() {
+    let adapters = vec![
+        ChaosReadOnlyRpc::healthy(
+            "rpc-rejected-stale-a",
+            200,
+            Some(signature_status(
+                "sig-phase14-rejected-stale-111111111111",
+                100,
+            )),
+        ),
+        ChaosReadOnlyRpc::healthy(
+            "rpc-rejected-stale-b",
+            201,
+            Some(signature_status(
+                "sig-phase14-rejected-stale-111111111111",
+                101,
+            )),
+        ),
+    ];
+
+    let quorum = review_read_only_rpc_adapters(
+        &adapters,
+        "sig-phase14-rejected-stale-111111111111",
+        &expected_binding(),
+        RpcProofConfig::new(2, 5),
+    )
+    .expect("rejected stale readback should still produce local report");
+
+    assert_eq!(quorum.quorum.decision, RpcQuorumDecision::Rejected);
+    assert!(quorum
+        .quorum
+        .has_finding(RpcQuorumFindingCode::StaleEvidence));
+
+    let review = review_readback_after_send(true, &quorum);
+
+    assert_eq!(review.status, ReadbackAfterSendStatus::RejectedReadback);
+    assert!(review.fail_safe);
+    assert!(review.readback_present);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
 }

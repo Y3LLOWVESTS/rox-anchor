@@ -6,10 +6,12 @@
 //! RO:TEST — covered through CLI command dispatch, status display tests, authority status tests, and private-pilot config tests.
 
 use rox_anchor_core::{
-    label_for_lifecycle_state, AnchorCluster, AnchorEnvironmentMode, AnchorLifecycleState,
-    AnchorOperationalPosture, AuthorityAssignment, AuthorityKeyId, AuthorityMap,
-    AuthorityRotationIntent, AuthoritySeparationMode, OperatorRole, PrivatePilotConfig,
-    SubmissionMode, TestnetConfig, SAFE_STATUS_LABELS,
+    label_for_lifecycle_state, AccountId, AnchorCluster, AnchorEnvironmentMode,
+    AnchorLifecycleState, AnchorOperationalPosture, AnchorSafetyProfile, AuthorityAssignment,
+    AuthorityKeyId, AuthorityMap, AuthorityRotationIntent, AuthoritySeparationMode,
+    ClusterAllowlist, IdempotencyKey, InternalRocDryRunBurnIntent, InternalRocDryRunReleaseIntent,
+    Nonce, OperationId, OperatorRole, PrivatePilotConfig, SubmissionMode, TestnetConfig,
+    TestnetProgramArtifactManifest, SAFE_STATUS_LABELS,
 };
 
 const PRIVATE_PILOT_STATUS_CONFIG: &str = r#"
@@ -23,6 +25,8 @@ asset_label = "test-only-rox-status-asset"
 receipt_output_path = "/external/pilot-receipts/status-receipt.json"
 observed_signature = "5JstatusPrivatePilotSignature1111222233334444"
 "#;
+
+const TESTNET_PROGRAM_ID: &str = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR";
 
 pub fn status_report() -> String {
     let mut lines = vec![
@@ -65,6 +69,86 @@ pub fn status_report() -> String {
     lines.push("private_pilot_config_runtime_effects: disabled".to_string());
     lines.push("private_pilot_config_wallet_loading: disabled".to_string());
     lines.push("private_pilot_config_rpc_calls: disabled".to_string());
+
+    lines.push("crablink_internal_roc_dry_run_surface: display_safe_intent_shapes".to_string());
+
+    let dry_run_safety = AnchorSafetyProfile::new(
+        AnchorEnvironmentMode::TestnetOnly,
+        AnchorCluster::Devnet,
+        ClusterAllowlist::testnet_experiments(),
+        SubmissionMode::SimulateOnly,
+    );
+
+    let burn_intent = InternalRocDryRunBurnIntent::new(
+        dry_run_safety,
+        OperationId::new("op-crablink-status-burn-0001")
+            .expect("static operation id should validate"),
+        IdempotencyKey::new("idem-crablink-status-burn-0001")
+            .expect("static idempotency key should validate"),
+        Nonce::new("nonce-crablink-status-burn-0001").expect("static nonce should validate"),
+        AccountId::new("crablink-status-test-account-0001")
+            .expect("static account should validate"),
+        "test-only-crablink-status-burn-intent",
+        50,
+    )
+    .expect("static CrabLink burn dry-run intent should validate");
+
+    for line in burn_intent.redacted_report_lines() {
+        lines.push(format!("  {line}"));
+    }
+
+    let release_intent = InternalRocDryRunReleaseIntent::new(
+        dry_run_safety,
+        OperationId::new("op-crablink-status-release-0001")
+            .expect("static operation id should validate"),
+        IdempotencyKey::new("idem-crablink-status-release-0001")
+            .expect("static idempotency key should validate"),
+        Nonce::new("nonce-crablink-status-release-0001").expect("static nonce should validate"),
+        AccountId::new("crablink-status-test-account-0002")
+            .expect("static account should validate"),
+        "test-only-crablink-status-release-intent",
+        25,
+    )
+    .expect("static CrabLink release dry-run intent should validate");
+
+    for line in release_intent.redacted_report_lines() {
+        lines.push(format!("  {line}"));
+    }
+
+    lines.push("crablink_internal_roc_adapter_runtime_effects: disabled".to_string());
+    lines.push("crablink_internal_roc_adapter_wallet_calls: disabled".to_string());
+    lines.push("crablink_internal_roc_adapter_ledger_mutation: disabled".to_string());
+    lines.push("crablink_internal_roc_adapter_paid_unlock: disabled".to_string());
+    lines.push("crablink_internal_roc_adapter_settlement_claim: none".to_string());
+
+    lines.push("testnet_program_manifest_surface: redacted_non_secret_artifact_shape".to_string());
+
+    let manifest = TestnetProgramArtifactManifest::from_labels(
+        "devnet",
+        TESTNET_PROGRAM_ID,
+        TESTNET_PROGRAM_ID,
+        "build-hash-private-status-0001",
+        "idl-hash-private-status-0001",
+        Some(123_456),
+        "private-pilot-program-status-operator",
+        "test-only-rox-program-status-artifact",
+        "/external/pilot-deploy/status/rox_anchor.so",
+        "/external/pilot-deploy/status/rox_anchor.json",
+    )
+    .expect("static CLI status manifest should validate");
+
+    for line in manifest.redacted_report().lines() {
+        let status_line = if line == "production_finality_claim: false" {
+            "private_pilot_finality_claim: false".to_string()
+        } else {
+            line
+        };
+
+        lines.push(format!("  {status_line}"));
+    }
+
+    lines.push("testnet_program_manifest_runtime_effects: disabled".to_string());
+    lines.push("testnet_program_manifest_deployment_claims: disabled".to_string());
 
     lines.push("phase12_kill_switch_surface: local_drill_only".to_string());
 

@@ -9,8 +9,10 @@
 
 use rox_anchor_coordinator::{
     review_coordinator_request, CoordinatorConfig, CoordinatorDecisionStatus,
+    CoordinatorIncidentDrillEvidence, CoordinatorIncidentStage, CoordinatorIncidentStatus,
     CoordinatorReviewRequest,
 };
+use rox_anchor_core::AnchorOperationalPosture;
 use rox_anchor_proof::{fixtures, ExpectedProofBinding, ReplaySet, ReviewDecision};
 use rox_anchor_relayer::{
     RelayerConfig, RelayerDryRun, RelayerReceiptStatus, RelayerSubmissionRequest,
@@ -164,4 +166,331 @@ fn fresh_rpc_evidence_after_stale_case_can_still_accept() {
     assert_eq!(receipt.proof_decision, ReviewDecision::Accepted);
     assert_eq!(receipt.attempts_used, 2);
     assert!(!receipt.live_submission);
+}
+
+fn accepted_phase14_decision() -> rox_anchor_coordinator::CoordinatorDecision {
+    let request = request_at_slot(450);
+    let decision = review_coordinator_request(&request, CoordinatorConfig::new(2, 100, 8), 500);
+    assert_eq!(decision.status, CoordinatorDecisionStatus::Accepted);
+    decision
+}
+
+#[test]
+fn phase14_coordinator_halt_before_simulation_fails_safe_with_inspectable_report() {
+    let decision = accepted_phase14_decision();
+
+    let review = rox_anchor_coordinator::review_coordinator_incident_drill(
+        CoordinatorIncidentDrillEvidence::new(
+            CoordinatorIncidentStage::AfterProofAcceptanceBeforeSimulation,
+            decision,
+            AnchorOperationalPosture::halted(),
+        ),
+    );
+
+    assert_eq!(
+        review.status,
+        CoordinatorIncidentStatus::FinalizationBlocked
+    );
+    assert!(review.fail_safe);
+    assert!(!review.permits_simulation);
+    assert!(!review.permits_submission);
+    assert!(!review.permits_finalization);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("phase14_coordinator_incident_drill: local_only"));
+    assert!(report.contains("stage: after_proof_acceptance_before_simulation"));
+    assert!(report.contains("status: FinalizationBlocked"));
+    assert!(report.contains("finalization_gate_status: Halted"));
+    assert!(report.contains("transaction_submission: not_performed_by_coordinator"));
+    assert!(report.contains("wallet_key_loading: disabled"));
+    assert!(report.contains("signing: disabled"));
+    assert!(report.contains("mint_burn_execution: disabled"));
+    assert!(report.contains("internal_roc_mutation: disabled"));
+    assert!(report.contains("settlement_claim: none"));
+}
+
+#[test]
+fn phase14_operator_approval_omitted_blocks_send_shaped_coordinator_stage() {
+    let decision = accepted_phase14_decision();
+
+    let review = rox_anchor_coordinator::review_coordinator_incident_drill(
+        CoordinatorIncidentDrillEvidence::new(
+            CoordinatorIncidentStage::AfterSimulationBeforeSubmission,
+            decision,
+            AnchorOperationalPosture::clear(),
+        )
+        .with_operator_approval_present(false),
+    );
+
+    assert_eq!(
+        review.status,
+        CoordinatorIncidentStatus::OperatorApprovalOmitted
+    );
+    assert!(review.fail_safe);
+    assert!(review.permits_simulation);
+    assert!(!review.permits_submission);
+    assert!(review.permits_finalization);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("stage: after_simulation_before_submission"));
+    assert!(report.contains("operator_approval_present: false"));
+    assert!(report.contains("status: OperatorApprovalOmitted"));
+    assert!(report.contains("permits_submission: false"));
+    assert!(report.contains("public_bridge_authorization: none"));
+}
+
+#[test]
+fn phase14_wrong_authority_attempt_is_coordinator_visible_and_never_runtime_success() {
+    let decision = accepted_phase14_decision();
+
+    let review = rox_anchor_coordinator::review_coordinator_incident_drill(
+        CoordinatorIncidentDrillEvidence::new(
+            CoordinatorIncidentStage::AfterSimulationBeforeSubmission,
+            decision,
+            AnchorOperationalPosture::clear(),
+        )
+        .with_wrong_authority_attempted(true),
+    );
+
+    assert_eq!(
+        review.status,
+        CoordinatorIncidentStatus::WrongAuthorityAttempted
+    );
+    assert!(review.fail_safe);
+    assert!(!review.permits_simulation);
+    assert!(!review.permits_submission);
+    assert!(!review.permits_finalization);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("wrong_authority_attempted: true"));
+    assert!(report.contains("status: WrongAuthorityAttempted"));
+    assert!(report.contains("wallet_key_loading: disabled"));
+    assert!(report.contains("signing: disabled"));
+}
+
+#[test]
+fn phase14_coordinator_readback_missing_after_submit_fails_safe_without_finality_claim() {
+    let decision = accepted_phase14_decision();
+
+    let review = rox_anchor_coordinator::review_coordinator_incident_drill(
+        CoordinatorIncidentDrillEvidence::new(
+            CoordinatorIncidentStage::AfterCappedTestnetSubmission,
+            decision,
+            AnchorOperationalPosture::clear(),
+        )
+        .with_network_submitted(true)
+        .with_readback_present(false),
+    );
+
+    assert_eq!(
+        review.status,
+        CoordinatorIncidentStatus::MissingReadbackAfterSend
+    );
+    assert!(review.fail_safe);
+    assert!(review.permits_simulation);
+    assert!(review.permits_submission);
+    assert!(!review.permits_finalization);
+    assert!(review.network_submitted);
+    assert!(!review.readback_present);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("stage: after_capped_testnet_submission"));
+    assert!(report.contains("network_submitted: true"));
+    assert!(report.contains("readback_present: false"));
+    assert!(report.contains("status: MissingReadbackAfterSend"));
+    assert!(report.contains("finality_claim: false"));
+    assert!(report.contains("settlement_claim: none"));
+
+    for forbidden in [
+        "settlement complete",
+        "finality: confirmed",
+        "mint complete",
+        "burn complete",
+        "access granted",
+        "roc released",
+        "loaded wallet",
+        "loaded keypair",
+    ] {
+        assert!(
+            !report.to_ascii_lowercase().contains(forbidden),
+            "report must not contain unsafe wording: {forbidden}\n{report}"
+        );
+    }
+}
+
+#[test]
+fn phase14_rejected_coordinator_decision_cannot_be_promoted_by_incident_report() {
+    let request = request_at_slot(10);
+    let rejected = review_coordinator_request(&request, CoordinatorConfig::new(2, 100, 8), 500);
+    assert_eq!(rejected.status, CoordinatorDecisionStatus::RejectedEvidence);
+
+    let review = rox_anchor_coordinator::review_coordinator_incident_drill(
+        CoordinatorIncidentDrillEvidence::new(
+            CoordinatorIncidentStage::AfterSimulationBeforeSubmission,
+            rejected,
+            AnchorOperationalPosture::clear(),
+        ),
+    );
+
+    assert_eq!(
+        review.status,
+        CoordinatorIncidentStatus::CoordinatorNotAccepted
+    );
+    assert!(review.fail_safe);
+    assert!(!review.permits_simulation);
+    assert!(!review.permits_submission);
+    assert!(!review.permits_finalization);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+}
+
+#[test]
+fn phase14_halt_after_simulation_before_submit_blocks_submission_and_finalization_claims() {
+    let decision = accepted_phase14_decision();
+
+    let review = rox_anchor_coordinator::review_coordinator_incident_drill(
+        CoordinatorIncidentDrillEvidence::new(
+            CoordinatorIncidentStage::AfterSimulationBeforeSubmission,
+            decision,
+            AnchorOperationalPosture::halted(),
+        ),
+    );
+
+    assert_eq!(
+        review.status,
+        CoordinatorIncidentStatus::FinalizationBlocked
+    );
+    assert!(review.fail_safe);
+    assert!(!review.permits_submission);
+    assert!(!review.permits_finalization);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("stage: after_simulation_before_submission"));
+    assert!(report.contains("status: FinalizationBlocked"));
+    assert!(report.contains("finalization_gate_status: Halted"));
+    assert!(report.contains("permits_submission: false"));
+    assert!(report.contains("finality_claim: false"));
+    assert!(report.contains("settlement_claim: none"));
+    assert!(report.contains("transaction_submission: not_performed_by_coordinator"));
+    assert!(report.contains("mint_burn_execution: disabled"));
+    assert!(report.contains("internal_roc_mutation: disabled"));
+}
+
+#[test]
+fn phase14_halt_after_capped_submit_blocks_finalization_until_safe_readback_review() {
+    let decision = accepted_phase14_decision();
+
+    let review = rox_anchor_coordinator::review_coordinator_incident_drill(
+        CoordinatorIncidentDrillEvidence::new(
+            CoordinatorIncidentStage::AfterCappedTestnetSubmission,
+            decision,
+            AnchorOperationalPosture::halted(),
+        )
+        .with_network_submitted(true)
+        .with_readback_present(true),
+    );
+
+    assert_eq!(
+        review.status,
+        CoordinatorIncidentStatus::FinalizationBlocked
+    );
+    assert!(review.fail_safe);
+    assert!(review.network_submitted);
+    assert!(review.readback_present);
+    assert!(!review.permits_finalization);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("stage: after_capped_testnet_submission"));
+    assert!(report.contains("network_submitted: true"));
+    assert!(report.contains("readback_present: true"));
+    assert!(report.contains("finalization_gate_status: Halted"));
+    assert!(report.contains("permits_finalization: false"));
+    assert!(report.contains("success_claim: false"));
+    assert!(report.contains("finality_claim: false"));
+    assert!(report.contains("settlement_claim: none"));
+}
+
+#[test]
+fn phase14_recovery_during_pending_operation_blocks_submission_and_finalization() {
+    let decision = accepted_phase14_decision();
+
+    let review = rox_anchor_coordinator::review_coordinator_incident_drill(
+        CoordinatorIncidentDrillEvidence::new(
+            CoordinatorIncidentStage::AfterSimulationBeforeSubmission,
+            decision,
+            AnchorOperationalPosture::recovery_required(),
+        ),
+    );
+
+    assert_eq!(
+        review.status,
+        CoordinatorIncidentStatus::FinalizationBlocked
+    );
+    assert!(review.fail_safe);
+    assert!(!review.permits_submission);
+    assert!(!review.permits_finalization);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("stage: after_simulation_before_submission"));
+    assert!(report.contains("status: FinalizationBlocked"));
+    assert!(report.contains("finalization_gate_status: RecoveryBlocked"));
+    assert!(report.contains("permits_submission: false"));
+    assert!(report.contains("permits_finalization: false"));
+    assert!(report.contains("wallet_key_loading: disabled"));
+    assert!(report.contains("signing: disabled"));
+    assert!(report.contains("public_bridge_authorization: none"));
+}
+
+#[test]
+fn phase14_clear_posture_incident_review_is_ready_but_still_makes_no_runtime_claims() {
+    let decision = accepted_phase14_decision();
+
+    let review = rox_anchor_coordinator::review_coordinator_incident_drill(
+        CoordinatorIncidentDrillEvidence::new(
+            CoordinatorIncidentStage::AfterSimulationBeforeSubmission,
+            decision,
+            AnchorOperationalPosture::clear(),
+        ),
+    );
+
+    assert_eq!(review.status, CoordinatorIncidentStatus::Ready);
+    assert!(review.is_ready());
+    assert!(!review.fail_safe);
+    assert!(review.permits_simulation);
+    assert!(review.permits_submission);
+    assert!(review.permits_finalization);
+    assert!(!review.success_claim);
+    assert!(!review.finality_claim);
+    assert!(!review.settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("status: Ready"));
+    assert!(report.contains("success_claim: false"));
+    assert!(report.contains("finality_claim: false"));
+    assert!(report.contains("settlement_claim: none"));
+    assert!(report.contains("transaction_submission: not_performed_by_coordinator"));
+    assert!(report.contains("mint_burn_execution: disabled"));
+    assert!(report.contains("internal_roc_mutation: disabled"));
 }

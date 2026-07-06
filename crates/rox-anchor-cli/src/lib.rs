@@ -15,6 +15,7 @@ pub enum CliError {
     UnknownCheckFixture(String),
     UnknownSubmitFlag(String),
     UnknownDrillFlag(String),
+    UnknownPilotFlag(String),
 }
 
 impl fmt::Display for CliError {
@@ -34,6 +35,10 @@ impl fmt::Display for CliError {
             Self::UnknownDrillFlag(flag) => write!(
                 f,
                 "unknown drill flag `{flag}`; try `rox-anchor drill --help`"
+            ),
+            Self::UnknownPilotFlag(flag) => write!(
+                f,
+                "unknown pilot flag `{flag}`; try `rox-anchor pilot --help`"
             ),
         }
     }
@@ -57,6 +62,9 @@ where
         "audit-relayer" | "relayer-audit" => Ok(commands::audit::relayer_audit_report()),
         "audit-posture" | "posture-audit" => Ok(commands::posture_audit::posture_audit_report()),
         "status" => Ok(commands::status::status_report()),
+        "pilot" => commands::pilot::run_pilot(command_args),
+        "receipts" | "receipt-ledger" => Ok(commands::receipts::receipt_report()),
+        "submit" => commands::submit::run_submit(command_args),
         "submit-capped" | "testnet-submit-capped" => {
             commands::submit::run_submit_capped(command_args)
         }
@@ -81,6 +89,8 @@ pub fn help_text() -> String {
         "  audit-relayer              show relayer simulation and capped submission audit report",
         "  audit-posture              show halt/challenge/recovery posture audit report",
         "  status                     show display-safe status labels",
+        "  pilot                      private pilot command group",
+        "  receipts                   show private pilot receipt ledger report",
         "  submit-capped              report capped testnet submit authorization",
         "  drill                      run local halt/recovery kill-switch drill",
         "  halt                       show halt posture notes",
@@ -89,6 +99,7 @@ pub fn help_text() -> String {
         "aliases:",
         "  relayer-audit              same as audit-relayer",
         "  posture-audit              same as audit-posture",
+        "  receipt-ledger             same as receipts",
         "  kill-switch                same as drill",
         "  kill-switch-drill          same as drill",
         "",
@@ -173,8 +184,11 @@ mod tests {
 
     #[test]
     fn unknown_command_is_error() {
-        let error = run_from_args(["rox-anchor", "submit"]).unwrap_err();
+        let error = run_from_args(["rox-anchor", "definitely-unknown"]).unwrap_err();
 
-        assert_eq!(error, CliError::UnknownCommand("submit".to_string()));
+        assert_eq!(
+            error,
+            CliError::UnknownCommand("definitely-unknown".to_string())
+        );
     }
 }

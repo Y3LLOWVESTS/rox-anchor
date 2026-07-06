@@ -1,7 +1,7 @@
-//! RO:WHAT — Phase 13 testnet chaos drills for relayer pending-operation and capped-submit behavior.
-//! RO:WHY — Proves halt/recovery and cap failures stop unsafe submission-shaped paths.
-//! RO:INTERACTS — RelayerDryRun, simulation plans, capped submit authorization, and core operational posture.
-//! RO:INVARIANTS — halted pending operations cannot simulate or authorize; capped submit never submits.
+//! RO:WHAT — Phase 14 testnet chaos drills for relayer pending-operation, receipt, replay, and capped-submit behavior.
+//! RO:WHY — Proves halt/recovery, cap, receipt, replay, and missing-readback failures stop unsafe submission-shaped paths.
+//! RO:INTERACTS — RelayerDryRun, simulation plans, capped submit authorization, receipt review, and core operational posture.
+//! RO:INVARIANTS — halted pending operations cannot simulate or authorize; incident receipts fail safe; capped submit never submits.
 //! RO:SECURITY — no RPC, wallet, key loading, transaction send, mint, burn, ROC release, or settlement.
 //! RO:TEST — cargo test -p rox-anchor-relayer --test testnet_chaos_drills.
 
@@ -206,4 +206,119 @@ fn send_enabled_but_caps_stop_operation_and_amount_drills() {
     );
     assert!(!amount_result.authorized);
     assert!(!amount_result.network_submitted);
+}
+
+fn phase14_incident_evidence() -> rox_anchor_relayer::PilotIncidentReceiptEvidence {
+    let package = fixtures::valid_package();
+
+    rox_anchor_relayer::PilotIncidentReceiptEvidence::new(
+        package.operation_id,
+        package.idempotency_key,
+        package.nonce,
+    )
+    .with_receipt_id(
+        rox_anchor_relayer::PilotReceiptId::new("phase14-receipt-incident-0001")
+            .expect("receipt id should validate"),
+    )
+}
+
+#[test]
+fn phase14_receipt_incidents_fail_safe_for_missing_tampered_and_duplicate_receipts() {
+    use rox_anchor_relayer::{review_pilot_incident_receipt, PilotIncidentReceiptStatus};
+
+    let missing =
+        review_pilot_incident_receipt(phase14_incident_evidence().with_receipt_file_present(false));
+    assert_eq!(
+        missing.status,
+        PilotIncidentReceiptStatus::MissingReceiptFile
+    );
+    assert!(missing.fail_safe);
+    assert!(!missing.live_submission_claim);
+    assert!(!missing.production_settlement_claim);
+
+    let tampered =
+        review_pilot_incident_receipt(phase14_incident_evidence().with_receipt_chain_valid(false));
+    assert_eq!(tampered.status, PilotIncidentReceiptStatus::ReceiptTamper);
+    assert!(tampered.fail_safe);
+
+    let duplicate =
+        review_pilot_incident_receipt(phase14_incident_evidence().with_duplicate_receipt(true));
+    assert_eq!(
+        duplicate.status,
+        PilotIncidentReceiptStatus::DuplicateReceipt
+    );
+    assert!(duplicate.fail_safe);
+
+    let report = duplicate.redacted_report_lines().join("\n");
+    assert!(report.contains("phase14_incident_receipt_review: local_only"));
+    assert!(report.contains("status: DuplicateReceipt"));
+    assert!(report.contains("operator_action: halt_or_recover_before_retry"));
+    assert!(report.contains("wallet_key_loading: false"));
+    assert!(report.contains("signing: false"));
+    assert!(report.contains("internal_roc_mutation: disabled"));
+    assert!(report.contains("settlement_claim: none"));
+}
+
+#[test]
+fn phase14_replay_incidents_fail_safe_for_duplicate_operation_id_idempotency_and_nonce() {
+    use rox_anchor_relayer::{review_pilot_incident_receipt, PilotIncidentReceiptStatus};
+
+    let duplicate_operation = review_pilot_incident_receipt(
+        phase14_incident_evidence().with_duplicate_operation_id(true),
+    );
+    assert_eq!(
+        duplicate_operation.status,
+        PilotIncidentReceiptStatus::DuplicateOperationId
+    );
+    assert!(duplicate_operation.fail_safe);
+
+    let duplicate_idempotency = review_pilot_incident_receipt(
+        phase14_incident_evidence().with_duplicate_idempotency_key(true),
+    );
+    assert_eq!(
+        duplicate_idempotency.status,
+        PilotIncidentReceiptStatus::DuplicateIdempotencyKey
+    );
+    assert!(duplicate_idempotency.fail_safe);
+
+    let nonce_reuse =
+        review_pilot_incident_receipt(phase14_incident_evidence().with_nonce_reused(true));
+    assert_eq!(nonce_reuse.status, PilotIncidentReceiptStatus::NonceReuse);
+    assert!(nonce_reuse.fail_safe);
+
+    for review in [duplicate_operation, duplicate_idempotency, nonce_reuse] {
+        assert!(!review.live_submission_claim);
+        assert!(!review.production_settlement_claim);
+        assert!(review
+            .redacted_report_lines()
+            .join("\n")
+            .contains("fail_safe: true"));
+    }
+}
+
+#[test]
+fn phase14_readback_missing_after_send_requires_fail_safe_recovery_without_settlement_claim() {
+    use rox_anchor_relayer::{review_pilot_incident_receipt, PilotIncidentReceiptStatus};
+
+    let review = review_pilot_incident_receipt(
+        phase14_incident_evidence()
+            .with_network_submitted(true)
+            .with_readback_present(false),
+    );
+
+    assert_eq!(
+        review.status,
+        PilotIncidentReceiptStatus::MissingReadbackAfterSend
+    );
+    assert!(review.fail_safe);
+    assert!(review.network_submitted);
+    assert!(!review.readback_present);
+    assert!(!review.live_submission_claim);
+    assert!(!review.production_settlement_claim);
+
+    let report = review.redacted_report_lines().join("\n");
+    assert!(report.contains("network_submitted: true"));
+    assert!(report.contains("readback_present: false"));
+    assert!(report.contains("operator_action: halt_or_recover_before_retry"));
+    assert!(report.contains("settlement_claim: none"));
 }

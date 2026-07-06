@@ -70,6 +70,35 @@ pub enum AnchorCoreError {
         field: &'static str,
         label: String,
     },
+    InternalRocDryRunRequiresExplicitNonProductionMode {
+        environment: &'static str,
+    },
+    InternalRocDryRunRequiresNonSubmittingMode {
+        submission: &'static str,
+    },
+    InvalidInternalRocDryRunAmount {
+        amount: u64,
+        max: u64,
+    },
+    MissingTestOnlyInternalRocLabel {
+        field: &'static str,
+        label: String,
+    },
+    PublicOrProductionInternalRocDryRunLabel {
+        field: &'static str,
+        label: String,
+    },
+    MissingTestnetProgramManifestField {
+        field: &'static str,
+    },
+    TestnetProgramIdMismatch {
+        expected: String,
+        actual: String,
+    },
+    PublicOrProductionTestnetProgramManifestLabel {
+        field: &'static str,
+        label: String,
+    },
     EmptyAuthorityAssignments,
     DuplicateAuthorityRole {
         role: &'static str,
@@ -169,6 +198,37 @@ impl fmt::Display for AnchorCoreError {
             Self::PublicOrProductionPrivatePilotLabel { field, label } => write!(
                 f,
                 "private pilot config field {field} uses forbidden public/production label: {label}"
+            ),
+            Self::InternalRocDryRunRequiresExplicitNonProductionMode { environment } => write!(
+                f,
+                "internal ROC dry-run requires explicit local_only or testnet_only mode, got {environment}"
+            ),
+            Self::InternalRocDryRunRequiresNonSubmittingMode { submission } => write!(
+                f,
+                "internal ROC dry-run cannot use submitting mode: {submission}"
+            ),
+            Self::InvalidInternalRocDryRunAmount { amount, max } => write!(
+                f,
+                "internal ROC dry-run amount {amount} must be between 1 and {max}"
+            ),
+            Self::MissingTestOnlyInternalRocLabel { field, label } => write!(
+                f,
+                "internal ROC dry-run field {field} must use an explicit test-only label, got {label}"
+            ),
+            Self::PublicOrProductionInternalRocDryRunLabel { field, label } => write!(
+                f,
+                "internal ROC dry-run field {field} uses forbidden public/production label: {label}"
+            ),
+            Self::MissingTestnetProgramManifestField { field } => {
+                write!(f, "missing testnet program manifest field: {field}")
+            }
+            Self::TestnetProgramIdMismatch { expected, actual } => write!(
+                f,
+                "testnet program manifest program id mismatch: expected {expected}, got {actual}"
+            ),
+            Self::PublicOrProductionTestnetProgramManifestLabel { field, label } => write!(
+                f,
+                "testnet program manifest field {field} uses forbidden public/production label: {label}"
             ),
             Self::EmptyAuthorityAssignments => {
                 f.write_str("authority assignments must not be empty")

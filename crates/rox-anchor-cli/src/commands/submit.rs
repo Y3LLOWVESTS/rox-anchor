@@ -293,3 +293,37 @@ fn submit_capped_help() -> String {
     ]
     .join("\n")
 }
+
+pub fn run_submit(args: &[String]) -> Result<String, CliError> {
+    let Some((subcommand, rest)) = args.split_first() else {
+        return Ok(submit_root_help());
+    };
+
+    match subcommand.as_str() {
+        "--help" | "-h" | "help" => Ok(submit_root_help()),
+        "capped-testnet" | "private-testnet-capped" => run_submit_capped(rest),
+        other => Err(CliError::UnknownSubmitFlag(format!(
+            "submit subcommand `{other}`; expected capped-testnet"
+        ))),
+    }
+}
+
+fn submit_root_help() -> String {
+    [
+        "rox-anchor submit",
+        "",
+        "Private pilot submit-shaped command group.",
+        "",
+        "subcommands:",
+        "  capped-testnet   explicit capped private testnet authorization report",
+        "",
+        "security:",
+        "  no default send path",
+        "  no RPC submission",
+        "  no wallet/key loading",
+        "  no mint/burn execution",
+        "  no ROC release",
+        "  no settlement or finality claim",
+    ]
+    .join("\n")
+}
