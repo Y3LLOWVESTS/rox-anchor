@@ -418,3 +418,259 @@ actual-private-testnet.json
 *.pilot-authority-notes.local.txt
 authority-notes.local.txt
 NOTES.md
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual Anchor build artifact capture — NEVER COMMIT
+# =============================================================================
+# Phase 2 may create local build-manifest captures for operator review.
+# Keep full manifests local/ignored unless a redacted summary is intentionally
+# promoted into docs.
+
+actual-private-testnet-build-artifacts.json
+actual-private-testnet-build-artifacts.local.json
+*.actual-anchor-build.local.json
+*.actual-private-testnet-build.local.json
+*.actual-build-manifest.local.json
+*.anchor-build-manifest.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual private testnet deployment receipts — NEVER COMMIT
+# =============================================================================
+# Phase 3 may produce local deployment or safe failed-deployment receipts.
+# Keep full receipts local/ignored unless a redacted summary is intentionally
+# promoted into docs.
+
+actual-private-testnet-deploy-receipt.json
+actual-private-testnet-deploy-receipt.local.json
+actual-private-testnet-deploy-failed.local.json
+*.actual-private-testnet-deploy.local.json
+*.actual-private-testnet-deploy-receipt.local.json
+*.actual-private-testnet-deploy-failed.local.json
+*.actual-deploy-receipt.local.json
+*.actual-deploy-failed.local.json
+*.deploy-attempt.local.json
+CODEBUNDLE.md 
+NOTES.md
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual test-only mint/config initialization receipts — NEVER COMMIT
+# =============================================================================
+# Phase 4 may produce local test-only mint/config initialization receipts and
+# readback captures. Keep full receipts local/ignored unless a redacted summary
+# is intentionally promoted into docs.
+
+actual-test-only-mint-init-receipt.json
+actual-test-only-mint-init-receipt.local.json
+actual-test-only-mint-init-failed.local.json
+actual-test-only-mint-readback.local.json
+*.actual-test-only-mint-init.local.json
+*.actual-test-only-mint-init-receipt.local.json
+*.actual-test-only-mint-init-failed.local.json
+*.actual-test-only-mint-readback.local.json
+*.actual-program-config-init.local.json
+*.actual-program-config-readback.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual private testnet read-only RPC evidence — NEVER COMMIT
+# =============================================================================
+# Phase 5 may produce local read-only RPC evidence receipts against deployed
+# private devnet/testnet accounts. Keep full receipts local/ignored unless a
+# redacted summary is intentionally promoted into docs.
+
+actual-private-testnet-read-only-evidence.json
+actual-private-testnet-read-only-evidence.local.json
+actual-private-testnet-read-only-evidence-failed.local.json
+*.actual-private-testnet-read-only-evidence.local.json
+*.actual-private-testnet-read-only-evidence-failed.local.json
+*.actual-read-only-rpc-evidence.local.json
+*.actual-rpc-readback.local.json
+*.actual-program-readback.local.json
+*.actual-config-readback.local.json
+*.actual-mint-readback.local.json
+*.actual-token-account-readback.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual private testnet simulation receipts — NEVER COMMIT
+# =============================================================================
+# Phase 6 may produce local simulation receipts against deployed private
+# devnet/testnet addresses. Keep full receipts local/ignored unless a redacted
+# summary is intentionally promoted into docs.
+
+actual-private-testnet-simulation-receipt.json
+actual-private-testnet-simulation-receipt.local.json
+actual-private-testnet-simulation-failed.local.json
+*.actual-private-testnet-simulation.local.json
+*.actual-private-testnet-simulation-receipt.local.json
+*.actual-private-testnet-simulation-failed.local.json
+*.actual-simulation-receipt.local.json
+*.actual-simulation-failed.local.json
+*.actual-roc-to-rox-simulation.local.json
+*.actual-rox-to-roc-simulation.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual capped ROC-to-ROX private testnet receipts — NEVER COMMIT
+# =============================================================================
+# Phase 7 may produce local capped ROC-to-ROX send/readback receipts against
+# deployed private devnet/testnet addresses. Keep full receipts local/ignored
+# unless a redacted summary is intentionally promoted into docs.
+
+actual-roc-to-rox-capped-send-receipt.json
+actual-roc-to-rox-capped-send-receipt.local.json
+actual-roc-to-rox-capped-send-failed.local.json
+actual-roc-to-rox-readback.local.json
+actual-roc-to-rox-readback-failed.local.json
+*.actual-roc-to-rox-capped-send.local.json
+*.actual-roc-to-rox-capped-send-receipt.local.json
+*.actual-roc-to-rox-capped-send-failed.local.json
+*.actual-roc-to-rox-readback.local.json
+*.actual-roc-to-rox-readback-failed.local.json
+*.actual-forward-flow.local.json
+*.actual-forward-readback.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual capped ROX-to-ROC private testnet receipts — NEVER COMMIT
+# =============================================================================
+# Phase 8 may produce local capped ROX-to-ROC burn/readback/dry-run release
+# receipts against deployed private devnet/testnet addresses. Keep full receipts
+# local/ignored unless a redacted summary is intentionally promoted into docs.
+
+actual-rox-to-roc-capped-send-receipt.json
+actual-rox-to-roc-capped-send-receipt.local.json
+actual-rox-to-roc-capped-send-failed.local.json
+actual-rox-to-roc-readback.local.json
+actual-rox-to-roc-readback-failed.local.json
+actual-rox-to-roc-release-intent.local.json
+actual-rox-to-roc-release-intent-failed.local.json
+*.actual-rox-to-roc-capped-send.local.json
+*.actual-rox-to-roc-capped-send-receipt.local.json
+*.actual-rox-to-roc-capped-send-failed.local.json
+*.actual-rox-to-roc-readback.local.json
+*.actual-rox-to-roc-readback-failed.local.json
+*.actual-rox-to-roc-release-intent.local.json
+*.actual-reverse-flow.local.json
+*.actual-reverse-readback.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual private testnet receipt ledger — NEVER COMMIT
+# =============================================================================
+# Phase 9 may produce local receipt-ledger reconciliation artifacts for actual
+# private devnet/testnet runs. Keep full ledgers local/ignored unless a redacted
+# summary is intentionally promoted into docs.
+
+actual-private-testnet-receipt-ledger.json
+actual-private-testnet-receipt-ledger.local.json
+actual-private-testnet-receipt-ledger-incomplete.local.json
+actual-private-testnet-receipt-ledger-quarantined.local.json
+actual-private-testnet-reconciliation.local.json
+actual-private-testnet-reconciliation-quarantine.local.json
+*.actual-private-testnet-receipt-ledger.local.json
+*.actual-private-testnet-receipt-ledger-incomplete.local.json
+*.actual-private-testnet-receipt-ledger-quarantined.local.json
+*.actual-receipt-ledger.local.json
+*.actual-ledger-reconciliation.local.json
+*.actual-reconciliation-quarantine.local.json
+*.actual-reconciliation-report.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual private testnet negative drill receipts — NEVER COMMIT
+# =============================================================================
+# Phase 10 may produce local negative-drill failure receipts against deployed
+# private devnet/testnet state. Keep full receipts local/ignored unless a
+# redacted summary is intentionally promoted into docs.
+
+actual-private-testnet-negative-drill.json
+actual-private-testnet-negative-drill.local.json
+actual-private-testnet-negative-drill-quarantined.local.json
+actual-private-testnet-negative-drill-failure-receipt.local.json
+*.actual-negative-drill.local.json
+*.actual-negative-drill-receipt.local.json
+*.actual-negative-drill-failed.local.json
+*.actual-negative-drill-quarantine.local.json
+*.negative-drill-receipt.local.json
+*.negative-drill-report.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual private testnet halt/recovery/authority drill reports — NEVER COMMIT
+# =============================================================================
+# Phase 11 may produce local operator safety reports for halt, recovery,
+# authority separation, key-rotation intent, and upgrade-authority checklist
+# drills. Keep full reports local/ignored unless a redacted summary is
+# intentionally promoted into docs.
+
+actual-private-testnet-halt-recovery-drill.json
+actual-private-testnet-halt-recovery-drill.local.json
+actual-private-testnet-authority-drill.json
+actual-private-testnet-authority-drill.local.json
+actual-private-testnet-authority-report.local.json
+*.actual-halt-recovery-drill.local.json
+*.actual-authority-drill.local.json
+*.actual-authority-report.local.json
+*.actual-key-rotation-intent.local.json
+*.actual-upgrade-authority-checklist.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual RustyOnions dry-run handoff reports — NEVER COMMIT
+# =============================================================================
+# Phase 12 may produce local dry-run handoff reports that connect private
+# testnet receipt evidence to RustyOnions intent/status shapes. These reports
+# are not wallet mutation, ledger mutation, settlement, real ROC release, or
+# finality records.
+
+actual-rustyonions-dry-run-handoff.json
+actual-rustyonions-dry-run-handoff.local.json
+actual-rustyonions-roc-to-rox-dry-run-handoff.local.json
+actual-rustyonions-rox-to-roc-dry-run-handoff.local.json
+*.actual-rustyonions-dry-run-handoff.local.json
+*.actual-rustyonions-roc-to-rox-handoff.local.json
+*.actual-rustyonions-rox-to-roc-handoff.local.json
+*.actual-rustyonions-handoff-report.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 CrabLink display-only private testnet status reports — NEVER COMMIT
+# =============================================================================
+# Phase 13 may produce local display-only status exports for CrabLink-facing
+# private testnet evidence review. These are not client authority, wallet
+# authority, ledger authority, bridge authority, paid-access unlock records,
+# production settlement, finality, or real ROC mutation records.
+
+actual-crablink-private-testnet-status.json
+actual-crablink-private-testnet-status.local.json
+actual-crablink-display-only-status.local.json
+actual-crablink-status-report.local.json
+*.actual-crablink-private-testnet-status.local.json
+*.actual-crablink-display-only-status.local.json
+*.actual-crablink-status-report.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual private testnet evidence package artifacts — NEVER COMMIT
+# =============================================================================
+# Phase 14 may produce local audit/evidence package indexes for actual private
+# testnet/test-only bridge evidence. These are not runtime authorization,
+# wallet authority, ledger authority, bridge authority, production settlement,
+# finality, public launch, or real ROC mutation records.
+
+actual-private-testnet-evidence-package.json
+actual-private-testnet-evidence-package.local.json
+actual-private-testnet-evidence-index.local.json
+actual-private-testnet-evidence-report.local.json
+*.actual-private-testnet-evidence-package.local.json
+*.actual-private-testnet-evidence-index.local.json
+*.actual-private-testnet-evidence-report.local.json
+*.actual-evidence-package.local.json
+*.actual-evidence-index.local.json
+
+# =============================================================================
+# ROX Anchor BUILD_PLAN4 actual private testnet closeout reports — NEVER COMMIT
+# =============================================================================
+# Phase 15 may produce local closeout reports for BUILD_PLAN4 completion.
+# These are not runtime authorization, wallet authority, ledger authority,
+# bridge authority, production settlement, finality, public launch, mainnet,
+# or real ROC mutation records.
+
+actual-private-testnet-closeout.json
+actual-private-testnet-closeout.local.json
+actual-private-testnet-closeout-report.local.json
+actual-build-plan4-closeout.local.json
+*.actual-private-testnet-closeout.local.json
+*.actual-private-testnet-closeout-report.local.json
+*.actual-build-plan4-closeout.local.json
+*.actual-closeout-report.local.json
