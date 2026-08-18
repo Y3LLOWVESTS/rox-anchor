@@ -7,7 +7,7 @@
 
 use rox_anchor_core::{AnchorCoreError, TestnetProgramArtifactManifest};
 
-const ANCHOR_TOML_PROGRAM_ID: &str = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR";
+const ANCHOR_TOML_PROGRAM_ID: &str = "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk";
 
 fn valid_manifest() -> TestnetProgramArtifactManifest {
     TestnetProgramArtifactManifest::from_labels(

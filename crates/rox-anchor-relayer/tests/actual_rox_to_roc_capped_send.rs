@@ -12,7 +12,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-const PROGRAM_ID: &str = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR";
+const PROGRAM_ID: &str = "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk";
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -79,7 +79,7 @@ fn write_send_receipt(path: &Path, overrides: &[(&str, &str)]) {
   "coordinator_decision_status": "accepted",
   "relayer_dry_run_status": "accepted",
   "simulation_result": "passed",
-  "operator_approval": "I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND",
+  "operator_approval": "I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN",
   "external_signer_used": true,
   "signer_path_redacted": "<redacted-external-signer-path>",
   "receipt_out_redacted": "<redacted-external-receipt-path>",
@@ -117,7 +117,7 @@ fn actual_rox_to_roc_send_template_is_redacted_and_capped() {
     assert!(ok, "template should print:\n{output}");
     assert!(output.contains("rox-anchor.actual-rox-to-roc-capped-send.v1"));
     assert!(output.contains("actual_rox_to_roc_capped_send_receipt"));
-    assert!(output.contains("I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND"));
+    assert!(output.contains("I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN"));
     assert!(output.contains(r#""test_only_rox_burn_only": true"#));
     assert!(output.contains(r#""internal_roc_release_intent_only": true"#));
     assert!(output.contains(r#""real_roc_release": false"#));
@@ -156,7 +156,7 @@ fn actual_rox_to_roc_send_receipt_accepts_blocked_non_submitting_shape() {
                 r#""simulation_result": "blocked""#,
             ),
             (
-                r#""operator_approval": "I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND""#,
+                r#""operator_approval": "I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN""#,
                 r#""operator_approval": "missing""#,
             ),
             (
@@ -222,9 +222,9 @@ fn actual_rox_to_roc_send_receipt_rejects_missing_required_gate() {
         ),
         (
             "approval",
-            r#""operator_approval": "I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND""#,
+            r#""operator_approval": "I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN""#,
             r#""operator_approval": "missing""#,
-            "operator_approval expected 'I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND'",
+            "operator_approval expected 'I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN'",
         ),
     ] {
         let dir = temp_dir(label);

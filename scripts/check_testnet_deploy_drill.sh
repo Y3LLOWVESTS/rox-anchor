@@ -159,6 +159,9 @@ is_ignored_scan_path() {
     */secrets/*|*/private/*|*/credentials/*|*/tokens/*|*/auth/*) return 0 ;;
     */keys/*|*/keypairs/*|*/wallets/*|*/mnemonics/*|*/seeds/*|*/seed/*|*/recovery/*|*/keystore/*) return 0 ;;
     */deploy-drills/*|*/testnet-deploy/*|*/testnet-artifacts/*|*/.rox-anchor-testnet/*) return 0 ;;
+    */.rox-anchor-pilot/*|*/.rox-anchor-private-pilot/*|*/private-pilot/*) return 0 ;;
+    */pilot-artifacts/*|*/pilot-rpc/*|*/pilot-keys/*|*/pilot-keypairs/*|*/pilot-wallets/*) return 0 ;;
+    */pilot-secrets/*|*/pilot-receipts/*|*/pilot-audit/*|*/pilot-deploy/*|*/pilot-ledger/*|*/pilot-tmp/*) return 0 ;;
     */CODEBUNDLE*.md) return 0 ;;
   esac
 

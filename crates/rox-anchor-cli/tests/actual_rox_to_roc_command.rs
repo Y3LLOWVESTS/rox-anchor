@@ -94,7 +94,9 @@ fn actual_rox_to_roc_runbook_uses_external_config_explicit_approval_and_caps() {
     assert!(doc.contains(
         "--receipt-out /external/private/<redacted-receipts-dir>/rox-to-roc.pilot-receipt.json"
     ));
-    assert!(doc.contains("--operator-approval \"I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND\""));
+    assert!(
+        doc.contains("--operator-approval \"I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN\"")
+    );
     assert!(doc.contains("--max-operations 1"));
     assert!(doc.contains("--max-amount-minor 1"));
     assert!(doc.contains("The internal ROC release intent is dry-run only."));

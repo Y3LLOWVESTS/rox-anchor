@@ -7,7 +7,7 @@
 
 use rox_anchor_cli::run_from_args;
 
-const ANCHOR_TOML_PROGRAM_ID: &str = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR";
+const ANCHOR_TOML_PROGRAM_ID: &str = "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk";
 
 #[test]
 fn status_output_includes_redacted_testnet_program_manifest_without_finality_claims() {

@@ -15,6 +15,18 @@ name = "rox-anchor"
 path = "src/main.rs"
 
 [dependencies]
+base64 = "0.21.7"
+serde_json = "1.0"
+bincode = "1.3.3"
+sha2 = "0.10"
+solana-loader-v3-interface = "=5.0.0"
+solana-system-interface = { version = "1.0.0", features = ["bincode"] }
+solana-sdk-ids = "2.2.1"
+anchor-client = "0.31.1"
+spl-associated-token-account = "6.0.0"
+spl-token = "7.0.0"
+anchor-lang = "0.31.1"
+rox-anchor = { path = "../../programs/rox-anchor", features = ["cpi"] }
 rox-anchor-core = { path = "../rox-anchor-core" }
 rox-anchor-coordinator = { path = "../rox-anchor-coordinator" }
 rox-anchor-proof = { path = "../rox-anchor-proof" }

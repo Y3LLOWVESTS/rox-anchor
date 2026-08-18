@@ -66,7 +66,7 @@ print_template() {
 # local-only; never commit
 
 cluster = "testnet"
-program_id = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR"
+program_id = "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk"
 
 payer_keypair_path = "<external-private-workspace>/keys/testnet-payer.json"
 program_keypair_path = "<external-private-workspace>/keys/rox-anchor-program-keypair.json"

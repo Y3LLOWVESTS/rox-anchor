@@ -226,7 +226,7 @@ print_receipt_template() {
   "receipt_role": "private_testnet_deployment_receipt",
   "cluster": "$cluster",
   "program_name": "rox_anchor",
-  "program_id": "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR",
+  "program_id": "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk",
   "deployment_outcome": "$outcome",
   "deploy_signature": "$signature",
   "deploy_slot": "$slot",

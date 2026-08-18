@@ -184,6 +184,9 @@ pub fn handler_roc_to_rox_mint(ctx: Context<FinalizeRocToRoxMint>) -> Result<()>
     operation.require_derived_address(ctx.program_id, &config_key, operation_account_key)?;
     operation.require_roc_to_rox()?;
 
+    config
+        .require_test_only_mint_supply_cap(ctx.accounts.rox_mint.supply, operation.amount_atoms)?;
+
     let finalize_plan =
         operation.finalize_for_direction(config, AnchorTransferDirection::RocToRox)?;
     let settlement = AnchorTokenSettlementBinding::from_derived_config_and_plan(

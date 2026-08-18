@@ -674,3 +674,6 @@ actual-build-plan4-closeout.local.json
 *.actual-private-testnet-closeout-report.local.json
 *.actual-build-plan4-closeout.local.json
 *.actual-closeout-report.local.json
+
+# Local development/carry-over notes — may contain operational metadata
+NOTES.MD

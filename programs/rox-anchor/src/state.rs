@@ -11,17 +11,28 @@ use anchor_lang::prelude::*;
 #[derive(Debug)]
 pub struct RoxAnchorConfig {
     pub authority: Pubkey,
+    pub halt_authority: Pubkey,
+    pub recovery_authority: Pubkey,
     pub rox_mint: Pubkey,
     pub mint_authority: Pubkey,
+    pub test_only_mode: bool,
+    pub max_supply_units: u64,
+    pub max_amount_units_per_operation: u64,
     pub mint_authority_bump: u8,
     pub halted: bool,
     pub recovery_required: bool,
 }
 
 impl RoxAnchorConfig {
-    pub const SPACE: usize = 8 + 32 + 32 + 32 + 1 + 1 + 1;
+    pub const SPACE: usize = 8 + (32 * 5) + 1 + 8 + 8 + 1 + 1 + 1;
 
     pub const MINT_AUTHORITY_SEED_PREFIX: &'static [u8] = b"rox-anchor-mint-authority";
+
+    /// Fixed private-devnet ceiling for the BUILD_PLAN4 pilot.
+    pub const PRIVATE_TEST_ONLY_MAX_SUPPLY_UNITS: u64 = 1_000;
+
+    /// Fixed private-devnet per-operation ceiling.
+    pub const PRIVATE_TEST_ONLY_MAX_AMOUNT_UNITS: u64 = 10;
 
     pub fn derive_mint_authority(
         program_id: &Pubkey,
@@ -92,12 +103,22 @@ impl RoxAnchorConfig {
         Ok(())
     }
 
+    /// Legacy local-fixture initializer.
+    ///
+    /// Existing deterministic unit fixtures may retain one shared authority.
+    /// The on-chain initialize instruction must use
+    /// `initialize_with_separated_authorities` instead.
     pub fn initialize(&mut self, authority: Pubkey, args: InitializeConfigArgs) -> Result<()> {
         args.validate()?;
 
         self.authority = authority;
+        self.halt_authority = authority;
+        self.recovery_authority = authority;
         self.rox_mint = args.rox_mint;
         self.mint_authority = args.mint_authority;
+        self.test_only_mode = false;
+        self.max_supply_units = u64::MAX;
+        self.max_amount_units_per_operation = u64::MAX;
         self.mint_authority_bump = args.mint_authority_bump;
         self.halted = false;
         self.recovery_required = false;
@@ -105,9 +126,147 @@ impl RoxAnchorConfig {
         Ok(())
     }
 
+    /// Initialize a live/testnet config with distinct operational roles.
+    ///
+    /// The workflow authority, halt authority, and recovery authority must
+    /// all be non-default and pairwise distinct. The configured operational
+    /// mint authority must also be distinct from those external roles.
+    pub fn initialize_with_separated_authorities(
+        &mut self,
+        authority: Pubkey,
+        halt_authority: Pubkey,
+        recovery_authority: Pubkey,
+        args: InitializeConfigArgs,
+    ) -> Result<()> {
+        args.validate()?;
+
+        require!(
+            authority != Pubkey::default()
+                && halt_authority != Pubkey::default()
+                && recovery_authority != Pubkey::default(),
+            crate::RoxAnchorError::InvalidConfigBinding
+        );
+
+        require!(
+            authority != halt_authority
+                && authority != recovery_authority
+                && halt_authority != recovery_authority,
+            crate::RoxAnchorError::InvalidConfigBinding
+        );
+
+        require!(
+            args.mint_authority != authority
+                && args.mint_authority != halt_authority
+                && args.mint_authority != recovery_authority,
+            crate::RoxAnchorError::InvalidConfigBinding
+        );
+
+        self.authority = authority;
+        self.halt_authority = halt_authority;
+        self.recovery_authority = recovery_authority;
+        self.rox_mint = args.rox_mint;
+        self.mint_authority = args.mint_authority;
+        self.test_only_mode = true;
+        self.max_supply_units = Self::PRIVATE_TEST_ONLY_MAX_SUPPLY_UNITS;
+        self.max_amount_units_per_operation = Self::PRIVATE_TEST_ONLY_MAX_AMOUNT_UNITS;
+        self.mint_authority_bump = args.mint_authority_bump;
+        self.halted = false;
+        self.recovery_required = false;
+
+        Ok(())
+    }
+
+    pub fn private_test_only_policy_is_valid(&self) -> bool {
+        self.test_only_mode
+            && self.max_supply_units == Self::PRIVATE_TEST_ONLY_MAX_SUPPLY_UNITS
+            && self.max_amount_units_per_operation == Self::PRIVATE_TEST_ONLY_MAX_AMOUNT_UNITS
+    }
+
+    pub fn test_only_amount_allowed(&self, amount_units: u64) -> bool {
+        if !self.test_only_mode {
+            return true;
+        }
+
+        self.private_test_only_policy_is_valid()
+            && amount_units > 0
+            && amount_units <= self.max_amount_units_per_operation
+    }
+
+    pub fn require_private_test_only_policy(&self) -> Result<()> {
+        require!(
+            self.test_only_mode,
+            crate::RoxAnchorError::TestOnlyModeRequired
+        );
+
+        require!(
+            self.private_test_only_policy_is_valid(),
+            crate::RoxAnchorError::InvalidConfigBinding
+        );
+
+        Ok(())
+    }
+
+    pub fn require_test_only_amount_cap(&self, amount_units: u64) -> Result<()> {
+        if !self.test_only_mode {
+            return Ok(());
+        }
+
+        self.require_private_test_only_policy()?;
+
+        require!(
+            amount_units > 0 && amount_units <= self.max_amount_units_per_operation,
+            crate::RoxAnchorError::TestAmountCapExceeded
+        );
+
+        Ok(())
+    }
+
+    pub fn require_test_only_mint_supply_cap(
+        &self,
+        current_supply_units: u64,
+        amount_units: u64,
+    ) -> Result<()> {
+        if !self.test_only_mode {
+            return Ok(());
+        }
+
+        self.require_private_test_only_policy()?;
+        self.require_test_only_amount_cap(amount_units)?;
+
+        let next_supply = match current_supply_units.checked_add(amount_units) {
+            Some(value) => value,
+            None => {
+                return err!(crate::RoxAnchorError::TestSupplyCapExceeded);
+            }
+        };
+
+        require!(
+            next_supply <= self.max_supply_units,
+            crate::RoxAnchorError::TestSupplyCapExceeded
+        );
+
+        Ok(())
+    }
+
     pub fn require_authority(&self, authority: Pubkey) -> Result<()> {
         require!(
             self.authority == authority,
+            crate::RoxAnchorError::AuthorityMismatch
+        );
+        Ok(())
+    }
+
+    pub fn require_halt_authority(&self, authority: Pubkey) -> Result<()> {
+        require!(
+            self.halt_authority == authority,
+            crate::RoxAnchorError::AuthorityMismatch
+        );
+        Ok(())
+    }
+
+    pub fn require_recovery_authority(&self, authority: Pubkey) -> Result<()> {
+        require!(
+            self.recovery_authority == authority,
             crate::RoxAnchorError::AuthorityMismatch
         );
         Ok(())
@@ -147,13 +306,13 @@ impl RoxAnchorConfig {
     }
 
     pub fn halt(&mut self, authority: Pubkey) -> Result<()> {
-        self.require_authority(authority)?;
+        self.require_halt_authority(authority)?;
         self.halted = true;
         Ok(())
     }
 
     pub fn recover(&mut self, authority: Pubkey) -> Result<()> {
-        self.require_authority(authority)?;
+        self.require_recovery_authority(authority)?;
         self.halted = false;
         self.recovery_required = false;
         Ok(())
@@ -463,6 +622,7 @@ impl RoxAnchorOperation {
             && !self.recovery_required
             && self.direction_code().is_some()
             && self.amount_atoms > 0
+            && config.test_only_amount_allowed(self.amount_atoms)
             && self.burn_evidence_hash != [0; 32]
             && matches!(
                 self.state_code(),
@@ -479,6 +639,7 @@ impl RoxAnchorOperation {
             !config.recovery_required && !self.recovery_required,
             crate::RoxAnchorError::RecoveryRequired
         );
+        config.require_test_only_amount_cap(self.amount_atoms)?;
         config.require_configured_for_operation(self)?;
         require!(
             self.can_finalize(config),
@@ -1423,8 +1584,13 @@ mod tests {
     fn config(authority: Pubkey, rox_mint: Pubkey) -> RoxAnchorConfig {
         RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint,
             mint_authority: Pubkey::new_unique(),
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: 251,
             halted: false,
             recovery_required: false,
@@ -2576,8 +2742,13 @@ mod tests {
 
         let config = RoxAnchorConfig {
             authority: config_authority,
+            halt_authority: config_authority,
+            recovery_authority: config_authority,
             rox_mint,
             mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -2637,8 +2808,13 @@ mod tests {
 
         let valid_config = RoxAnchorConfig {
             authority: config_authority,
+            halt_authority: config_authority,
+            recovery_authority: config_authority,
             rox_mint,
             mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -2709,8 +2885,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -2745,8 +2926,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -2783,8 +2969,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let mut configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -2988,8 +3179,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3062,8 +3258,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3137,8 +3338,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3196,8 +3402,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let mut configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3271,8 +3482,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3339,8 +3555,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3410,8 +3631,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3482,8 +3708,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3543,8 +3774,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3623,8 +3859,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3697,8 +3938,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3817,8 +4063,13 @@ mod tests {
             RoxAnchorConfig::derived_initialize_args(&program_id, &config_key, rox_mint).unwrap();
         let configured = RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,
@@ -3963,8 +4214,13 @@ mod tests {
 
         RoxAnchorConfig {
             authority,
+            halt_authority: authority,
+            recovery_authority: authority,
             rox_mint: args.rox_mint,
             mint_authority: args.mint_authority,
+            test_only_mode: false,
+            max_supply_units: u64::MAX,
+            max_amount_units_per_operation: u64::MAX,
             mint_authority_bump: args.mint_authority_bump,
             halted: false,
             recovery_required: false,

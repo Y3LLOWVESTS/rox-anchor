@@ -34,7 +34,30 @@ pub(crate) use instructions::open_challenge::__client_accounts_open_challenge;
 pub(crate) use instructions::recover::__client_accounts_recover;
 pub(crate) use instructions::resolve_challenge::__client_accounts_resolve_challenge;
 
-declare_id!("U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR");
+// When this program crate is consumed through its `cpi` feature, Anchor's
+// Accounts derive also emits CPI-specific client-account modules inside the
+// instruction submodules. The #[program] macro resolves those modules from
+// crate root, just as it does the normal client-account modules above.
+#[cfg(feature = "cpi")]
+pub(crate) use instructions::finalize::__cpi_client_accounts_finalize;
+#[cfg(feature = "cpi")]
+pub(crate) use instructions::finalize::__cpi_client_accounts_finalize_roc_to_rox_mint;
+#[cfg(feature = "cpi")]
+pub(crate) use instructions::finalize::__cpi_client_accounts_finalize_rox_to_roc_burn;
+#[cfg(feature = "cpi")]
+pub(crate) use instructions::halt::__cpi_client_accounts_halt;
+#[cfg(feature = "cpi")]
+pub(crate) use instructions::initialize::__cpi_client_accounts_initialize;
+#[cfg(feature = "cpi")]
+pub(crate) use instructions::observe_burn::__cpi_client_accounts_observe_burn;
+#[cfg(feature = "cpi")]
+pub(crate) use instructions::open_challenge::__cpi_client_accounts_open_challenge;
+#[cfg(feature = "cpi")]
+pub(crate) use instructions::recover::__cpi_client_accounts_recover;
+#[cfg(feature = "cpi")]
+pub(crate) use instructions::resolve_challenge::__cpi_client_accounts_resolve_challenge;
+
+declare_id!("FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk");
 
 #[allow(deprecated)]
 #[program]

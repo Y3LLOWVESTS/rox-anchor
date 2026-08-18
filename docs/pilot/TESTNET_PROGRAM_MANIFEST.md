@@ -39,7 +39,7 @@ local artifact paths are redacted in reports
 Current expected private pilot binding:
 
 ```text
-U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR
+FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk
 ```
 
 Allowed use:

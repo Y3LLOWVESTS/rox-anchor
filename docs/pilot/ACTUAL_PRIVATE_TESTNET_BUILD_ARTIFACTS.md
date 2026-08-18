@@ -91,7 +91,7 @@ The capture script emits JSON with this shape:
   "artifact_role": "anchor_build_metadata_only",
   "cluster": "devnet",
   "program_name": "rox_anchor",
-  "program_id": "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR",
+  "program_id": "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk",
   "expected_program_id_source": "Anchor.toml [programs.devnet]",
   "program_binary_sha256": "<sha256>",
   "program_binary_size_bytes": 0,

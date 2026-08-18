@@ -1,8 +1,9 @@
+#![recursion_limit = "256"]
 // RO:WHAT — Local command dispatch for the ROX Anchor CLI.
 // RO:WHY — Routes terminal commands into real core/proof/relayer review behavior.
 // RO:INTERACTS — commands::{check, proof, status, submit, drill, halt, recover}, rox-anchor-proof, rox-anchor-core.
-// RO:INVARIANTS — CLI reports local review only; it never claims settlement or submits transactions.
-// RO:SECURITY — no live RPC, wallet calls, deployment, minting, burning, staking, liquidity, or settlement.
+// RO:INVARIANTS — default CLI remains report-only; explicit Phase 4 simulation never submits transactions or claims settlement.
+// RO:SECURITY — no transaction submission, deployment, mint/burn execution, staking, liquidity, or settlement; Phase 4 simulation is explicit.
 // RO:TEST — crate-local CLI smoke tests cover dispatch and deterministic check/submit output.
 
 pub mod commands;
@@ -106,7 +107,7 @@ pub fn help_text() -> String {
         "security:",
         "  local/report-only by default",
         "  no silent RPC submission",
-        "  no wallet/key loading",
+        "  no wallet/key loading by default; explicit Phase 4 simulation only",
         "  no mint/burn execution",
         "  no ROC release",
         "  no settlement or finality claim",

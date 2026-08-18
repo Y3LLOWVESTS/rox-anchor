@@ -274,7 +274,7 @@ print_template() {
   "receipt_role": "private_testnet_read_only_rpc_evidence_receipt",
   "cluster": "$cluster",
   "program_name": "rox_anchor",
-  "program_id": "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR",
+  "program_id": "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk",
   "evidence_outcome": "$outcome",
   "current_slot": "1000",
   "program_account": "<redacted-program-account>",

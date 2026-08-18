@@ -15,6 +15,8 @@ use crate::state::{
 #[event]
 pub struct RoxAnchorInitialized {
     pub authority: Pubkey,
+    pub halt_authority: Pubkey,
+    pub recovery_authority: Pubkey,
     pub rox_mint: Pubkey,
     pub mint_authority: Pubkey,
     pub mint_authority_bump: u8,

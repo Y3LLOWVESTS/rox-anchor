@@ -26,7 +26,7 @@ receipt_output_path = "/external/pilot-receipts/status-receipt.json"
 observed_signature = "5JstatusPrivatePilotSignature1111222233334444"
 "#;
 
-const TESTNET_PROGRAM_ID: &str = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR";
+const TESTNET_PROGRAM_ID: &str = "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk";
 
 pub fn status_report() -> String {
     let mut lines = vec![

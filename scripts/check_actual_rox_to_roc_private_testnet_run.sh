@@ -169,7 +169,7 @@ check_docs() {
     "Actual Capped Testnet ROX-to-ROC Flow" \
     "actual_rox_to_roc_capped_send_receipt" \
     "actual_rox_to_roc_readback_receipt" \
-    "I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND" \
+    "I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN" \
     "test_only_rox_burn_only" \
     "internal_roc_release_intent_only" \
     "dry_run_release_intent_id" \
@@ -234,7 +234,7 @@ print_send_template() {
   local cluster="${2:-testnet}"
   require_valid_cluster "$cluster" >/dev/null
 
-  local approval="I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND"
+  local approval="I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN"
   local sim="passed"
   local signer="true"
   local submitted="true"
@@ -270,7 +270,7 @@ print_send_template() {
   "cluster": "$cluster",
   "direction": "rox_to_roc",
   "program_name": "rox_anchor",
-  "program_id": "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR",
+  "program_id": "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk",
   "send_outcome": "$outcome",
   "operation_id": "actual-rox-to-roc-op-0001",
   "idempotency_key": "actual-rox-to-roc-idem-0001",
@@ -332,7 +332,7 @@ print_readback_template() {
   "cluster": "$cluster",
   "direction": "rox_to_roc",
   "program_name": "rox_anchor",
-  "program_id": "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR",
+  "program_id": "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk",
   "readback_outcome": "verified",
   "operation_id": "actual-rox-to-roc-op-0001",
   "idempotency_key": "actual-rox-to-roc-idem-0001",
@@ -445,7 +445,7 @@ check_send_receipt() {
     require_json_string "$receipt" "coordinator_decision_status" "accepted"
     require_json_string "$receipt" "relayer_dry_run_status" "accepted"
     require_json_string "$receipt" "simulation_result" "passed"
-    require_json_string "$receipt" "operator_approval" "I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND"
+    require_json_string "$receipt" "operator_approval" "I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN"
     require_json_bool_true "$receipt" "external_signer_used"
     require_json_bool_true "$receipt" "transaction_submission"
     require_json_bool_true "$receipt" "send_authorized"

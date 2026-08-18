@@ -308,7 +308,7 @@ print_template() {
   "cluster": "$cluster",
   "direction": "$direction",
   "program_name": "rox_anchor",
-  "program_id": "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR",
+  "program_id": "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk",
   "simulation_outcome": "$outcome",
   "operation_id": "actual-simulation-op-0001",
   "idempotency_key": "actual-simulation-idem-0001",

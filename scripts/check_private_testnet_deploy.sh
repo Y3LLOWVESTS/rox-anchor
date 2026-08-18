@@ -101,7 +101,7 @@ grep -Eq '^\[programs\.devnet\]' "$ANCHOR_TOML" || fail "Anchor.toml must includ
 grep -Eq '^\[programs\.testnet\]' "$ANCHOR_TOML" || fail "Anchor.toml must include a testnet program binding"
 ok "devnet/testnet program bindings are present"
 
-grep -Fq 'rox_anchor = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR"' "$ANCHOR_TOML" \
+grep -Fq 'rox_anchor = "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk"' "$ANCHOR_TOML" \
   || fail "expected ROX Anchor program binding is missing from Anchor.toml"
 ok "expected ROX Anchor program ID binding is present"
 

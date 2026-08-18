@@ -2,7 +2,7 @@
 //! RO:WHY — BUILD_PLAN3 Phase 10 makes pilot status/proof/simulation/submit/receipt/drill paths usable.
 //! RO:INTERACTS — status, proof, submit, receipts, drill commands plus relayer simulation models.
 //! RO:INVARIANTS — every non-read-only pilot path is explicit; unknown/ambiguous flags fail closed.
-//! RO:SECURITY — no live RPC, wallet/key loading, signing, transaction send, mint, burn, ROC release, or settlement.
+//! RO:SECURITY — default pilot reports are inert; explicit Phase 4 live simulation may read RPC and load/sign pilot keys but has no transaction-send path.
 //! RO:TEST — cargo test -p rox-anchor-cli --test private_pilot_cli.
 
 use rox_anchor_core::{
@@ -33,6 +33,66 @@ pub fn run_pilot(args: &[String]) -> Result<String, CliError> {
             reject_extra_args("status", rest)?;
             Ok(wrap_pilot_report("status", commands::status::status_report()))
         }
+        "phase5-read-only-live" | "live-read-only-evidence" => {
+            let report =
+                commands::phase5_live_read_only::run_phase5_live_read_only(rest)?;
+            Ok(wrap_pilot_report(
+                "phase5-read-only-live",
+                report,
+            ))
+        }
+        "phase5-read-only-quorum" | "live-read-only-quorum" => {
+            let report =
+                commands::phase5_live_quorum::run_phase5_live_quorum(rest)?;
+            Ok(wrap_pilot_report(
+                "phase5-read-only-quorum",
+                report,
+            ))
+        }
+
+        "phase5-read-only-closeout" | "live-read-only-closeout" => {
+            let report =
+                commands::phase5_live_closeout::run_phase5_live_closeout(rest)?;
+            Ok(wrap_pilot_report(
+                "phase5-read-only-closeout",
+                report,
+            ))
+        }
+        "phase6-actual-address-simulation-gate" | "actual-address-simulation-gate" => {
+            let report =
+                commands::phase6_live_simulation::run_phase6_actual_address_simulation_gate(rest)?;
+            Ok(wrap_pilot_report(
+                "phase6-actual-address-simulation-gate",
+                report,
+            ))
+        }
+        "phase6-live-rpc-simulation" | "actual-address-live-simulation" => {
+            let report =
+                commands::phase6_live_rpc_simulation::run_phase6_live_rpc_simulation(rest)?;
+            Ok(wrap_pilot_report(
+                "phase6-live-rpc-simulation",
+                report,
+            ))
+        }
+        "phase7-prepare-capped-roc-to-rox" | "prepare-actual-roc-to-rox-send" => {
+            let report =
+                commands::phase7_live_capped_sender::run_phase7_prepare_capped_roc_to_rox(rest)?;
+            Ok(wrap_pilot_report(
+                "phase7-prepare-capped-roc-to-rox",
+                report,
+            ))
+        }
+        "phase7-simulate-and-authorize-roc-to-rox" | "phase7-live-simulation-authorization" => {
+            let report =
+                commands::phase7_live_simulation_authorization::run_phase7_simulate_and_authorize(rest)?;
+            Ok(wrap_pilot_report(
+                "phase7-simulate-and-authorize-roc-to-rox",
+                report,
+            ))
+        }
+        "phase7-execute-capped-roc-to-rox" | "execute-actual-roc-to-rox-send" => {
+            commands::phase7_live_manual_execution::run_phase7_live_manual_execution(rest)
+        }
         "proof" | "read-only-proof" | "read-only" => {
             reject_extra_args("read-only-proof", rest)?;
             Ok(wrap_pilot_report(
@@ -40,9 +100,39 @@ pub fn run_pilot(args: &[String]) -> Result<String, CliError> {
                 commands::proof::proof_help(),
             ))
         }
+        "phase7-post-send-closeout" | "closeout-actual-roc-to-rox-send" => {
+            let report =
+                commands::phase7_live_closeout::run_phase7_post_send_closeout(rest)?;
+            Ok(wrap_pilot_report(
+                "phase7-post-send-closeout",
+                report,
+            ))
+        }
+        "initialize-test-only-mint" | "init-test-only-mint" => {
+            let report =
+                commands::test_only_init::run_initialize_test_only_mint(rest)?;
+            Ok(wrap_pilot_report(
+                "initialize-test-only-mint",
+                report,
+            ))
+        }
         "simulate" | "simulation" => run_pilot_simulate(rest),
         "roc-to-rox" | "roc-to-rox-pilot" => run_pilot_roc_to_rox(rest),
         "rox-to-roc" | "rox-to-roc-pilot" => run_pilot_rox_to_roc(rest),
+        "phase8-execute-capped-rox-to-roc-burn"
+        | "execute-actual-rox-to-roc-burn" => {
+            commands::phase8_live_execution::run_phase8_live_execution(rest)
+        }
+        "phase8-simulate-rox-to-roc-burn"
+        | "simulate-actual-rox-to-roc-burn" => {
+            let report =
+                commands::phase8_rox_to_roc_simulation::
+                    run_phase8_rox_to_roc_simulation(rest)?;
+            Ok(wrap_pilot_report(
+                "phase8-simulate-rox-to-roc-burn",
+                report,
+            ))
+        }
         "submit-capped" | "capped-submit" | "capped-testnet" => {
             let report = commands::submit::run_submit_capped(rest)?;
             Ok(wrap_pilot_report("submit-capped", report))
@@ -67,7 +157,7 @@ pub fn run_pilot(args: &[String]) -> Result<String, CliError> {
             Ok(wrap_pilot_report("recover", commands::recover::recovery_report()))
         }
         other => Err(CliError::UnknownPilotFlag(format!(
-            "pilot subcommand `{other}`; expected status, read-only-proof, simulate, roc-to-rox, rox-to-roc, submit-capped, receipts, drill, halt, or recover"
+            "pilot subcommand `{other}`; expected status, read-only-proof, initialize-test-only-mint, simulate, roc-to-rox, rox-to-roc, submit-capped, receipts, drill, halt, or recover"
         ))),
     }
 }
@@ -508,9 +598,16 @@ fn pilot_help() -> String {
         "subcommands:",
         "  status                         show private pilot status/report surfaces",
         "  read-only-proof                show read-only RPC proof report",
+        "  phase5-read-only-quorum       run fixed two-source Phase 5B read-only quorum",
+        "  phase5-read-only-closeout      run Phase 5B2 loader metadata closeout",
+        "  initialize-test-only-mint --prepare-only|--simulate-live",
+        "                                  prepare inputs or explicitly simulate the atomic init",
         "  simulate --simulate-only       run local simulation-only pilot report",
         "  roc-to-rox --simulate-only      run private forward ROC-to-ROX pilot report",
         "  rox-to-roc --simulate-only      run private reverse ROX-to-ROC pilot report",
+        "  phase7-prepare-capped-roc-to-rox prepare exact Phase 7 two-instruction candidate",
+        "  phase7-execute-capped-roc-to-rox LIVE DEVNET one-shot forward execution; explicit flags required",
+        "  phase8-simulate-rox-to-roc-burn simulate exact one-unit reverse burn without submitting",
         "  submit-capped                  run explicit capped-submit authorization report",
         "  receipts                       inspect deterministic pilot receipt ledger",
         "  drill                          run halt/recovery drill in pilot mode",
@@ -522,7 +619,7 @@ fn pilot_help() -> String {
         "  no mainnet mode",
         "  no public launch mode",
         "  no production settlement mode",
-        "  no wallet/key loading",
+        "  no wallet/key loading by default; Phase 4 live simulation is explicit",
         "  no silent RPC submission",
         "  no mint/burn execution from CLI reports",
         "  non-read-only pilot paths require explicit flags",
@@ -545,7 +642,7 @@ fn pilot_simulate_help() -> String {
         "",
         "security:",
         "  no RPC submission",
-        "  no wallet/key loading",
+        "  no wallet/key loading by default; Phase 4 live simulation is explicit",
         "  no signing",
         "  no mint/burn execution",
         "  no internal ROC mutation",
@@ -572,7 +669,7 @@ fn pilot_roc_to_rox_help() -> String {
         "security:",
         "  no real internal ROC burn",
         "  no public ROX mint",
-        "  no wallet/key loading",
+        "  no wallet/key loading by default; Phase 4 live simulation is explicit",
         "  no signing",
         "  no CLI transaction submission",
         "  no settlement or finality claim",
@@ -597,7 +694,7 @@ fn pilot_rox_to_roc_help() -> String {
         "  no real internal ROC release",
         "  no svc-wallet call",
         "  no ron-ledger mutation",
-        "  no wallet/key loading",
+        "  no wallet/key loading by default; Phase 4 live simulation is explicit",
         "  no signing",
         "  no CLI transaction submission",
         "  no settlement or finality claim",

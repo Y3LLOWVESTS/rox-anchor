@@ -106,7 +106,7 @@ Only after all gates are green and external config/evidence exists:
 cargo run -p rox-anchor-cli -- pilot rox-to-roc \
   --config /external/private/<redacted-private-testnet-config> \
   --receipt-out /external/private/<redacted-receipts-dir>/rox-to-roc.pilot-receipt.json \
-  --operator-approval "I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND" \
+  --operator-approval "I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN" \
   --max-operations 1 \
   --max-amount-minor 1
 ```
@@ -166,7 +166,7 @@ Readback is required before any operator report may call the test-only ROX burn 
   "cluster": "testnet",
   "direction": "rox_to_roc",
   "program_name": "rox_anchor",
-  "program_id": "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR",
+  "program_id": "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk",
   "send_outcome": "sent",
   "operation_id": "actual-rox-to-roc-op-0001",
   "idempotency_key": "actual-rox-to-roc-idem-0001",
@@ -190,7 +190,7 @@ Readback is required before any operator report may call the test-only ROX burn 
   "coordinator_decision_status": "accepted",
   "relayer_dry_run_status": "accepted",
   "simulation_result": "passed",
-  "operator_approval": "I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND",
+  "operator_approval": "I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN",
   "external_signer_used": true,
   "signer_path_redacted": "<redacted-external-signer-path>",
   "receipt_out_redacted": "<redacted-external-receipt-path>",
@@ -224,7 +224,7 @@ Readback is required before any operator report may call the test-only ROX burn 
   "cluster": "testnet",
   "direction": "rox_to_roc",
   "program_name": "rox_anchor",
-  "program_id": "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR",
+  "program_id": "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk",
   "send_outcome": "blocked",
   "operation_id": "actual-rox-to-roc-op-0001",
   "idempotency_key": "actual-rox-to-roc-idem-0001",
@@ -283,7 +283,7 @@ Readback is required before any operator report may call the test-only ROX burn 
   "cluster": "testnet",
   "direction": "rox_to_roc",
   "program_name": "rox_anchor",
-  "program_id": "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR",
+  "program_id": "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk",
   "readback_outcome": "verified",
   "operation_id": "actual-rox-to-roc-op-0001",
   "idempotency_key": "actual-rox-to-roc-idem-0001",
@@ -336,7 +336,7 @@ proof_review_status = accepted
 coordinator_decision_status = accepted
 relayer_dry_run_status = accepted
 simulation_result = passed
-operator_approval = I_APPROVE_PRIVATE_TESTNET_CAPPED_SEND
+operator_approval = I_APPROVE_PRIVATE_TESTNET_CAPPED_ROX_TO_ROC_BURN
 test_only_rox_burn_only = true
 internal_roc_release_intent_only = true
 transaction_submission = true

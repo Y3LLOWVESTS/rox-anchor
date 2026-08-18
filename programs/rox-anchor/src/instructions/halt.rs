@@ -1,7 +1,7 @@
 //! RO:WHAT — Halt sensitive ROX Anchor transitions.
 //! RO:WHY — Gives program state an explicit blocker before finalize/mint behavior is added.
 //! RO:INTERACTS — RoxAnchorConfig and halted event.
-//! RO:INVARIANTS — authority must match config authority.
+//! RO:INVARIANTS — signer must match the dedicated config halt authority.
 //! RO:SECURITY — halt state only; no live deployment or value movement.
 //! RO:TEST — cargo check -p rox-anchor.
 
@@ -13,12 +13,12 @@ use crate::{RoxAnchorConfig, RoxAnchorHalted};
 pub struct Halt<'info> {
     #[account(mut)]
     pub config: Account<'info, RoxAnchorConfig>,
-    pub authority: Signer<'info>,
+    pub halt_authority: Signer<'info>,
 }
 
 pub fn handler(ctx: Context<Halt>) -> Result<()> {
     let config = &mut ctx.accounts.config;
-    let authority = ctx.accounts.authority.key();
+    let authority = ctx.accounts.halt_authority.key();
 
     config.halt(authority)?;
 

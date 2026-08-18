@@ -3,13 +3,13 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-rox_anchor = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR"
+rox_anchor = "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk"
 
 [programs.devnet]
-rox_anchor = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR"
+rox_anchor = "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk"
 
 [programs.testnet]
-rox_anchor = "U91owoSZLda4pZf2Qw8Xz3rS5v2vvi95kSev33KTivR"
+rox_anchor = "FiUY5M3a8xRHCgCfNzqNe5qATKUa3fk2chHFsJGdEitk"
 
 [provider]
 cluster = "Localnet"

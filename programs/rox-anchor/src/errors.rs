@@ -51,6 +51,8 @@ pub enum RoxAnchorError {
     PublicTokenAccountLabelRejected,
     #[msg("ROX Anchor test-only amount exceeds cap or is zero")]
     TestAmountCapExceeded,
+    #[msg("ROX Anchor test-only mint supply exceeds configured private-pilot cap")]
+    TestSupplyCapExceeded,
     #[msg("ROX Anchor test token account mint binding mismatch")]
     TestTokenAccountMintMismatch,
 }
